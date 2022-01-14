@@ -1,0 +1,9 @@
+[Unit]
+Description=e-Navigation VDES Controller Service
+After=syslog.target
+
+[Service]
+ExecStart=/opt/e-nav/vdesController/vdesController.jar
+
+[Install]
+WantedBy=multi-user.target
