@@ -11,10 +11,10 @@
 	</parent>
 
 	<groupId>org.grad</groupId>
-	<artifactId>s125-service</artifactId>
+	<artifactId>aton-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>S125Service</name>
-	<description>GRAD e-Navigation S-125 Microservice</description>
+	<description>GRAD e-Navigation AtoN Microservice</description>
 
 	<properties>
 		<java.version>11</java.version>
