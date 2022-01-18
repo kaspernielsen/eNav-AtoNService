@@ -16,9 +16,11 @@
 
 package org.grad.eNav.atonService.models.domain;
 
-import org.grad.eNav.atonService.models.dtos.S125Node;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.grad.eNav.atonService.utils.GeometryBinder;
-import org.grad.eNav.atonService.utils.S100Utils;
+import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
+import org.grad.eNav.atonService.utils.GeometryJSONSerializer;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
@@ -68,6 +70,8 @@ public class AtonMessage {
     @Column(name = "type", columnDefinition = "varchar(30) default 'S125'")
     private AtonMessageType type;
 
+    @JsonSerialize(using = GeometryJSONSerializer.class)
+    @JsonDeserialize(using = GeometryJSONDeserializer.class)
     @NotNull
     @NonStandardField(valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     @Column(name = "geometry")
