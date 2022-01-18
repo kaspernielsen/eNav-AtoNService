@@ -37,19 +37,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     /**
      * The WebSocket Name
      */
-    @Value("${gla.rad.vdes-ctlr.web-socket.name:vdes-ctrl-websocket}")
+    @Value("${gla.rad.aton-service.web-socket.name:aton-service-websocket}")
     private String webSocketName;
 
     /**
      * The General Destination Prefix
      */
-    @Value("${gla.rad.vdes-ctlr.web-socket.prefix:topic}")
+    @Value("${gla.rad.aton-service.web-socket.prefix:topic}")
     private String prefix;
 
     /**
      * The VDES Controller Data Endpoint of the WebSocket
      */
-    @Value("${gla.rad.vdes-ctlr.web-socket.aton-data-endpoint:atons}")
+    @Value("${gla.rad.aton-service.web-socket.aton-data-endpoint:atons}")
     private String atonDataEndpoint;
 
     /**
