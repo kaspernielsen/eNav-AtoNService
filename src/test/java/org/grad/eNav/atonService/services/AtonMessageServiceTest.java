@@ -18,7 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.AtonMessage;
-import org.grad.eNav.atonService.models.domain.SNodeType;
+import org.grad.eNav.atonService.models.domain.AtonMessageType;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.repos.AtonMessageRepo;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -27,6 +27,7 @@ import org.hibernate.search.engine.search.query.SearchResultTotal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.mockito.InjectMocks;
@@ -34,7 +35,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -69,10 +69,10 @@ class AtonMessageServiceTest {
     AtonMessageRepo sNodeRepo;
 
     // Test Variables
-    private List<AtonMessage> nodes;
+    private List<AtonMessage> messages;
     private Pageable pageable;
-    private AtonMessage newNode;
-    private AtonMessage existingNode;
+    private AtonMessage newMessage;
+    private AtonMessage existingMessage;
 
     /**
      * Common setup for all the tests.
@@ -82,32 +82,35 @@ class AtonMessageServiceTest {
         // Create a temp geometry factory to get a test geometries
         GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
-        // Initialise the station nodes list
-        this.nodes = new ArrayList<>();
+        // Initialise the AtoN messages list
+        this.messages = new ArrayList<>();
         for(long i=0; i<10; i++) {
-            AtonMessage node = new AtonMessage();
-            node.setId(BigInteger.valueOf(i));
-            node.setUid("UID" + i);
-            node.setType(SNodeType.S125);
-            node.setMessage("Node Message No" + i);
-            this.nodes.add(node);
+            AtonMessage msg = new AtonMessage();
+            msg.setId(BigInteger.valueOf(i));
+            msg.setUid("UID" + i);
+            msg.setType(AtonMessageType.S125);
+            msg.setGeometry(factory.createPoint(new Coordinate(1.594 + i, 53.6 + i)));
+            msg.setMessage("Node Message No" + i);
+            this.messages.add(msg);
         }
 
         // Create a pageable definition
         this.pageable = PageRequest.of(0, 5);
 
-        // Create a new station node
-        this.newNode = new AtonMessage();
-        this.newNode.setUid("UID1");
-        this.newNode.setType(SNodeType.S125);
-        this.newNode.setMessage("Node Message");
+        // Create a new AtoN message
+        this.newMessage = new AtonMessage();
+        this.newMessage.setUid("UID1");
+        this.newMessage.setType(AtonMessageType.S125);
+        this.newMessage.setGeometry(factory.createPoint(new Coordinate(1.594, 53.6)));
+        this.newMessage.setMessage("Node Message");
 
-        // Create a station node with an ID
-        this.existingNode = new AtonMessage();
-        this.existingNode.setId(BigInteger.TEN);
-        this.existingNode.setUid("UID10");
-        this.existingNode.setType(SNodeType.S125);
-        this.existingNode.setMessage("Node Message");
+        // Create an existing AtoN message with ID
+        this.existingMessage = new AtonMessage();
+        this.existingMessage.setId(BigInteger.TEN);
+        this.existingMessage.setUid("UID10");
+        this.existingMessage.setType(AtonMessageType.S125);
+        this.existingMessage.setGeometry(factory.createPoint(new Coordinate(1.594, 53.6)));
+        this.existingMessage.setMessage("Node Message");
     }
 
     /**
@@ -117,39 +120,45 @@ class AtonMessageServiceTest {
     @Test
     void testFindAll() {
         // Created a result page to be returned by the mocked repository
-        doReturn(this.nodes).when(this.sNodeRepo).findAll();
+        doReturn(this.messages).when(this.sNodeRepo).findAll();
 
         // Perform the service call
         List<AtonMessage> result = this.atonMessageService.findAll();
 
         // Test the result
-        assertEquals(this.nodes.size(), result.size());
+        assertEquals(this.messages.size(), result.size());
 
         // Test each of the result entries
         for(int i=0; i < result.size(); i++){
-            assertEquals(this.nodes.get(i), result.get(i));
+            assertEquals(this.messages.get(i), result.get(i));
         }
     }
 
     /**
-     * Test that we can retrieve all the station nodes currently present in the
-     * database through a paged call.
+     * Test that we can search for all the station nodes currently present in
+     * the database and matching the provided criteria, through a paged call.
      */
     @Test
     void testFindAllPaged() {
-        // Created a result page to be returned by the mocked repository
-        Page<AtonMessage> page = new PageImpl<>(this.nodes.subList(0, 5), this.pageable, this.nodes.size());
-        doReturn(page).when(this.sNodeRepo).findAll(this.pageable);
+        // Mock the full text query
+        SearchQuery<AtonMessage> mockedQuery = mock(SearchQuery.class);
+        SearchResult<AtonMessage> searchResult = mock(SearchResult.class);
+        SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
+        doReturn(searchResult).when(mockedQuery).fetch(any(), any());
+        doReturn(this.messages.subList(0, 5)).when(searchResult).hits();
+        doReturn(searchResultTotal).when(searchResult).total();
+        doReturn(10L).when(searchResultTotal).hitCount();
+        doReturn(mockedQuery).when(this.atonMessageService).getMessageSearchQuery(any(), any(), any());
 
         // Perform the service call
-        Page<AtonMessage> result = this.atonMessageService.findAll(pageable);
+        Page<AtonMessage> result = this.atonMessageService.findAll(Optional.of("uid"), Optional.empty(), pageable);
 
         // Test the result
-        assertEquals(page.getSize(), result.getSize());
+        assertEquals(5, result.getSize());
 
         // Test each of the result entries
         for(int i=0; i < result.getSize(); i++){
-            assertEquals(this.nodes.get(i), result.getContent().get(i));
+            assertEquals(this.messages.get(i), result.getContent().get(i));
         }
     }
 
@@ -159,17 +168,17 @@ class AtonMessageServiceTest {
      */
     @Test
     void testFindOne() {
-        doReturn(Optional.of(this.existingNode)).when(this.sNodeRepo).findById(this.existingNode.getId());
+        doReturn(Optional.of(this.existingMessage)).when(this.sNodeRepo).findById(this.existingMessage.getId());
 
         // Perform the service call
-        AtonMessage result = this.atonMessageService.findOne(this.existingNode.getId());
+        AtonMessage result = this.atonMessageService.findOne(this.existingMessage.getId());
 
         // Test the result
         assertNotNull(result);
-        assertEquals(this.existingNode.getId(), result.getId());
-        assertEquals(this.existingNode.getUid(), result.getUid());
-        assertEquals(this.existingNode.getType(), result.getType());
-        assertEquals(this.existingNode.getMessage(), result.getMessage());
+        assertEquals(this.existingMessage.getId(), result.getId());
+        assertEquals(this.existingMessage.getUid(), result.getUid());
+        assertEquals(this.existingMessage.getType(), result.getType());
+        assertEquals(this.existingMessage.getMessage(), result.getMessage());
     }
 
     /**
@@ -181,7 +190,7 @@ class AtonMessageServiceTest {
     void testFindOneNotFound() {
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
-                this.atonMessageService.findOne(this.existingNode.getId())
+                this.atonMessageService.findOne(this.existingMessage.getId())
         );
     }
 
@@ -191,20 +200,20 @@ class AtonMessageServiceTest {
      */
     @Test
     void testFindOneByUid() {
-        doReturn(this.existingNode).when(this.sNodeRepo).findByUid(this.existingNode.getUid());
+        doReturn(this.existingMessage).when(this.sNodeRepo).findByUid(this.existingMessage.getUid());
 
         // Perform the service call
-        AtonMessage result = this.atonMessageService.findOneByUid(this.existingNode.getUid());
+        AtonMessage result = this.atonMessageService.findOneByUid(this.existingMessage.getUid());
 
         // Make sure the eager relationships repo call was called
-        verify(this.sNodeRepo, times(1)).findByUid(this.existingNode.getUid());
+        verify(this.sNodeRepo, times(1)).findByUid(this.existingMessage.getUid());
 
         // Test the result
         assertNotNull(result);
-        assertEquals(this.existingNode.getId(), result.getId());
-        assertEquals(this.existingNode.getUid(), result.getUid());
-        assertEquals(this.existingNode.getType(), result.getType());
-        assertEquals(this.existingNode.getMessage(), result.getMessage());
+        assertEquals(this.existingMessage.getId(), result.getId());
+        assertEquals(this.existingMessage.getUid(), result.getUid());
+        assertEquals(this.existingMessage.getType(), result.getType());
+        assertEquals(this.existingMessage.getMessage(), result.getMessage());
     }
 
     /**
@@ -214,11 +223,11 @@ class AtonMessageServiceTest {
      */
     @Test
     void testFindOneByUidNotFound() {
-        doReturn(null).when(this.sNodeRepo).findByUid(this.existingNode.getUid());
+        doReturn(null).when(this.sNodeRepo).findByUid(this.existingMessage.getUid());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
-                this.atonMessageService.findOneByUid(this.existingNode.getUid())
+                this.atonMessageService.findOneByUid(this.existingMessage.getUid())
         );
     }
 
@@ -228,20 +237,20 @@ class AtonMessageServiceTest {
      */
     @Test
     void testSave() {
-        doReturn(this.newNode).when(this.sNodeRepo).save(any());
+        doReturn(this.newMessage).when(this.sNodeRepo).save(any());
 
         // Perform the service call
-        AtonMessage result = this.atonMessageService.save(this.newNode);
+        AtonMessage result = this.atonMessageService.save(this.newMessage);
 
         // Test the result
         assertNotNull(result);
-        assertEquals(this.newNode.getId(), result.getId());
-        assertEquals(this.newNode.getUid(), result.getUid());
-        assertEquals(this.newNode.getType(), result.getType());
-        assertEquals(this.newNode.getMessage(), result.getMessage());
+        assertEquals(this.newMessage.getId(), result.getId());
+        assertEquals(this.newMessage.getUid(), result.getUid());
+        assertEquals(this.newMessage.getType(), result.getType());
+        assertEquals(this.newMessage.getMessage(), result.getMessage());
 
         // Also that a saving call took place in the repository
-        verify(this.sNodeRepo, times(1)).save(this.newNode);
+        verify(this.sNodeRepo, times(1)).save(this.newMessage);
     }
 
     /**
@@ -249,14 +258,14 @@ class AtonMessageServiceTest {
      */
     @Test
     void testDelete() throws DataNotFoundException {
-        doReturn(Optional.of(this.existingNode)).when(this.sNodeRepo).findById(this.existingNode.getId());
-        doNothing().when(this.sNodeRepo).delete(this.existingNode);
+        doReturn(Optional.of(this.existingMessage)).when(this.sNodeRepo).findById(this.existingMessage.getId());
+        doNothing().when(this.sNodeRepo).delete(this.existingMessage);
 
         // Perform the service call
-        this.atonMessageService.delete(this.existingNode.getId());
+        this.atonMessageService.delete(this.existingMessage.getId());
 
         // Verify that a deletion call took place in the repository
-        verify(this.sNodeRepo, times(1)).delete(this.existingNode);
+        verify(this.sNodeRepo, times(1)).delete(this.existingMessage);
     }
 
     /**
@@ -265,11 +274,11 @@ class AtonMessageServiceTest {
      */
     @Test
     void testDeleteNotFound() {
-        doReturn(Optional.empty()).when(this.sNodeRepo).findById(this.existingNode.getId());
+        doReturn(Optional.empty()).when(this.sNodeRepo).findById(this.existingMessage.getId());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
-                this.atonMessageService.delete(this.existingNode.getId())
+                this.atonMessageService.delete(this.existingMessage.getId())
         );
     }
 
@@ -278,14 +287,14 @@ class AtonMessageServiceTest {
      */
     @Test
     void testDeleteByUid() {
-        doReturn(this.existingNode).when(this.sNodeRepo).findByUid(this.existingNode.getUid());
-        doNothing().when(this.atonMessageService).delete(this.existingNode.getId());
+        doReturn(this.existingMessage).when(this.sNodeRepo).findByUid(this.existingMessage.getUid());
+        doNothing().when(this.atonMessageService).delete(this.existingMessage.getId());
 
         // Perform the service call
-        this.atonMessageService.deleteByUid(this.existingNode.getUid());
+        this.atonMessageService.deleteByUid(this.existingMessage.getUid());
 
         // Verify that a deletion call took place in the repository
-        verify(this.atonMessageService, times(1)).delete(this.existingNode.getId());
+        verify(this.atonMessageService, times(1)).delete(this.existingMessage.getId());
     }
 
     /**
@@ -294,11 +303,11 @@ class AtonMessageServiceTest {
      */
     @Test
     void testDeleteByUidNotFound() {
-        doReturn(null).when(this.sNodeRepo).findByUid(this.existingNode.getUid());
+        doReturn(null).when(this.sNodeRepo).findByUid(this.existingMessage.getUid());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
-                this.atonMessageService.deleteByUid(this.existingNode.getUid())
+                this.atonMessageService.deleteByUid(this.existingMessage.getUid())
         );
     }
 
@@ -337,9 +346,9 @@ class AtonMessageServiceTest {
         SearchResultTotal mockedResultTotal = mock(SearchResultTotal.class);
         doReturn(5L).when(mockedResultTotal).hitCount();
         doReturn(mockedResultTotal).when(mockedResult).total();
-        doReturn(this.nodes.subList(0, 5)).when(mockedResult).hits();
+        doReturn(this.messages.subList(0, 5)).when(mockedResult).hits();
         doReturn(mockedResult).when(mockedQuery).fetch(any(), any());
-        doReturn(mockedQuery).when(this.atonMessageService).searchSNodesQuery(any(), any());
+        doReturn(mockedQuery).when(this.atonMessageService).getSearchMessageQueryByText(any(), any());
 
         // Perform the service call
         DtPage<AtonMessage> result = this.atonMessageService.handleDatatablesPagingRequest(dtPagingRequest);
@@ -350,7 +359,7 @@ class AtonMessageServiceTest {
 
         // Test each of the result entries
         for(int i=0; i < result.getRecordsFiltered(); i++){
-            assertEquals(this.nodes.get(i), result.getData().get(i));
+            assertEquals(this.messages.get(i), result.getData().get(i));
         }
     }
 

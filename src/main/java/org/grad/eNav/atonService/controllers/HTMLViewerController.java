@@ -16,8 +16,7 @@
 
 package org.grad.eNav.atonService.controllers;
 
-import org.grad.eNav.atonService.models.domain.SNodeType;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.grad.eNav.atonService.models.domain.AtonMessageType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -83,7 +82,7 @@ public class HTMLViewerController {
      */
     @GetMapping("/index")
     public String index(Model model) {
-        model.addAttribute("endpoints", Arrays.stream(SNodeType.values())
+        model.addAttribute("endpoints", Arrays.stream(AtonMessageType.values())
                 .map(type -> String.format("%s", type.name()))
                 .collect(Collectors.toList()));
 

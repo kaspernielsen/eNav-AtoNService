@@ -22,14 +22,16 @@ import org.grad.eNav.atonService.models.dtos.datatables.DtPage;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.services.AtonMessageService;
 import org.grad.eNav.atonService.utils.HeaderUtil;
+import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,18 +54,22 @@ public class AtonMessageController {
     /**
      * GET /api/messages : Returns a paged list of all current AtoN messages.
      *
-     * @param page the page number to be retrieved
-     * @param size the number of entries on each page
+     * @param uid the AtoN message UID
+     * @param geometry the geometry for AtoN message filtering
+     * @param startDate the start date for AtoN message filtering
+     * @param endDate the end date for AtoN message filtering
+     * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
     @ResponseStatus
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<AtonMessage>> getNodes(@RequestParam("page") Optional<Integer> page,
-                                                      @RequestParam("size") Optional<Integer> size) {
-        log.debug("REST request to get page of Stations");
-        int currentPage = page.orElse(1);
-        int pageSize = size.orElse(10);
-        Page<AtonMessage> nodePage = this.atonMessageService.findAll(PageRequest.of(currentPage - 1, pageSize));
+    public ResponseEntity<List<AtonMessage>> getMessages(@RequestParam("uid") Optional<String> uid,
+                                                         @RequestParam("geometry") Optional<Geometry> geometry,
+                                                         @RequestParam("startDate") Optional<Date> startDate,
+                                                         @RequestParam("endDate") Optional<Date> endDate,
+                                                         Pageable pageable) {
+        log.debug("REST request to get page of message");
+        Page<AtonMessage> nodePage = this.atonMessageService.findAll(uid, geometry, pageable);
         return ResponseEntity.ok()
                 .body(nodePage.getContent());
     }
@@ -75,8 +81,8 @@ public class AtonMessageController {
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DtPage<AtonMessage>> getNodesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
-        log.debug("REST request to get page of Stations for datatables");
+    public ResponseEntity<DtPage<AtonMessage>> getMessagesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
+        log.debug("REST request to get page of message for datatables");
         return ResponseEntity.ok()
                 .body(this.atonMessageService.handleDatatablesPagingRequest(dtPagingRequest));
     }
@@ -88,8 +94,8 @@ public class AtonMessageController {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> deleteNode(@PathVariable BigInteger id) {
-        log.debug("REST request to delete Station Node : {}", id);
+    public ResponseEntity<Void> deleteMessage(@PathVariable BigInteger id) {
+        log.debug("REST request to delete message : {}", id);
         this.atonMessageService.delete(id);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("node", id.toString()))
@@ -103,8 +109,8 @@ public class AtonMessageController {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping(value = "/uid/{uid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> deleteNodeByUid(@PathVariable String uid) {
-        log.debug("REST request to delete Station Node by UID : {}", uid);
+    public ResponseEntity<Void> deleteMessageByUid(@PathVariable String uid) {
+        log.debug("REST request to delete message by UID : {}", uid);
         // First translate the UID into a station node ID
         this.atonMessageService.deleteByUid(uid);
         return ResponseEntity.ok()

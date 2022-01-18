@@ -19,7 +19,7 @@ package org.grad.eNav.atonService.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.AtonMessage;
-import org.grad.eNav.atonService.models.domain.SNodeType;
+import org.grad.eNav.atonService.models.domain.AtonMessageType;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.services.AtonMessageService;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,7 +89,7 @@ class AtonMessageControllerTest {
             AtonMessage node = new AtonMessage();
             node.setId(BigInteger.valueOf(i));
             node.setUid("UID" + i);
-            node.setType(SNodeType.S125);
+            node.setType(AtonMessageType.S125);
             node.setMessage("Node Message No" + i);
             this.atonMessages.add(node);
         }
@@ -101,7 +101,7 @@ class AtonMessageControllerTest {
         existingMessage = new AtonMessage();
         existingMessage.setId(BigInteger.valueOf(1));
         existingMessage.setUid("UID1");
-        existingMessage.setType(SNodeType.S125);
+        existingMessage.setType(AtonMessageType.S125);
         existingMessage.setMessage("Node Message");
     }
 
@@ -113,7 +113,7 @@ class AtonMessageControllerTest {
     void testGetAllNodes() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<AtonMessage> page = new PageImpl<>(this.atonMessages.subList(0, 5), this.pageable, this.atonMessages.size());
-        doReturn(page).when(this.atonMessageService).findAll(any());
+        doReturn(page).when(this.atonMessageService).findAll(any(), any(), any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/messages"))

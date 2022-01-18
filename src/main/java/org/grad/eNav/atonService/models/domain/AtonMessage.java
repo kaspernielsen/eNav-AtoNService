@@ -16,16 +16,16 @@
 
 package org.grad.eNav.atonService.models.domain;
 
-import org.grad.eNav.atonService.models.dtos.S124Node;
 import org.grad.eNav.atonService.models.dtos.S125Node;
+import org.grad.eNav.atonService.utils.GeometryBinder;
+import org.grad.eNav.atonService.utils.S100Utils;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.ScaledNumberField;
+import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
+import org.locationtech.jts.geom.Geometry;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -43,7 +43,7 @@ import java.util.Objects;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
-@Table(name = "node")
+@Table(name = "aton_message")
 @Cacheable
 @Indexed
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -65,8 +65,13 @@ public class AtonMessage {
     @NotNull
     @Enumerated(EnumType.STRING)
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
-    @Column(name = "type", columnDefinition = "varchar(30) default 'S_125'")
-    private SNodeType type;
+    @Column(name = "type", columnDefinition = "varchar(30) default 'S125'")
+    private AtonMessageType type;
+
+    @NotNull
+    @NonStandardField(valueBinder = @ValueBinderRef(type = GeometryBinder.class))
+    @Column(name = "geometry")
+    private Geometry geometry;
 
     @NotNull
     @Type(type="text")
@@ -83,14 +88,18 @@ public class AtonMessage {
     }
 
     /**
-     * Instantiates a new AtoN Message using an S125 object.
+     * Instantiates a new AtoN message.
      *
-     * @param s125Node the s125 node object
+     * @param uid      the uid
+     * @param type     the type
+     * @param geometry the geometry
+     * @param message  the message
      */
-    public AtonMessage(S125Node s125Node) {
-        this.uid = s125Node.getAtonUID();
-        this.type = SNodeType.S125;
-        this.message = s125Node.getContent();
+    public AtonMessage(String uid, AtonMessageType type, Geometry geometry, String message) {
+        this.uid = uid;
+        this.type = type;
+        this.geometry = geometry;
+        this.message = message;
     }
 
     /**
@@ -134,7 +143,7 @@ public class AtonMessage {
      *
      * @return the type
      */
-    public SNodeType getType() {
+    public AtonMessageType getType() {
         return type;
     }
 
@@ -143,8 +152,26 @@ public class AtonMessage {
      *
      * @param type the type
      */
-    public void setType(SNodeType type) {
+    public void setType(AtonMessageType type) {
         this.type = type;
+    }
+
+    /**
+     * Gets geometry.
+     *
+     * @return the geometry
+     */
+    public Geometry getGeometry() {
+        return geometry;
+    }
+
+    /**
+     * Sets geometry.
+     *
+     * @param geometry the geometry
+     */
+    public void setGeometry(Geometry geometry) {
+        this.geometry = geometry;
     }
 
     /**

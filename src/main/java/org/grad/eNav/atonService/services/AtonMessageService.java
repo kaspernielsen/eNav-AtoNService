@@ -17,24 +17,19 @@
 package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.*;
 import org.apache.lucene.spatial.prefix.RecursivePrefixTreeStrategy;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.exceptions.InvalidRequestException;
 import org.grad.eNav.atonService.models.domain.AtonMessage;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPage;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.AtonMessageRepo;
 import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
@@ -52,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityManager;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -108,9 +104,19 @@ public class AtonMessageService {
      * @return the list of AtoN messages
      */
     @Transactional(readOnly = true)
-    public Page<AtonMessage> findAll(Pageable pageable) {
-        log.debug("Request to get all AtoN messages in a pageable search");
-        return this.sNodeRepo.findAll(pageable);
+    public Page<AtonMessage> findAll(Optional<String> uid,
+                                     Optional<Geometry> geometry,
+                                     Pageable pageable) {
+        log.debug("Request to get AtoN messages in a pageable search");
+        // Create the search query - always sort by name
+        SearchQuery searchQuery = this.getMessageSearchQuery(uid, geometry, new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true)));
+
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
+                .map(searchResult -> new PageImpl<AtonMessage>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
+
     }
 
     /**
@@ -198,12 +204,12 @@ public class AtonMessageService {
     @Transactional(readOnly = true)
     public DtPage<AtonMessage> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
-        SearchQuery searchQuery = this.searchSNodesQuery(
+        SearchQuery searchQuery = this.getSearchMessageQueryByText(
                 dtPagingRequest.getSearch().getValue(),
                 dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort))
         );
 
-        // For some reason we need this casting otherwise JDK8 complains
+        // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
                 .map(searchResult -> new PageImpl<AtonMessage>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
@@ -224,42 +230,50 @@ public class AtonMessageService {
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<AtonMessage> searchSNodesQuery(String searchText, Sort sort) {
+    protected SearchQuery<AtonMessage> getSearchMessageQueryByText(String searchText, Sort sort) {
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<AtonMessage> scope = searchSession.scope( AtonMessage.class );
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
-                .where( scope.predicate().wildcard()
+                .where(f -> f.wildcard()
                         .fields( this.searchFields )
-                        .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
-                        .toPredicate() )
+                        .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" ))
                 .sort(f -> f.fromLuceneSort(sort))
                 .toQuery();
     }
 
     /**
-     * Creates a Lucene query based on the query string provided. The query
-     * string should follow the Lucene query syntax.
+     * Constructs a hibernate search query using Lucene based on the provided
+     * AtoN UID and geometry. This query will be based solely on the aton
+     * messages table and will include the following fields:
+     * - UID
+     * - Geometry
+     * For any more elaborate search, the getSearchMessageQueryByText funtion
+     * can be used.
      *
-     * @param queryString   The query string that follows the Lucene query syntax
-     * @return The Lucene query constructed
+     * @param uid the AtoN UID to be searched
+     * @param geometry the geometry that the results should intersect with
+     * @param sort the sorting selection for the search query
+     * @return the full text query
      */
-    protected Query createLuceneQuery(String queryString) {
-        // First parse the input string to make sure it's right
-        MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, new StandardAnalyzer());
-        parser.setDefaultOperator( QueryParser.Operator.AND );
-        return Optional.ofNullable(queryString)
-                .filter(StringUtils::isNotBlank)
-                .map(q -> {
-                    try {
-                        return parser.parse(q);
-                    } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
-                        this.log.error(ex.getMessage());
-                        throw new InvalidRequestException(ex.getMessage());
-                    }
-                })
-                .orElse(null);
+    protected SearchQuery<AtonMessage> getMessageSearchQuery(Optional<String> uid, Optional<Geometry> geometry, Sort sort) {
+        // Then build and return the hibernate-search query
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<AtonMessage> scope = searchSession.scope( AtonMessage.class );
+        return searchSession.search( scope )
+                .where( f -> f.bool(b -> {
+                            b.must(f.matchAll());
+                            uid.ifPresent(v -> b.must(f.match()
+                                    .field("uid")
+                                    .matching(v)));
+                            geometry.ifPresent(g-> geometry.map(this::createGeoSpatialQuery)
+                                    .map(f.extension(LuceneExtension.get())::fromLuceneQuery));
+                        })
+                )
+                .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
+                .toQuery();
     }
+
 
     /**
      * Creates a Lucene geo-spatial query based on the provided geometry. The
@@ -272,7 +286,7 @@ public class AtonMessageService {
     protected Query createGeoSpatialQuery(Geometry geometry) {
         // Initialise the spatial strategy
         JtsSpatialContext ctx = JtsSpatialContext.GEO;
-        int maxLevels = 12; //results in sub-meter precision for geohash
+        int maxLevels = 12; //results in sub-meter precision for geo-hash
         SpatialPrefixTree grid = new GeohashPrefixTree(ctx, maxLevels);
         RecursivePrefixTreeStrategy strategy = new RecursivePrefixTreeStrategy(grid,"geometry");
 
