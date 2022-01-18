@@ -17,16 +17,15 @@
 package org.grad.eNav.atonService.models.domain;
 
 /**
- * The SNode Type Enum.
+ * The AtoN Message Type Enum.
  * <p></p>
- * This enumeration defines the types of stations nodes supported by the
+ * This enumeration defines the types of AtoN message types supported by the
  * AtoN Service microservice. Although the service is primarily for
  * controlling the S125 AtoN entries, there is no reason we cannot support
  * any S-100/S-200 IALA product specification.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public enum SNodeType {
-    S124,
+public enum AtonMessageType {
     S125
 }

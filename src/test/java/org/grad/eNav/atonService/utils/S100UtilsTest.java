@@ -24,11 +24,14 @@ import _net.opengis.gml.profiles.BoundingShapeType;
 import _net.opengis.gml.profiles.EnvelopeType;
 import _net.opengis.gml.profiles.Pos;
 import org.apache.commons.io.IOUtils;
+import org.grad.eNav.atonService.models.domain.AtonMessage;
+import org.grad.eNav.atonService.models.domain.AtonMessageType;
 import org.grad.eNav.atonService.models.dtos.S125Node;
-import org.grad.vdes1000.ais.messages.AISMessage21;
-import org.grad.vdes1000.generic.AtonType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.core.io.ClassPathResource;
 
 import javax.xml.bind.JAXBElement;
@@ -39,14 +42,15 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class S100UtilsTest {
 
     // Test Variables
     private DataSet dataset;
     private String datasetXml;
+    private GeometryFactory factory;
 
     /**
      * Common setup for all the tests.
@@ -100,6 +104,9 @@ class S100UtilsTest {
         MemberType memberType = new MemberType();
         memberType.setAbstractFeature(jaxbElement);
         this.dataset.getMembersAndImembers().add(memberType);
+
+        // Create a temp geometry factory to get a test geometries
+        this.factory = new GeometryFactory(new PrecisionModel(), 4326);
     }
 
     /**
@@ -154,106 +161,59 @@ class S100UtilsTest {
     public static final String S125_NO_3_CONTENT = "<S125:DataSet xmlns:S125=\"http://www.iho.int/S125/gml/0.1\" xmlns:S100=\"http://www.iho.int/s100gml/1.0\" xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" gml:id=\"aton.uk.test_aton_no_3\" xsi:schemaLocation=\"http://www.iho.int/S125/gml/1.0 S125.xsd\"><gml:boundedBy><gml:Envelope srsName=\"EPSG:4326\"><gml:lowerCorner>53.61 1.594</gml:lowerCorner><gml:upperCorner>53.61 1.594</gml:upperCorner></gml:Envelope></gml:boundedBy><member><S125:S125_NavAidStructure><featureName><displayName>true</displayName><language>eng</language><name>Test AtoN No 3</name></featureName><geometry><S100:pointProperty><S100:Point gml:id=\"G.aton.uk.test_aton_no_3.1\" srsName=\"EPSG:4326\"><gml:pos>53.61 1.594</gml:pos></S100:Point></S100:pointProperty></geometry><mmsi>123456789</mmsi><length>4</length><width>4</width><atonType>Port hand Mark</atonType><deploymentType>Mobile</deploymentType><raimFlag>false</raimFlag><vatonFlag>false</vatonFlag></S125:S125_NavAidStructure></member></S125:DataSet>";
 
     /**
-     * Test that the AIS Message 21 will be constructed by default with
-     * empty parameters.
+     * Test that we can correctly parse an incoming S125 dataset and construct
+     * the domain-level AtoN message (first variant).
      */
     @Test
-    public void testEmptyConstructor() {
-        AISMessage21 aisMessage21 = new AISMessage21();
-        assertNull(aisMessage21.getMmsi());
-        assertEquals(AtonType.DEFAULT, aisMessage21.getAtonType());
-        assertEquals("", aisMessage21.getName());
-        assertEquals(0.0, aisMessage21.getLatitude());
-        assertEquals(0.0, aisMessage21.getLongitude());
-        assertEquals(0, aisMessage21.getLength());
-        assertEquals(0, aisMessage21.getWidth());
-        assertEquals(Boolean.FALSE, aisMessage21.getRaim());
-        assertEquals(Boolean.FALSE, aisMessage21.getVaton());
-    }
-
-    /**
-     * Test that by using the S125Node constructor, all parameters will be
-     * correctly picked up, for a test Virtual AtoN.
-     */
-    @Test
-    public void testS125NodeConstructorNo1() throws JAXBException {
+    public void testToAtonMessage1() {
         // Create an S125Node message
         S125Node node = new S125Node("aton.uk.test_aton_no_1", null, S125_NO_1_CONTENT);
 
-        // Create the GR-AIS Message 21
-        AISMessage21 msgParams = S100Utils.s125ToAisMessage21(node);
+        // Create the local AtoN message
+        AtonMessage atonMessage = S100Utils.toAtonMessage(node);
 
         // Assert that all variables have been initialised correctly
-        assertEquals(123456789, msgParams.getMmsi());
-        assertEquals(AtonType.SPECIAL_MARK, msgParams.getAtonType());
-        assertEquals("Test AtoN No 1", msgParams.getName());
-        assertEquals(53.61, msgParams.getLatitude());
-        assertEquals(1.594, msgParams.getLongitude());
-        assertEquals(0, msgParams.getLength());
-        assertEquals(0, msgParams.getWidth());
-        assertEquals(Boolean.FALSE, msgParams.getRaim());
-        assertEquals(Boolean.TRUE, msgParams.getVaton());
+        assertEquals("aton.uk.test_aton_no_1", atonMessage.getUid());
+        assertEquals(AtonMessageType.S125, atonMessage.getType());
+        assertEquals(factory.createPoint(new Coordinate(1.594, 53.61)), atonMessage.getGeometry());
+        assertEquals(node.getContent(), atonMessage.getMessage());
     }
 
     /**
-     * Test that by using the S125Node constructor, all parameters will be
-     * correctly picked up, for a different Virtual AtoN.
+     * Test that we can correctly parse an incoming S125 dataset and construct
+     * the domain-level AtoN message (second variant).
      */
     @Test
-    public void testS125NodeConstructorNo2() throws JAXBException {
+    public void testToAtonMessage2() {
         // Create an S125Node message
         S125Node node = new S125Node("aton.uk.test_aton_no_2", null, S125_NO_2_CONTENT);
 
-        // Create the GR-AIS Message 21
-        AISMessage21 aisMessage21 = S100Utils.s125ToAisMessage21(node);
+        // Create the local AtoN message
+        AtonMessage atonMessage = S100Utils.toAtonMessage(node);
 
         // Assert that all variables have been initialised correctly
-        assertEquals(111111111, aisMessage21.getMmsi());
-        assertEquals(AtonType.NORTH_CARDINAL, aisMessage21.getAtonType());
-        assertEquals("Test AtoN No 2", aisMessage21.getName());
-        assertEquals(1.594, aisMessage21.getLatitude());
-        assertEquals(53.61, aisMessage21.getLongitude());
-        assertEquals(0, aisMessage21.getLength());
-        assertEquals(0, aisMessage21.getWidth());
-        assertEquals(Boolean.FALSE, aisMessage21.getRaim());
-        assertEquals(Boolean.TRUE, aisMessage21.getVaton());
+        assertEquals("aton.uk.test_aton_no_2", atonMessage.getUid());
+        assertEquals(AtonMessageType.S125, atonMessage.getType());
+        assertEquals(factory.createPoint(new Coordinate(53.61,1.594)), atonMessage.getGeometry());
+        assertEquals(node.getContent(), atonMessage.getMessage());
     }
 
     /**
-     * Test that by using the S125Node constructor, all parameters will be
-     * correctly picked up, for a real AtoN.
+     * Test that we can correctly parse an incoming S125 dataset and construct
+     * the domain-level AtoN message (third variant).
      */
     @Test
-    public void testS125NodeConstructorNo3() throws JAXBException {
+    public void testToAtonMessage3() {
         // Create an S125Node message
         S125Node node = new S125Node("aton.uk.test_aton_no_3", null, S125_NO_3_CONTENT);
 
-        // Create the GR-AIS Message 21 Parameters
-        AISMessage21 aisMessage21 = S100Utils.s125ToAisMessage21(node);
+        // Create the local AtoN message
+        AtonMessage atonMessage = S100Utils.toAtonMessage(node);
 
         // Assert that all variables have been initialised correctly
-        assertEquals(123456789, aisMessage21.getMmsi());
-        assertEquals(AtonType.PORT_HAND_MARK, aisMessage21.getAtonType());
-        assertEquals("Test AtoN No 3", aisMessage21.getName());
-        assertEquals(53.61, aisMessage21.getLatitude());
-        assertEquals(1.594, aisMessage21.getLongitude());
-        assertEquals(4, aisMessage21.getLength());
-        assertEquals(4, aisMessage21.getWidth());
-        assertEquals(Boolean.FALSE, aisMessage21.getRaim());
-        assertEquals(Boolean.FALSE, aisMessage21.getVaton());
+        assertEquals("aton.uk.test_aton_no_3", atonMessage.getUid());
+        assertEquals(AtonMessageType.S125, atonMessage.getType());
+        assertEquals(factory.createPoint(new Coordinate(1.594, 53.61)), atonMessage.getGeometry());
+        assertEquals(node.getContent(), atonMessage.getMessage());
     }
-
-    /**
-     * Test that by using the S125Node constructor, if it fails, a JAXBException
-     * will be thrown.
-     */
-    @Test
-    public void testS125NodeConstructorFails() {
-        // Create an S125Node message
-        S125Node node = new S125Node("aton.uk.test_aton_no_1", null, "Erroneous Content");
-
-        // Create the GR-AIS Message 21 Parameters and see it fail
-        assertThrows(JAXBException.class, () -> S100Utils.s125ToAisMessage21(node));
-    }
-
 }

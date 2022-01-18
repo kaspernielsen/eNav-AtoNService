@@ -18,8 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.IOUtils;
-import org.grad.eNav.atonService.models.PubSubMsgHeaders;
-import org.grad.eNav.atonService.models.domain.SNodeType;
+import org.grad.eNav.atonService.models.domain.AtonMessageType;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.utils.GeoJSONUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -123,7 +122,7 @@ class S125WebSocketServiceTest {
     void testHandleS125Message() throws IOException {
         // Create a message to be handled
         Message message = Optional.of(this.s125Node).map(MessageBuilder::withPayload)
-                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SNodeType.S125))
+                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, AtonMessageType.S125))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -148,7 +147,7 @@ class S125WebSocketServiceTest {
     void testHandleStringMessage() throws IOException {
         // Create a message to be handled
         Message message = Optional.of("This is a simple message").map(MessageBuilder::withPayload)
-                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SNodeType.S125))
+                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, AtonMessageType.S125))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -172,7 +171,7 @@ class S125WebSocketServiceTest {
     void testHandleMessageWrongPayload() throws IOException {
         // Change the message content type to something else
         Message message = Optional.of(Integer.MAX_VALUE).map(MessageBuilder::withPayload)
-                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SNodeType.S125))
+                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, AtonMessageType.S125))
                 .map(MessageBuilder::build)
                 .orElse(null);
 

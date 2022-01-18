@@ -29,6 +29,7 @@ import org.grad.eNav.atonService.models.domain.AtonMessage;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AtonMessageService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
+import org.grad.eNav.atonService.utils.S100Utils;
 import org.locationtech.geomesa.kafka.utils.KafkaFeatureEvent;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,7 +102,7 @@ public class S125GDSListener implements FeatureListener {
         Optional.ofNullable(this.featureSource).ifPresent(fs -> fs.addFeatureListener(this));
 
         // Log an information message
-        log.info(String.format("Initialised AtoN listener for area: %s",
+        log.info(String.format("Initialised AtoN message listener for area: %s",
                  GeometryJSONConverter.convertFromGeometry(geometry)));
     }
 
@@ -111,7 +112,7 @@ public class S125GDSListener implements FeatureListener {
      */
     @PreDestroy
     public void destroy() {
-        log.info("AtoN Data Listener is shutting down...");
+        log.info("AtoN message Listener is shutting down...");
         this.featureSource.removeFeatureListener(this);
     }
 
@@ -152,7 +153,7 @@ public class S125GDSListener implements FeatureListener {
                     .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, this.geomesaData.getTypeName()))
                     .map(MessageBuilder::build)
                     .forEach(msg -> {
-                        this.saveSNode(msg.getPayload());
+                        this.saveAtonMessage(msg.getPayload());
                         this.publishSubscribeChannel.send(msg);
                     });
         }
@@ -179,22 +180,26 @@ public class S125GDSListener implements FeatureListener {
      * @param s125Node  the S125Node to be saved
      */
     @Transactional
-    protected void saveSNode(S125Node s125Node){
-        // Create a new SNode entry
-        AtonMessage atonMessage = Optional.of(s125Node)
-                .map(S125Node::getAtonUID)
-                .map(uid -> {
-                    try {
-                        return this.atonMessageService.findOneByUid(uid);
-                    } catch(DataNotFoundException ex) {
-                        return null;
-                    }
+    protected void saveAtonMessage(S125Node s125Node){
+        // Create or update the AtoN message entry
+        Optional.of(s125Node)
+                .map(S100Utils::toAtonMessage)
+                .map(msg -> {
+                    // Attempt to update if it already exists
+                    Optional.of(msg)
+                            .map(AtonMessage::getUid)
+                            .map(uid -> {
+                                try {
+                                    return this.atonMessageService.findOneByUid(uid);
+                                } catch (Exception ex) {
+                                    return null;
+                                }
+                            })
+                            .map(AtonMessage::getId)
+                            .ifPresent(msg::setId);
+                    return msg;
                 })
-                .orElseGet(() -> new AtonMessage(s125Node));
-        atonMessage.setMessage(s125Node.getContent());
-
-        // Save the SNode
-        this.atonMessageService.save(atonMessage);
+                .ifPresent(atonMessageService::save);
     }
 
 }

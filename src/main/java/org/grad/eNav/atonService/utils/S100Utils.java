@@ -20,26 +20,24 @@ import _int.iho.s100.gml.base._1_0.PointProperty;
 import _int.iho.s100.gml.base._1_0.PointType;
 import _int.iho.s100.gml.base._1_0_Ext.PointCurveSurfaceProperty;
 import _int.iho.s125.gml._0.*;
-import _net.opengis.gml.profiles.AbstractFeatureMemberType;
-import _net.opengis.gml.profiles.AbstractFeatureType;
-import _net.opengis.gml.profiles.Pos;
-import com.fasterxml.jackson.databind.JsonNode;
+import _net.opengis.gml.profiles.*;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.AtonMessage;
+import org.grad.eNav.atonService.models.domain.AtonMessageType;
 import org.grad.eNav.atonService.models.dtos.S100AbstractNode;
-import org.grad.eNav.atonService.models.dtos.S124Node;
 import org.grad.eNav.atonService.models.dtos.S125Node;
-import org.grad.vdes1000.ais.messages.AISMessage21;
-import org.grad.vdes1000.generic.AtonType;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 
 import javax.xml.bind.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.lang.Boolean;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 /**
  * The S-100 Utility Class.
@@ -102,7 +100,7 @@ public class S100Utils {
      * @param snode the SNode object to be translated to a DTO
      * @return the DTO generated from the provided SNode object
      */
-    public static S100AbstractNode toS100Dto(AtonMessage snode) {
+    public static AtonMessage toAtonMessage(S100AbstractNode snode) {
         // Sanity check
         if(Objects.isNull(snode)) {
             return null;
@@ -113,99 +111,62 @@ public class S100Utils {
 
         // Unmarshall the station node message  using the appropriate message time
         try {
-            switch (snode.getType()) {
-                case S125:
-                    dataset = S100Utils.unmarshallS125(snode.getMessage());
-                    break;
-                default:
-                    log.error("Unsupported S100 dataset translation operation detected...");
-                    return null;
+            if (S125Node.class.equals(snode.getClass())) {
+                dataset = S100Utils.unmarshallS125(snode.getContent());
+            } else {
+                log.error("Unsupported S100 dataset translation operation detected...");
+                return null;
             }
         } catch (JAXBException | NumberFormatException ex) {
             log.error(ex.getMessage());
             return null;
         }
 
-        // Find out the bounding box
-        final List<Double> point = dataset.getBoundedBy().getEnvelope().getLowerCorner().getValues();
-        final String crsName = dataset.getBoundedBy().getEnvelope().getSrsName();
-        final Integer srid = Optional.ofNullable(crsName).map(crs -> crs.split(":")[1]).map(Integer::valueOf).orElse(null);
-        final JsonNode  bbox = GeoJSONUtils.createGeoJSONPoint(point.get(1), point.get(0), srid);
+        // Setup a geometry factory based on the bounding box SRS
+        final Integer srid = Optional.ofNullable(dataset)
+                .map(AbstractFeatureType::getBoundedBy)
+                .map(BoundingShapeType::getEnvelope)
+                .map(EnvelopeType::getSrsName)
+                .map(crs -> crs.split(":")[1])
+                .map(Integer::valueOf)
+                .orElse(4326);
+        final GeometryFactory factory = new GeometryFactory(new PrecisionModel(), srid);
 
-        // Now construct the DTO based on the SNode type
-        switch (snode.getType()) {
-            case S124:
-                return new S124Node(snode.getUid(), bbox, snode.getMessage());
-            case S125:
-                return new S125Node(snode.getUid(), bbox, snode.getMessage());
-            default:
-                return null;
+        // Now construct the AtoN Message based on the node type
+        if (S125Node.class.equals(snode.getClass())) {
+            // Construct the geometry using the S125 Member NavAid Geometry
+            Geometry geometry = Optional.ofNullable(dataset)
+                    .filter(DataSet.class::isInstance)
+                    .map(DataSet.class::cast)
+                    .map(DataSet::getMembersAndImembers)
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .filter(MemberType.class::isInstance)
+                    .map(MemberType.class::cast)
+                    .map(MemberType::getAbstractFeature)
+                    .map(JAXBElement::getValue)
+                    .filter(S125NavAidStructureType.class::isInstance)
+                    .map(S125NavAidStructureType.class::cast)
+                    .map(S125NavAidStructureType::getGeometry)
+                    .map(PointCurveSurfaceProperty::getPointProperty)
+                    .map(PointProperty::getPoint)
+                    .map(PointType::getPos)
+                    .map(Pos::getValues)
+                    .map(pos -> new Coordinate(pos.get(1), pos.get(0)))
+                    .map(factory::createPoint)
+                    .findFirst()
+                    .orElse(null);
+            // Construct the AtoN message
+            return new AtonMessage(
+                    S125Node.class.cast(snode).getAtonUID(),
+                    AtonMessageType.S125,
+                    geometry,
+                    snode.getContent());
+        } else {
+            // Nothing to return
+            return null;
         }
-    }
 
-    /**
-     * Constructors from an S125Node object.
-     *
-     * @param s125Node the S125Node object
-     * @throws JAXBException when the S125Node XML content cannot be parsed
-     */
-    public static AISMessage21 s125ToAisMessage21(S125Node s125Node) throws JAXBException {
-        // Default at first
-        AISMessage21 aisMessage21 = new AISMessage21();
-
-        // Try to unmarshall the S125Node object
-        DataSet dataset = unmarshallS125(s125Node.getContent());
-
-        // Extract the S125 Member NavAid Information
-        Optional.ofNullable(dataset)
-                .map(DataSet::getMembersAndImembers)
-                .filter(((Predicate<List<AbstractFeatureMemberType>>) List::isEmpty).negate())
-                .map(l -> l.get(0))
-                .filter(MemberType.class::isInstance)
-                .map(MemberType.class::cast)
-                .map(MemberType::getAbstractFeature)
-                .map(JAXBElement::getValue)
-                .filter(S125NavAidStructureType.class::isInstance)
-                .map(S125NavAidStructureType.class::cast)
-                .ifPresent(navAid -> {
-                    Optional.of(dataset)
-                            .map(DataSet::getId)
-                            .ifPresent(aisMessage21::setUid);
-                    Optional.of(navAid)
-                            .map(S125NavAidStructureType::getFeatureName)
-                            .map(S125FeatureNameType::getName)
-                            .ifPresent(aisMessage21::setName);
-                    Optional.of(navAid).
-                            map(S125NavAidStructureType::getAtonType)
-                            .map(S125AtonType::value)
-                            .map(AtonType::fromString)
-                            .ifPresent(aisMessage21::setAtonType);
-                    Optional.of(navAid)
-                            .map(S125NavAidStructureType::getGeometry)
-                            .map(PointCurveSurfaceProperty::getPointProperty)
-                            .map(PointProperty::getPoint)
-                            .map(PointType::getPos)
-                            .map(Pos::getValues)
-                            .map(list -> list.get(0))
-                            .ifPresent(aisMessage21::setLatitude);
-                    Optional.of(navAid)
-                            .map(S125NavAidStructureType::getGeometry)
-                            .map(PointCurveSurfaceProperty::getPointProperty)
-                            .map(PointProperty::getPoint)
-                            .map(PointType::getPos)
-                            .map(Pos::getValues)
-                            .map(list -> list.get(1))
-                            .ifPresent(aisMessage21::setLongitude);
-                    aisMessage21.setMmsi(navAid.getMmsi());
-                    aisMessage21.setLength(navAid.isVatonFlag() ? 0 : Math.round(Optional.ofNullable(navAid.getLength()).orElse(0)));
-                    aisMessage21.setWidth(navAid.isVatonFlag() ? 0 : Math.round(Optional.ofNullable(navAid.getWidth()).orElse(0)));
-                    aisMessage21.setRaim(navAid.isRaimFlag());
-                    aisMessage21.setVaton(navAid.isVatonFlag());
-                    aisMessage21.setTimestamp(LocalDateTime.now());
-                });
-
-        //Return the populated AIS message
-        return aisMessage21;
     }
 
 }

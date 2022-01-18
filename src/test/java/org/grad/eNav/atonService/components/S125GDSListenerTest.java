@@ -25,6 +25,7 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FidFilterImpl;
 import org.geotools.filter.text.cql2.CQLException;
 import org.grad.eNav.atonService.models.GeomesaS125;
+import org.grad.eNav.atonService.models.domain.AtonMessage;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AtonMessageService;
 import org.grad.eNav.atonService.utils.GeoJSONUtils;
@@ -188,16 +189,17 @@ class S125GDSListenerTest {
         this.s125GDSListener.changed(featureEvent);
 
         // Verify that our message was saved and sent
+        verify(this.atonMessageService, times(1)).save(any(AtonMessage.class));
         verify(publishSubscribeChannel, times(1)).send(any(Message.class));
     }
 
     /**
      * Test that the S125 Geomesa Listener can correctly handle the incoming
      * S125 Geomesa change events, but it will not act on them if the fall
-     * outside the station's coverage area.
+     * outside the listeners's coverage area.
      */
     @Test
-    void testListenToEventsChangedOutsideStationArea() throws IOException {
+    void testListenToEventsChangedOutsideListenerArea() throws IOException {
         // Change the stations coverage area
         this.geometry = geometryFactory.createPolygon(new Coordinate[] {
                 new Coordinate(-0, -0),
@@ -219,7 +221,9 @@ class S125GDSListenerTest {
         this.s125GDSListener.changed(featureEvent);
 
         // Verify that our message was not saved or sent
-        verify(publishSubscribeChannel, never()).send(any(Message.class));
+        verify(this.atonMessageService, never()).save(any(AtonMessage.class));
+        verify(this.publishSubscribeChannel, never()).send(any(Message.class));
+
     }
 
     /**

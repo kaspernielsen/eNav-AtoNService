@@ -25,7 +25,7 @@ import java.util.Objects;
  * The S-100 Node Abstract Class
  *
  * This class implements an abstract object suitable for most S-100 extensions
- * like S-124 and S-125. It will contain a generic representation of the object
+ * like S-125 and S-201. It will contain a generic representation of the object
  * like a bounding box and the XML object representation.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
