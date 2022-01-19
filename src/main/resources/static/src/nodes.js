@@ -7,29 +7,25 @@ var stationsNodesTable = undefined;
  * The Station Nodes Table Column Definitions
  * @type {Array}
  */
-var nodesColumnDefs = [{
-    data: "id",
-    title: "ID",
-    hoverMsg: "The Node ID",
-    placeholder: "The Node ID",
-    visible: false,
-    searchable: false
-}, {
-    data: "uid",
-    title: "UID",
-    hoverMsg: "The Node UID",
-    placeholder: "The Node UID"
+var nodesColumnDefs = [
+{
+    data: "atonUID",
+    title: "AtoN UID",
+    hoverMsg: "The S125 UID",
+    placeholder: "The S125 UID"
  }, {
-    data: "type",
-    title: "Type",
-    hoverMsg: "The Node Type",
-    placeholder: "The Node Type"
+     data: "bbox",
+     title: "Bounding Box",
+     hoverMsg: "The S125 Bounding Box",
+     placeholder: "The S125 Bounding Box",
+     visible: false,
+     searchable: false
  }, {
-    data: "message",
-    title: "Message",
+    data: "content",
+    title: "Content",
     type: "textarea",
-    hoverMsg: "The Node Content",
-    placeholder: "The Node Content",
+    hoverMsg: "The S125 Content",
+    placeholder: "The S125 Content",
     width: "70%",
     render: function (data, type, row) {
         return "<textarea style=\"width: 100%; max-height: 300px\" readonly>" + data + "</textarea>";
@@ -72,7 +68,7 @@ $(function () {
             selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
                 $.ajax({
                     type: 'DELETE',
-                    url: `./api/messages/${this.data()["id"]}`,
+                    url: `./api/messages/uid/${this.data()["atonUID"]}`,
                     success: success,
                     error: error
                 });

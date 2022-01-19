@@ -154,6 +154,7 @@ class AtonMessageServiceTest {
         Page<AtonMessage> result = this.atonMessageService.findAll(Optional.of("uid"), Optional.empty(), pageable);
 
         // Test the result
+        assertNotNull(result);
         assertEquals(5, result.getSize());
 
         // Test each of the result entries
@@ -351,15 +352,15 @@ class AtonMessageServiceTest {
         doReturn(mockedQuery).when(this.atonMessageService).getSearchMessageQueryByText(any(), any());
 
         // Perform the service call
-        DtPage<AtonMessage> result = this.atonMessageService.handleDatatablesPagingRequest(dtPagingRequest);
+        Page<AtonMessage> result = this.atonMessageService.handleDatatablesPagingRequest(dtPagingRequest);
 
         // Validate the result
         assertNotNull(result);
-        assertEquals(5, result.getRecordsFiltered());
+        assertEquals(5, result.getSize());
 
         // Test each of the result entries
-        for(int i=0; i < result.getRecordsFiltered(); i++){
-            assertEquals(this.messages.get(i), result.getData().get(i));
+        for(int i=0; i < result.getSize(); i++){
+            assertEquals(this.messages.get(i), result.getContent().get(i));
         }
     }
 

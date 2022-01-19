@@ -17,6 +17,7 @@
 package org.grad.eNav.atonService;
 
 import org.geotools.data.DataStore;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -34,6 +35,17 @@ import static org.mockito.Mockito.mock;
 @Profile("test")
 @Configuration
 public class TestConfiguration {
+
+	/**
+	 * The Model Mapper Bean.
+	 *
+	 * @return  the model mapper bean.
+	 */
+	@Bean
+	public ModelMapper modelMapper() {
+		return new ModelMapper();
+	}
+
 
 	/**
 	 * Feign depends on the Eureka Registration Listener bean so let's mock one

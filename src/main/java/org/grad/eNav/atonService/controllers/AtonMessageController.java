@@ -17,10 +17,13 @@
 package org.grad.eNav.atonService.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.AtonMessage;
+import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPage;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.services.AtonMessageService;
+import org.grad.eNav.atonService.utils.GeometryJSONConverter;
 import org.grad.eNav.atonService.utils.HeaderUtil;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,9 +33,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -52,6 +55,26 @@ public class AtonMessageController {
     AtonMessageService atonMessageService;
 
     /**
+     * Object Mapper from Domain to DTO.
+     */
+    @Autowired
+    DomainDtoMapper<AtonMessage, S125Node> atonMessageToS125Mapper;
+
+    /**
+     * Setup up addition model mapper configurations.
+     */
+    @PostConstruct
+    void setup() {
+        this.atonMessageToS125Mapper.getModelMapper().createTypeMap(AtonMessage.class, S125Node.class)
+                .implicitMappings()
+                .addMapping(AtonMessage::getUid, S125Node::setAtonUID)
+                .addMappings(mapper -> mapper
+                        .using(ctx -> GeometryJSONConverter.convertFromGeometry((Geometry) ctx.getSource()))
+                        .map(src-> src.getGeometry(), S125Node::setBbox))
+                .addMapping(AtonMessage::getMessage, S125Node::setContent);
+    }
+
+    /**
      * GET /api/messages : Returns a paged list of all current AtoN messages.
      *
      * @param uid the AtoN message UID
@@ -63,7 +86,7 @@ public class AtonMessageController {
      */
     @ResponseStatus
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<AtonMessage>> getMessages(@RequestParam("uid") Optional<String> uid,
+    public ResponseEntity<Page<S125Node>> getMessages(@RequestParam("uid") Optional<String> uid,
                                                          @RequestParam("geometry") Optional<Geometry> geometry,
                                                          @RequestParam("startDate") Optional<Date> startDate,
                                                          @RequestParam("endDate") Optional<Date> endDate,
@@ -71,7 +94,7 @@ public class AtonMessageController {
         log.debug("REST request to get page of message");
         Page<AtonMessage> nodePage = this.atonMessageService.findAll(uid, geometry, pageable);
         return ResponseEntity.ok()
-                .body(nodePage.getContent());
+                .body(this.atonMessageToS125Mapper.convertToPage(nodePage, S125Node.class));
     }
 
     /**
@@ -81,10 +104,10 @@ public class AtonMessageController {
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DtPage<AtonMessage>> getMessagesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
+    public ResponseEntity<DtPage<S125Node>> getMessagesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
         log.debug("REST request to get page of message for datatables");
         return ResponseEntity.ok()
-                .body(this.atonMessageService.handleDatatablesPagingRequest(dtPagingRequest));
+                .body(this.atonMessageToS125Mapper.convertToDtPage(this.atonMessageService.handleDatatablesPagingRequest(dtPagingRequest), dtPagingRequest, S125Node.class));
     }
 
     /**
