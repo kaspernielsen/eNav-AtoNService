@@ -34,6 +34,13 @@ public class S125Node extends S100AbstractNode {
     private String atonUID;
 
     /**
+     * Empty Constructor
+     */
+    public S125Node() {
+
+    }
+
+    /**
      * The Fully Populated  Constructor.
      *
      * @param atonUID       The AtoN UID

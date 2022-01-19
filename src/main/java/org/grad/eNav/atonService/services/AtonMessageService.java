@@ -202,7 +202,7 @@ public class AtonMessageService {
      * @return the Datatables paged response
      */
     @Transactional(readOnly = true)
-    public DtPage<AtonMessage> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+    public Page<AtonMessage> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
         SearchQuery searchQuery = this.getSearchMessageQueryByText(
                 dtPagingRequest.getSearch().getValue(),
@@ -213,9 +213,7 @@ public class AtonMessageService {
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
                 .map(searchResult -> new PageImpl<AtonMessage>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
-                .map(Page.class::cast)
-                .map(page -> new DtPage<>((Page<AtonMessage>)page, dtPagingRequest))
-                .orElseGet(DtPage::new);
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
     /**
