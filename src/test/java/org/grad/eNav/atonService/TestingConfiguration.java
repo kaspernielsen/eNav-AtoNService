@@ -17,10 +17,12 @@
 package org.grad.eNav.atonService;
 
 import org.geotools.data.DataStore;
+import org.grad.eNav.atonService.components.DomainDtoMapper;
+import org.grad.eNav.atonService.models.domain.AtonMessage;
+import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.modelmapper.ModelMapper;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 import javax.security.auth.message.config.RegistrationListener;
 
@@ -32,9 +34,8 @@ import static org.mockito.Mockito.mock;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Profile("test")
-@Configuration
-public class TestConfiguration {
+@TestConfiguration
+public class TestingConfiguration {
 
 	/**
 	 * The Model Mapper Bean.
@@ -46,6 +47,13 @@ public class TestConfiguration {
 		return new ModelMapper();
 	}
 
+	/**
+	 * AtoN message Mapper from Domain to DTO.
+	 */
+	@Bean
+	public DomainDtoMapper<AtonMessage, S125Node> atonMessageToS125Mapper() {
+		return new DomainDtoMapper<>();
+	}
 
 	/**
 	 * Feign depends on the Eureka Registration Listener bean so let's mock one
