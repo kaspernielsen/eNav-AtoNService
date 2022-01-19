@@ -16,10 +16,13 @@
 
 package org.grad.eNav.atonService.controllers;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.AtonMessage;
 import org.grad.eNav.atonService.models.domain.AtonMessageType;
+import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.services.AtonMessageService;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.openfeign.support.PageJacksonModule;
+import org.springframework.cloud.openfeign.support.SortJacksonModule;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +45,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,6 +58,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ActiveProfiles("test")
 @WebMvcTest(controllers = AtonMessageController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@Import(TestingConfiguration.class)
 class AtonMessageControllerTest {
 
     /**
@@ -83,6 +89,10 @@ class AtonMessageControllerTest {
      */
     @BeforeEach
     void setUp() {
+        // Allow the object mapper to deserialize pages
+        this.objectMapper.registerModule(new PageJacksonModule());
+        this.objectMapper.registerModule(new SortJacksonModule());
+
         // Initialise the station nodes list
         this.atonMessages = new ArrayList<>();
         for(long i=0; i<10; i++) {
@@ -122,8 +132,14 @@ class AtonMessageControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        AtonMessage[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), AtonMessage[].class);
-        assertEquals(5, Arrays.asList(result).size());
+        Page<S125Node> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        assertEquals(page.getSize(), result.getContent().size());
+
+        // Validate the entries one by one
+        for(int i=0; i< page.getSize(); i++) {
+            assertEquals(page.getContent().get(i).getUid(), result.getContent().get(i).getAtonUID());
+            assertEquals(page.getContent().get(i).getMessage(), result.getContent().get(i).getContent());
+        }
     }
 
     /**
@@ -147,15 +163,9 @@ class AtonMessageControllerTest {
         dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
         dtPagingRequest.setColumns(Collections.singletonList(dtColumn));
 
-        // Create a mocked datatables paging response
-        DtPage<AtonMessage> dtPage = new DtPage<>();
-        dtPage.setData(this.atonMessages);
-        dtPage.setDraw(1);
-        dtPage.setRecordsFiltered(this.atonMessages.size());
-        dtPage.setRecordsTotal(this.atonMessages.size());
-
-        // Mock the service call for creating a new instance
-        doReturn(dtPage).when(this.atonMessageService).handleDatatablesPagingRequest(any());
+        // Created a result page to be returned by the mocked service
+        Page<AtonMessage> page = new PageImpl<>(this.atonMessages.subList(0, 5), this.pageable, this.atonMessages.size());
+        doReturn(page).when(this.atonMessageService).handleDatatablesPagingRequest(any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/messages/dt")
@@ -165,8 +175,14 @@ class AtonMessageControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        DtPage<AtonMessage> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DtPage.class);
-        assertEquals(this.atonMessages.size(), result.getData().size());
+        DtPage<S125Node> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), new TypeReference<>() {});
+        assertEquals(page.getSize(), result.getData().size());
+
+        // Validate the entries one by one
+        for(int i=0; i< page.getSize(); i++) {
+            assertEquals(page.getContent().get(i).getUid(), result.getData().get(i).getAtonUID());
+            assertEquals(page.getContent().get(i).getMessage(), result.getData().get(i).getContent());
+        }
     }
 
     /**
