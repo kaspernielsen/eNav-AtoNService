@@ -87,10 +87,10 @@ public class AtonMessageController {
     @ResponseStatus
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<S125Node>> getMessages(@RequestParam("uid") Optional<String> uid,
-                                                         @RequestParam("geometry") Optional<Geometry> geometry,
-                                                         @RequestParam("startDate") Optional<Date> startDate,
-                                                         @RequestParam("endDate") Optional<Date> endDate,
-                                                         Pageable pageable) {
+                                                      @RequestParam("geometry") Optional<Geometry> geometry,
+                                                      @RequestParam("startDate") Optional<Date> startDate,
+                                                      @RequestParam("endDate") Optional<Date> endDate,
+                                                      Pageable pageable) {
         log.debug("REST request to get page of message");
         Page<AtonMessage> nodePage = this.atonMessageService.findAll(uid, geometry, pageable);
         return ResponseEntity.ok()
