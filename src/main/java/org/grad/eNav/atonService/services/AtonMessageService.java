@@ -264,8 +264,9 @@ public class AtonMessageService {
                             uid.ifPresent(v -> b.must(f.match()
                                     .field("uid")
                                     .matching(v)));
-                            geometry.ifPresent(g-> geometry.map(this::createGeoSpatialQuery)
-                                    .map(f.extension(LuceneExtension.get())::fromLuceneQuery));
+                            geometry.ifPresent(g-> b.must(geometry.map(this::createGeoSpatialQuery)
+                                    .map(f.extension(LuceneExtension.get())::fromLuceneQuery)
+                                    .orElse(null)));
                         })
                 )
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
