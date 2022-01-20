@@ -16,7 +16,10 @@
 
 package org.grad.eNav.atonService.config;
 
+import org.grad.eNav.atonService.components.GeoJsonStringToGeometryConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -32,6 +35,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
+
+    /**
+     * The GeoJSON string to Geometry Converter.
+     */
+    @Autowired
+    GeoJsonStringToGeometryConverter geoJsonStringToGeometryConverter;
 
     /**
      * Add the static resources and webjars to the web resources.
@@ -63,6 +72,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("forward:/index");
+    }
+
+    /**
+     * Add the converters between GeoJSON strings and Geometry.
+     *
+     * @param registry the Formatter Registry
+     */
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(geoJsonStringToGeometryConverter);
     }
 
 }
