@@ -91,7 +91,11 @@ public class AtonMessageController {
                                                       @RequestParam("startDate") Optional<Date> startDate,
                                                       @RequestParam("endDate") Optional<Date> endDate,
                                                       Pageable pageable) {
-        log.debug("REST request to get page of message");
+        this.log.debug("REST request to get page of message");
+        uid.ifPresent(v -> this.log.debug("message UID specified as: {}", uid));
+        geometry.ifPresent(v -> this.log.debug("message geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
+        startDate.ifPresent(v -> this.log.debug("message start date specified as: {}", startDate));
+        endDate.ifPresent(v -> this.log.debug("message end date specified as: {}", endDate));
         Page<AtonMessage> nodePage = this.atonMessageService.findAll(uid, geometry, pageable);
         return ResponseEntity.ok()
                 .body(this.atonMessageToS125Mapper.convertToPage(nodePage, S125Node.class));
@@ -105,7 +109,7 @@ public class AtonMessageController {
      */
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<S125Node>> getMessagesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
-        log.debug("REST request to get page of message for datatables");
+        this.log.debug("REST request to get page of message for datatables");
         return ResponseEntity.ok()
                 .body(this.atonMessageToS125Mapper.convertToDtPage(this.atonMessageService.handleDatatablesPagingRequest(dtPagingRequest), dtPagingRequest, S125Node.class));
     }
@@ -118,7 +122,7 @@ public class AtonMessageController {
      */
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteMessage(@PathVariable BigInteger id) {
-        log.debug("REST request to delete message : {}", id);
+        this.log.debug("REST request to delete message : {}", id);
         this.atonMessageService.delete(id);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("node", id.toString()))
@@ -133,7 +137,7 @@ public class AtonMessageController {
      */
     @DeleteMapping(value = "/uid/{uid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteMessageByUid(@PathVariable String uid) {
-        log.debug("REST request to delete message by UID : {}", uid);
+        this.log.debug("REST request to delete message by UID : {}", uid);
         // First translate the UID into a station node ID
         this.atonMessageService.deleteByUid(uid);
         return ResponseEntity.ok()
