@@ -18,11 +18,12 @@ package org.grad.eNav.atonService;
 
 import org.geotools.data.DataStore;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
+import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.domain.AtonMessage;
 import org.grad.eNav.atonService.models.dtos.S125Node;
-import org.modelmapper.ModelMapper;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 
 import javax.security.auth.message.config.RegistrationListener;
 
@@ -35,17 +36,8 @@ import static org.mockito.Mockito.mock;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @TestConfiguration
+@Import(GlobalConfig.class)
 public class TestingConfiguration {
-
-	/**
-	 * The Model Mapper Bean.
-	 *
-	 * @return  the model mapper bean.
-	 */
-	@Bean
-	public ModelMapper modelMapper() {
-		return new ModelMapper();
-	}
 
 	/**
 	 * AtoN message Mapper from Domain to DTO.
