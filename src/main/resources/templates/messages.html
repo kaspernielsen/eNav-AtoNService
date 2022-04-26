@@ -56,7 +56,7 @@
                     <div class="modal-footer">
                         <div class="float-right">
                             <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Cancel Changes">
-                                <i class="fas">&times</i>
+                                <i class="fa-solid fa-xmark"></i>&nbsp;
                                 <span class="btn-label"> Close</span>
                             </button>
                         </div>
@@ -67,7 +67,6 @@
         <div th:replace="fragments/general.html :: footer"></div>
     </div>
     <!-- We need to refresh the session due to our AJAX calls -->
-    <iframe th:replace="fragments/general.html :: sessionRefresher"></iframe>
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
     <script th:src="@{/webjars/leaflet/dist/leaflet.js}"></script>

@@ -126,17 +126,6 @@ public class HTMLViewerController {
     }
 
     /**
-     * The refresh session page of the AtoN Service Application.
-     *
-     * @param model The application UI model
-     * @return The refresh session page
-     */
-    @GetMapping(path = "/refresh")
-    public String refresh(Model model) {
-        return "refresh";
-    }
-
-    /**
      * Logs the user in an authenticated session and redirect to the home page.
      *
      * @param request The logout request
