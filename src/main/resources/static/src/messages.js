@@ -40,7 +40,7 @@ $(function () {
     atonMessagesTable = $('#nodes_table').DataTable({
         processing: true,
         language: {
-            processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
+            processing: '<i class="fa-solid fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
         },
         serverSide: true,
         ajax: {
@@ -62,7 +62,7 @@ $(function () {
         altEditor: true, // Enable altEditor
         buttons: [{
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-map-marked-alt"></i>',
+            text: '<i class="fa-solid fa-map-location"></i>',
             titleAttr: 'View Message Geometry',
             name: 'messageGeometry', // do not change name
             className: 'message-geometry-toggle',
@@ -71,7 +71,7 @@ $(function () {
             }
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-trash-alt"></i>',
+            text: '<i class="fa-solid fa-trash-can"></i>',
             titleAttr: 'Delete Node',
             name: 'delete' // do not change name
         }],
