@@ -22,14 +22,13 @@ import org.geotools.data.FeatureEvent;
 import org.geotools.data.FeatureListener;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FidFilterImpl;
-import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.GeomesaData;
 import org.grad.eNav.atonService.models.GeomesaS125;
 import org.grad.eNav.atonService.models.domain.AtonMessage;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AtonMessageService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
-import org.grad.eNav.atonService.utils.S100Utils;
+import org.grad.eNav.atonService.utils.AtonMessageUtils;
 import org.locationtech.geomesa.kafka.utils.KafkaFeatureEvent;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -183,7 +182,7 @@ public class S125GDSListener implements FeatureListener {
     protected void saveAtonMessage(S125Node s125Node){
         // Create or update the AtoN message entry
         Optional.of(s125Node)
-                .map(S100Utils::toAtonMessage)
+                .map(AtonMessageUtils::toAtonMessage)
                 .map(msg -> {
                     // Attempt to update if it already exists
                     Optional.of(msg)
