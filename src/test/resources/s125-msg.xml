@@ -45,7 +45,7 @@
                     <ns2:Curve ns1:id="ID002">
                         <ns1:segments>
                             <ns1:LineStringSegment>
-                                <ns1:posList>51.891666666666666 1.4233333333333333</ns1:posList>
+                                <ns1:posList>1.4233333333333333 51.891666666666666</ns1:posList>
                             </ns1:LineStringSegment>
                         </ns1:segments>
                     </ns2:Curve>
