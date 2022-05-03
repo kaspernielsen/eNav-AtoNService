@@ -159,8 +159,6 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         super.configure(httpSecurity);
         httpSecurity
                 .csrf().disable()
-                .headers().frameOptions().sameOrigin()
-                .and()
                 .authorizeRequests()
                 .antMatchers(
                         "/webjars/**",   //bootstrap
