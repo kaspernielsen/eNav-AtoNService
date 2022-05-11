@@ -25,9 +25,9 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FidFilterImpl;
 import org.geotools.filter.text.cql2.CQLException;
 import org.grad.eNav.atonService.models.GeomesaS125;
-import org.grad.eNav.atonService.models.domain.AtonMessage;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.dtos.S125Node;
-import org.grad.eNav.atonService.services.AtonMessageService;
+import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.utils.GeoJSONUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +41,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 import org.opengis.feature.simple.SimpleFeature;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -54,8 +55,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -69,16 +69,22 @@ class S125GDSListenerTest {
     S125GDSListener s125GDSListener;
 
     /**
+     * The Model Mapper injection.
+     */
+    @Spy
+    ModelMapper modelMapper;
+
+    /**
      * The AtoN Data Channel mock.
      */
     @Mock
     PublishSubscribeChannel publishSubscribeChannel;
 
     /**
-     * The Station Node Service mock.
+     * The Aids to Navigation Service mock.
      */
     @Mock
-    AtonMessageService atonMessageService;
+    AidsToNavigationService aidsToNavigationService;
 
     // Test Variables
     private Geometry geometry;
@@ -146,6 +152,8 @@ class S125GDSListenerTest {
         assertEquals(this.s125GDSListener.consumer, this.consumer);
         assertEquals(this.s125GDSListener.geomesaData, this.geomesaData);
         assertEquals(this.s125GDSListener.geometry, this.geometry);
+        assertNotNull(this.s125GDSListener.modelMapper);
+        assertFalse(this.modelMapper.getTypeMaps().isEmpty());
         assertTrue(this.featureListeners.size() == 1);
     }
 
@@ -170,9 +178,10 @@ class S125GDSListenerTest {
     }
 
     /**
-     * Test that the S125 Geomesa Listener can correctly handle the incoming
-     * S125 Geomesa change events, and if so, it will save the S125 message
-     * in the database and send it to the AtoN publish-subscribe channel
+     * Test that the S-125 Geomesa Listener can correctly handle the incoming
+     * S-125 Geomesa change events, and if so, it will save the S-125 message
+     * entries in the database and send them to the AtoN publish-subscribe
+     * channel.
      */
     @Test
     void testListenToEventsChangedSendAndSaved() throws IOException {
@@ -189,13 +198,13 @@ class S125GDSListenerTest {
         this.s125GDSListener.changed(featureEvent);
 
         // Verify that our message was saved and sent
-        verify(this.atonMessageService, times(1)).save(any(AtonMessage.class));
+        verify(this.aidsToNavigationService, times(1)).save(any(AidsToNavigation.class));
         verify(publishSubscribeChannel, times(1)).send(any(Message.class));
     }
 
     /**
-     * Test that the S125 Geomesa Listener can correctly handle the incoming
-     * S125 Geomesa change events, but it will not act on them if the fall
+     * Test that the S-125 Geomesa Listener can correctly handle the incoming
+     * S-125 Geomesa change events, but it will not act on them if the fall
      * outside the listeners's coverage area.
      */
     @Test
@@ -221,16 +230,16 @@ class S125GDSListenerTest {
         this.s125GDSListener.changed(featureEvent);
 
         // Verify that our message was not saved or sent
-        verify(this.atonMessageService, never()).save(any(AtonMessage.class));
+        verify(this.aidsToNavigationService, never()).save(any(AidsToNavigation.class));
         verify(this.publishSubscribeChannel, never()).send(any(Message.class));
 
     }
 
     /**
-     * Test that the S125 Geomesa Listener, if initialise correctly as a deletion
-     * handler, it can correctly handle the incoming S125 Geomesa delete events,
-     * regardless of the coverage area and will delete the applicable S-125
-     * station nodes.
+     * Test that the S-125 Geomesa Listener, if initialised correctly as a
+     * deletion handler, it can correctly handle the incoming S125 Geomesa
+     * delete events, regardless of the coverage area and will delete the
+     * applicable S-125 station nodes.
      */
     @Test
     void testListenToEventsRemoved() throws IOException {
@@ -246,7 +255,7 @@ class S125GDSListenerTest {
         this.s125GDSListener.changed(featureEvent);
 
         // Make sure the evaluation works
-        verify(this.atonMessageService, times(1)).deleteByUid(eq(this.s125Node.getAtonUID()));
+        verify(this.aidsToNavigationService, times(1)).deleteByAtonNumber(this.s125Node.getAtonUID());
     }
 
 }

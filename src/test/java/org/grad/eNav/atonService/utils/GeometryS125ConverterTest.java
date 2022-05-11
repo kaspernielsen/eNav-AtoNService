@@ -16,21 +16,15 @@
 
 package org.grad.eNav.atonService.utils;
 
-import org.grad.eNav.atonService.models.domain.AtonMessage;
-import org.grad.eNav.atonService.models.domain.AtonMessageType;
-import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
 
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class AtonMessageUtilsTest {
+class GeometryS125ConverterTest {
 
     // Test Variables
     private GeometryFactory factory;
@@ -47,62 +41,5 @@ class AtonMessageUtilsTest {
     void setup() throws IOException {
         // Create a temp geometry factory to get a test geometries
         this.factory = new GeometryFactory(new PrecisionModel(), 4326);
-    }
-
-    /**
-     * Test that we can correctly parse an incoming S125 dataset and construct
-     * the domain-level AtoN message (first variant).
-     */
-    @Test
-    public void testToAtonMessage1() throws IOException {
-        // Create an S125Node message
-        S125Node node = new S125Node("aton.uk.test_aton_no_1", null, S125_NO_1_CONTENT);
-
-        // Create the local AtoN message
-        AtonMessage atonMessage = AtonMessageUtils.toAtonMessage(node);
-
-        // Assert that all variables have been initialised correctly
-        assertEquals("aton.uk.test_aton_no_1", atonMessage.getUid());
-        assertEquals(AtonMessageType.S125, atonMessage.getType());
-        assertEquals(factory.createGeometryCollection(new Point[]{factory.createPoint(new Coordinate(1.594, 53.61))}), atonMessage.getGeometry());
-        assertEquals(node.getContent(), atonMessage.getMessage());
-    }
-
-    /**
-     * Test that we can correctly parse an incoming S125 dataset and construct
-     * the domain-level AtoN message (second variant).
-     */
-    @Test
-    public void testToAtonMessage2() {
-        // Create an S125Node message
-        S125Node node = new S125Node("aton.uk.test_aton_no_2", null, S125_NO_2_CONTENT);
-
-        // Create the local AtoN message
-        AtonMessage atonMessage = AtonMessageUtils.toAtonMessage(node);
-
-        // Assert that all variables have been initialised correctly
-        assertEquals("aton.uk.test_aton_no_2", atonMessage.getUid());
-        assertEquals(AtonMessageType.S125, atonMessage.getType());
-        assertEquals(factory.createGeometryCollection(new Point[]{factory.createPoint(new Coordinate(53.61,1.594))}), atonMessage.getGeometry());
-        assertEquals(node.getContent(), atonMessage.getMessage());
-    }
-
-    /**
-     * Test that we can correctly parse an incoming S125 dataset and construct
-     * the domain-level AtoN message (third variant).
-     */
-    @Test
-    public void testToAtonMessage3() {
-        // Create an S125Node message
-        S125Node node = new S125Node("aton.uk.test_aton_no_3", null, S125_NO_3_CONTENT);
-
-        // Create the local AtoN message
-        AtonMessage atonMessage = AtonMessageUtils.toAtonMessage(node);
-
-        // Assert that all variables have been initialised correctly
-        assertEquals("aton.uk.test_aton_no_3", atonMessage.getUid());
-        assertEquals(AtonMessageType.S125, atonMessage.getType());
-        assertEquals(factory.createGeometryCollection(new Point[]{factory.createPoint(new Coordinate(1.594, 53.61))}), atonMessage.getGeometry());
-        assertEquals(node.getContent(), atonMessage.getMessage());
     }
 }

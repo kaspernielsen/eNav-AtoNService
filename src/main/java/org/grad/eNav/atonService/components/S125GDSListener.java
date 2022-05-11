@@ -16,6 +16,8 @@
 
 package org.grad.eNav.atonService.components;
 
+import _int.iala_aism.s125.gml._0_0.*;
+import _net.opengis.gml.profiles.AbstractFeatureMemberType;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.data.DataStore;
 import org.geotools.data.FeatureEvent;
@@ -24,13 +26,17 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FidFilterImpl;
 import org.grad.eNav.atonService.models.GeomesaData;
 import org.grad.eNav.atonService.models.GeomesaS125;
-import org.grad.eNav.atonService.models.domain.AtonMessage;
+import org.grad.eNav.atonService.models.domain.s125.*;
+import org.grad.eNav.atonService.models.dtos.S100AbstractNode;
 import org.grad.eNav.atonService.models.dtos.S125Node;
+import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.AtonMessageService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
-import org.grad.eNav.atonService.utils.AtonMessageUtils;
+import org.grad.eNav.atonService.utils.GeometryS125Converter;
+import org.grad.eNav.s125.utils.S125Utils;
 import org.locationtech.geomesa.kafka.utils.KafkaFeatureEvent;
 import org.locationtech.jts.geom.Geometry;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -39,12 +45,13 @@ import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PreDestroy;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * The AtoN Geomesa Data Store Listener Class
@@ -55,10 +62,15 @@ import java.util.Optional;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Slf4j
-@Transactional
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Component
 public class S125GDSListener implements FeatureListener {
+
+    /**
+     * The Model Mapper.
+     */
+    @Autowired
+    ModelMapper modelMapper;
 
     /**
      * The AtoN Data Channel to publish the incoming data to.
@@ -72,6 +84,12 @@ public class S125GDSListener implements FeatureListener {
      */
     @Autowired
     AtonMessageService atonMessageService;
+
+    /**
+     * The Aids to Navigation Service.
+     */
+    @Autowired
+    AidsToNavigationService aidsToNavigationService;
 
     // Component Variables
     protected DataStore consumer;
@@ -91,10 +109,14 @@ public class S125GDSListener implements FeatureListener {
                      GeomesaData<S125Node> geomesaData,
                      Geometry geometry,
                      boolean handleDeletions) throws IOException {
+        // Remember the input data
         this.consumer = consumer;
         this.geomesaData = geomesaData;
         this.geometry = geometry;
         this.deletionHandler = handleDeletions;
+
+        // Configure the model mapper for S-125
+        Optional.ofNullable(this.modelMapper).ifPresent(this::initialiseModelMapper);
 
         // And add the feature listener to start reading
         this.featureSource = this.consumer.getFeatureSource(this.geomesaData.getTypeName());
@@ -168,7 +190,7 @@ public class S125GDSListener implements FeatureListener {
                     .map(FidFilterImpl::getFidsSet)
                     .orElse(Collections.emptySet())
                     .stream()
-                    .forEach(this.atonMessageService::deleteByUid);
+                    .forEach(this.aidsToNavigationService::deleteByAtonNumber);
         }
     }
 
@@ -178,27 +200,52 @@ public class S125GDSListener implements FeatureListener {
      *
      * @param s125Node  the S125Node to be saved
      */
-    @Transactional
     protected void saveAtonMessage(S125Node s125Node){
         // Create or update the AtoN message entry
         Optional.of(s125Node)
-                .map(AtonMessageUtils::toAtonMessage)
-                .map(msg -> {
-                    // Attempt to update if it already exists
-                    Optional.of(msg)
-                            .map(AtonMessage::getUid)
-                            .map(uid -> {
-                                try {
-                                    return this.atonMessageService.findOneByUid(uid);
-                                } catch (Exception ex) {
-                                    return null;
-                                }
-                            })
-                            .map(AtonMessage::getId)
-                            .ifPresent(msg::setId);
-                    return msg;
+                .map(S100AbstractNode::getContent)
+                .map(xml -> {
+                    try {
+                        return S125Utils.unmarshallS125(xml);
+                    } catch (JAXBException ex) {
+                        return null;
+                    }
                 })
-                .ifPresent(atonMessageService::save);
+                .map(DataSet::getImembersAndMembers)
+                .filter(((Predicate<List<AbstractFeatureMemberType>>) List::isEmpty).negate())
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(MemberType.class::isInstance)
+                .map(MemberType.class::cast)
+                .map(MemberType::getAbstractFeature)
+                .map(JAXBElement::getValue)
+                .filter(S125AidsToNavigationType.class::isInstance)
+                .map(S125AidsToNavigationType.class::cast)
+                .map(s125Aton -> this.modelMapper.map(s125Aton, S125AtonTypes.fromS125Class(s125Aton.getClass()).getLocalClass()))
+                .filter(Objects::nonNull)
+                .forEach(this.aidsToNavigationService::save);
+    }
+
+    /**
+     * This helper function initialises the model mapper for the S-125 to
+     * local Aids to Navigation entity objects.
+     *
+     * Note that since the local {@link AidsToNavigation) class is abstract
+     * we need to specify the mapping for each of the implementation classes.
+     *
+     * @param modelMapper the model mapper to be initialised
+     */
+    protected void initialiseModelMapper(ModelMapper modelMapper) {
+        // Loop all the mapped S-125 AtoN types and configure the model mapper
+        for(S125AtonTypes type : S125AtonTypes.values()) {
+            modelMapper.createTypeMap(type.getS125Class(), type.getLocalClass())
+                    .implicitMappings()
+                    .addMappings(mapper -> {
+                        mapper.skip(AidsToNavigation::setId);
+                        mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((S125AidsToNavigationType) ctx.getSource())))
+                                .map(src-> src, AidsToNavigation::setGeometry);
+                    });
+        }
     }
 
 }

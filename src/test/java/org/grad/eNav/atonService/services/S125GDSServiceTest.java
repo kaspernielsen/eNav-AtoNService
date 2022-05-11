@@ -22,12 +22,11 @@ import org.grad.eNav.atonService.components.S125GDSListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 
@@ -69,9 +68,6 @@ class S125GDSServiceTest {
      */
     @BeforeEach
     void setup() {
-        // Create a temp geometry factory to get a test geometries
-        GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
-
         // Set the service geometry
         this.s125GDSService.geometryWKT = "POINT (52.001 1.002)";
     }
