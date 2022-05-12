@@ -19,6 +19,7 @@ package org.grad.eNav.atonService.models.domain.s125;
 import _int.iala_aism.s125.gml._0_0.*;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
@@ -47,9 +48,11 @@ public enum S125AtonTypes {
     LANDMARK("Cardinal Beacon", S125LandmarkType.class, Landmark.class, false),
     LIGHTHOUSE("Lighthouse", S125LighthouseType.class, Lighthouse.class, false),
     LIGHT_VESSEL("Light Vessel", S125LightVesselType.class, LightVessel.class, false),
-    PHYSICAL_AIS_ATON("Physical AIS AtoN", S125PhysicalAISAidToNavigationType.class, PhysicalAISAidToNavigation.class, false),
-    VIRTUAL_AIS_ATON("Virtual AtoN", S125VirtualAISAidToNavigationType.class, VirtualAISAidToNavigation.class, false),
-    SYNTHETIC_AIS_ATON("Virtual AtoN", S125SyntheticAISAidToNavigationType.class, SyntheticAISAidToNavigation.class, false);
+    PHYSICAL_AIS_ATON("Physical AIS AtoN", S125PhysicalAISAidToNavigationType.class, PhysicalAISAidToNavigation.class, true),
+    VIRTUAL_AIS_ATON("Virtual AtoN", S125VirtualAISAidToNavigationType.class, VirtualAISAidToNavigation.class, true),
+    SYNTHETIC_AIS_ATON("Virtual AtoN", S125SyntheticAISAidToNavigationType.class, SyntheticAISAidToNavigation.class, true),
+    NAVIGATION_LINE("Navigation Line", S125NavigationLineType.class, NavigationLine.class, false),
+    RECOMMENDED_TRACK("Recommended Track", S125RecommendedTrackType.class, RecommendedTrack.class, false);
 
     // Enum Variables
     final Class<? extends S125AidsToNavigationType> s125Class;
@@ -142,6 +145,12 @@ public enum S125AtonTypes {
      * @throws NoSuchFieldException
      */
     public Class<?> getS125GeometryType() throws NoSuchFieldException {
-        return this.getS125Class().getField("geometry").getType();
+        Class current = this.getS125Class();
+        // Look for the geometry field and iterate to the super class if necessary
+        while(!Arrays.stream(current.getDeclaredFields()).map(Field::getName).anyMatch("geometry"::equals) && current.getSuperclass() != null) {
+            current = current.getSuperclass();
+        }
+        // Once found (or not) return the type of the geometry
+        return current.getDeclaredField("geometry").getType();
     }
 }

@@ -41,15 +41,11 @@
             <estimatedRangeOfTransmission>20</estimatedRangeOfTransmission>
             <MMSICode>992359598</MMSICode>
             <geometry>
-                <ns2:curveProperty>
-                    <ns2:Curve ns1:id="ID002">
-                        <ns1:segments>
-                            <ns1:LineStringSegment>
-                                <ns1:posList>1.4233333333333333 51.891666666666666</ns1:posList>
-                            </ns1:LineStringSegment>
-                        </ns1:segments>
-                    </ns2:Curve>
-                </ns2:curveProperty>
+                <ns2:pointProperty>
+                    <ns2:Point>
+                        <ns1:pos>1.4233333333333333 51.891666666666666</ns1:pos>
+                    </ns2:Point>
+                </ns2:pointProperty>
             </geometry>
         </ns6:S125_VirtualAISAidToNavigation>
     </member>
