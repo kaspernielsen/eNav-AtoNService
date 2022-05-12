@@ -23,12 +23,8 @@ import _int.iho.s100.gml.base._1_0.SurfaceProperty;
 import _int.iho.s100.gml.base._1_0_Ext.PointCurveSurfaceProperty;
 import _net.opengis.gml.profiles.*;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.s125.utils.S125Utils;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.PrecisionModel;
+import org.locationtech.jts.geom.*;
 
 import javax.xml.bind.JAXBElement;
 import java.util.*;
@@ -62,7 +58,7 @@ public class GeometryS125Converter {
      */
     public PointCurveSurfaceProperty convertFromGeometry(AidsToNavigation aidsToNavigation) {
         return Optional.ofNullable(aidsToNavigation)
-                .map(aton -> this.geometryToS125PointCurveSurfaceToGeometry(aton.getGeometry(), S125AtonTypes.fromLocalClass(aton.getClass())))
+                .map(aton -> this.geometryToS125PointCurveSurfaceToGeometry(aton.getGeometry()))
                 .orElse(null);
     }
 
@@ -74,7 +70,7 @@ public class GeometryS125Converter {
      * @param pointCurveSurface the S-100 point/curve/surface property
      * @return the respective geometry
      */
-    private Geometry s125PointCurveSurfaceToGeometry(PointCurveSurfaceProperty pointCurveSurface) {
+    protected Geometry s125PointCurveSurfaceToGeometry(PointCurveSurfaceProperty pointCurveSurface) {
         final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         return Optional.ofNullable(pointCurveSurface)
                 .map(pcs -> {
@@ -133,37 +129,70 @@ public class GeometryS125Converter {
 
     /**
      * Translates the generic JTS geometry property of the local Aids to
-     * Navigation objects tp a generic S-125 point/curve/surface geometry
+     * Navigation objects to a generic S-125 point/curve/surface geometry
      * that can be understood and handled by the S-125 services.
      *
      * @param geometry      The JTS geometry object
-     * @param s125AtonTypes The S-125 AtoN type to pick up the point/curve/surface geometry type from
      * @return the S-125 point/curve/surface geometry
      */
-    private PointCurveSurfaceProperty geometryToS125PointCurveSurfaceToGeometry(Geometry geometry, S125AtonTypes s125AtonTypes) {
+    protected PointCurveSurfaceProperty geometryToS125PointCurveSurfaceToGeometry(Geometry geometry) {
         // Initialise the point/curve/surface geometry
         PointCurveSurfaceProperty pointCurveSurfaceProperty = new PointCurveSurfaceProperty();
+
         // Populate according to the S-125 AtoN type
-        try {
-            Class<?> s125GeometryType = s125AtonTypes.getS125GeometryType();
-            if(s125GeometryType == _int.iho.s100.gml.base._1_0_Ext.PointProperty.class) {
-                pointCurveSurfaceProperty.setPointProperty(this.generatePointProperty(
-                        coordinatesToPosList(geometry.getCoordinates()).getValues()
-                ));
-            } else if (s125GeometryType == _int.iho.s100.gml.base._1_0_Ext.CurveProperty.class) {
-                pointCurveSurfaceProperty.setCurveProperty(this.generateCurveProperty(
-                        coordinatesToPosList(geometry.getCoordinates()).getValues()
-                ));
-            } else if (s125GeometryType == _int.iho.s100.gml.base._1_0_Ext.SurfaceProperty.class) {
-                pointCurveSurfaceProperty.setSurfaceProperty(this.generateSurfaceProperty(
-                        coordinatesToPosList(geometry.getCoordinates()).getValues()
-                ));
-            }
-        } catch (NoSuchFieldException e) {
-            // Don't bother... something went wrong, so we did nothing
-        }
+        populatePointCurveSurfaceToGeometry(geometry, pointCurveSurfaceProperty);
+
         // And return the populated property
         return pointCurveSurfaceProperty;
+    }
+
+    /**
+     * A iterative helper function that examines the provided geometry and
+     * dives deeper into collection to pick up the basic JTS geometry types
+     * such as the points, lines and polygons.
+     *
+     * @param geometry                      The geometry to be examined
+     * @param pointCurveSurfaceProperty     The S-125 geometry object to be populated
+     */
+    protected void populatePointCurveSurfaceToGeometry(Geometry geometry, PointCurveSurfaceProperty pointCurveSurfaceProperty) {
+        // Create an OpenGIS GML factory
+        ObjectFactory opengisGMLFactory = new ObjectFactory();
+
+        if(geometry instanceof Puntal) {
+            // Initialise the point property if not already initialised
+            if(pointCurveSurfaceProperty.getPointProperty() == null) {
+                pointCurveSurfaceProperty.setPointProperty(this.initPointProperty());
+            }
+
+            // And append the point
+            pointCurveSurfaceProperty.getPointProperty().getPoint().setPos(
+                    this.generatePointPropertyPosition(coordinatesToGmlPosList(geometry.getCoordinates()).getValues())
+            );
+        } else if(geometry instanceof Lineal) {
+            // Initialise the curve property if not already initialised
+            if(pointCurveSurfaceProperty.getCurveProperty() == null) {
+                pointCurveSurfaceProperty.setCurveProperty(this.initialiseCurveProperty());
+            }
+
+            // And append the line string
+            pointCurveSurfaceProperty.getCurveProperty().getCurve().getSegments().getAbstractCurveSegments().add(
+                    opengisGMLFactory.createLineStringSegment(generateCurvePropertySegment(coordinatesToGmlPosList(geometry.getCoordinates()).getValues()))
+            );
+        } else if(geometry instanceof Polygonal) {
+            // Initialise the curve property if not already initialised
+            if(pointCurveSurfaceProperty.getSurfaceProperty() == null) {
+                pointCurveSurfaceProperty.setSurfaceProperty(this.initialiseSurfaceProperty());
+            }
+
+            // And append the surface patch
+            ((SurfaceType)pointCurveSurfaceProperty.getSurfaceProperty().getAbstractSurface().getValue()).getPatches().getAbstractSurfacePatches().add(
+                    opengisGMLFactory.createPolygonPatch(generateSurfacePropertyPatch(coordinatesToGmlPosList(geometry.getCoordinates()).getValues()))
+            );
+        } else if(geometry instanceof GeometryCollection && geometry.getNumGeometries() > 0) {
+            for(int i=0; i < geometry.getNumGeometries(); i++) {
+                this.populatePointCurveSurfaceToGeometry(geometry.getGeometryN(i), pointCurveSurfaceProperty);
+            }
+        }
     }
 
     /**
@@ -173,14 +202,11 @@ public class GeometryS125Converter {
      * @param coords    The coordinates of the element to be generated
      * @return The populated point property
      */
-    private SurfaceProperty generateSurfaceProperty(Collection<Double> coords) {
+    protected PolygonPatchType generateSurfacePropertyPatch(Collection<Double> coords) {
         // Create an OpenGIS GML factory
         ObjectFactory opengisGMLFactory = new ObjectFactory();
 
         // Generate the elements
-        SurfaceProperty surfaceProperty = new SurfaceProperty();
-        _int.iho.s100.gml.base._1_0.SurfaceType surfaceType = new _int.iho.s100.gml.base._1_0.SurfaceType();
-        Patches patches = new Patches();
         PolygonPatchType polygonPatchType = new PolygonPatchType();
         AbstractRingPropertyType abstractRingPropertyType = new AbstractRingPropertyType();
         LinearRingType linearRingType = new LinearRingType();
@@ -193,12 +219,9 @@ public class GeometryS125Converter {
         linearRingType.setPosList(posList);
         abstractRingPropertyType.setAbstractRing(opengisGMLFactory.createLinearRing(linearRingType));
         polygonPatchType.setExterior(abstractRingPropertyType);
-        patches.getAbstractSurfacePatches().add(opengisGMLFactory.createPolygonPatch(polygonPatchType));
-        surfaceType.setPatches(patches);
-        surfaceProperty.setAbstractSurface(opengisGMLFactory.createSurface(surfaceType));
 
         // And return the output
-        return surfaceProperty;
+        return polygonPatchType;
     }
 
     /**
@@ -208,28 +231,17 @@ public class GeometryS125Converter {
      * @param coords    The coordinates of the element to be generated
      * @return The populated point property
      */
-    private CurveProperty generateCurveProperty(Collection<Double> coords) {
-        // Create an OpenGIS GML factory
-        ObjectFactory opengisGMLFactory = new ObjectFactory();
-
+    protected LineStringSegmentType generateCurvePropertySegment(Collection<Double> coords) {
         // Generate the elements
-        CurveProperty curveProperty = new CurveProperty();
-        _int.iho.s100.gml.base._1_0.CurveType curveType = new _int.iho.s100.gml.base._1_0.CurveType();
-        Segments segments = new Segments();
         LineStringSegmentType lineStringSegmentType = new LineStringSegmentType();
         PosList posList = new PosList();
 
         // Populate with the geometry data
         posList.getValues().addAll(coords);
-
-        // Populate the elements
         lineStringSegmentType.setPosList(posList);
-        segments.getAbstractCurveSegments().add(opengisGMLFactory.createLineStringSegment(lineStringSegmentType));
-        curveType.setSegments(segments);
-        curveProperty.setCurve(curveType);
 
         // And return the output
-        return curveProperty;
+        return lineStringSegmentType;
     }
 
     /**
@@ -239,17 +251,69 @@ public class GeometryS125Converter {
      * @param coords    The coordinates of the element to be generated
      * @return The populated point property
      */
-    protected PointProperty generatePointProperty(Collection<Double> coords) {
+    protected Pos generatePointPropertyPosition(Collection<Double> coords) {
         // Generate the elements
-        PointProperty pointProperty = new PointProperty();
-        _int.iho.s100.gml.base._1_0.PointType pointType = new _int.iho.s100.gml.base._1_0.PointType();
         Pos pos = new Pos();
 
         // Populate with the geometry data
         pos.getValues().addAll(coords);
 
+        // And return the output
+        return pos;
+    }
+
+    /**
+     * Initialise the S-125 Surface Property object
+     *
+     * @return the initialised S-125 Surface Property object
+     */
+    protected SurfaceProperty initialiseSurfaceProperty() {
+        // Create an OpenGIS GML factory
+        ObjectFactory opengisGMLFactory = new ObjectFactory();
+
+        // Generate the elements
+        SurfaceProperty surfaceProperty = new SurfaceProperty();
+        _int.iho.s100.gml.base._1_0.SurfaceType surfaceType = new _int.iho.s100.gml.base._1_0.SurfaceType();
+        Patches patches = new Patches();
+
         // Populate the elements
-        pointType.setPos(pos);
+        surfaceType.setPatches(patches);
+        surfaceProperty.setAbstractSurface(opengisGMLFactory.createSurface(surfaceType));
+
+        // And return the output
+        return surfaceProperty;
+    }
+
+    /**
+     * Initialise the S-125 Curve Property object
+     *
+     * @return the initialised S-125 Curve Property object
+     */
+    protected CurveProperty initialiseCurveProperty() {
+        // Generate the elements
+        CurveProperty curveProperty = new CurveProperty();
+        _int.iho.s100.gml.base._1_0.CurveType curveType = new _int.iho.s100.gml.base._1_0.CurveType();
+        Segments segments = new Segments();
+
+        // Populate the elements
+        curveType.setSegments(segments);
+        curveProperty.setCurve(curveType);
+
+        // And return the output
+        return curveProperty;
+    }
+
+    /**
+     * Initialise the S-125 Point Property object
+     *
+     * @return the initialised S-125 Point Property object
+     */
+    protected PointProperty initPointProperty() {
+        // Generate the elements
+        PointProperty pointProperty = new PointProperty();
+        _int.iho.s100.gml.base._1_0.PointType pointType = new _int.iho.s100.gml.base._1_0.PointType();
+
+        // Populate the elements
         pointProperty.setPoint(pointType);
 
         // And return the output
@@ -279,13 +343,13 @@ public class GeometryS125Converter {
      * @param coordinates the provided coordinates
      * @return the respective position list
      */
-    protected PosList coordinatesToPosList(Coordinate[] coordinates) {
+    protected PosList coordinatesToGmlPosList(Coordinate[] coordinates) {
         // Translate the coordinates to a simple list of doubles (Y, X)
         List<Double> coords = Optional.ofNullable(coordinates)
                 .map(Arrays::asList)
                 .orElse(Collections.emptyList())
                 .stream()
-                .map(c -> Arrays.asList(c.getY(), c.getX()))
+                .map(c -> Arrays.asList(c.getX(), c.getY()))
                 .flatMap(List::stream).toList();
 
         // The create the list and return
