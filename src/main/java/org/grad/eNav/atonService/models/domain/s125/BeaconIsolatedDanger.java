@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 GLA Research and Development Directorate
+ * Copyright (c) 2022 GLA Research and Development Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-package org.grad.eNav.atonService.repos;
+package org.grad.eNav.atonService.models.domain.s125;
 
-import org.grad.eNav.atonService.models.domain.AtonMessage;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.math.BigInteger;
+import javax.persistence.Entity;
 
 /**
- * Spring Data JPA repository for the AtoN Message entity.
+ * The S-125 Beacon Isolated Danger Entity Class.
+ * <p>
+ * This is the basic class for implementing the S-125-compatible Beacon Isolated
+ * Danger type. It is modelled as an entity that extends the
+ * {@link GenericBeacon} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ * @see _int.iala_aism.s125.gml._0_0.S125BeaconIsolatedDangerType
  */
-public interface AtonMessageRepo extends JpaRepository<AtonMessage, BigInteger> {
-
-    /**
-     * Find one using the AtoN message UID.
-     *
-     * @return The AtoN message matching the UID
-     */
-    AtonMessage findByUid(String uid);
+@Entity
+public class BeaconIsolatedDanger extends GenericBeacon {
 
 }

@@ -1,0 +1,1651 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "SECOM Service interface",
+    "description": "Compliant with SECOM 20xx edition 2020-07-09-r3",
+    "contact": {
+      "name": "Swedish Maritime Administration",
+      "url": "http://sjofartsverket.se"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/v1/Access/request": {
+      "post": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "Access to information can be requested through the Access interface.",
+        "requestBody": {
+          "description": "Description of reason for requesting access to information",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestAccessRequestObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/Access/notification": {
+      "post": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "Result from Access Request shall be sent asynchronous through this interface.",
+        "requestBody": {
+          "description": "Result from the request for access; True or False",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessNotificationRequestObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/Acknowledgement": {
+      "post": {
+        "tags": [
+          "Acknowledgement"
+        ],
+        "summary": "Upload acknowledgement for previously sent message",
+        "requestBody": {
+          "description": "Object with reference to information and time when delivered",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcknowledgementObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/Capability": {
+      "get": {
+        "tags": [
+          "Capability"
+        ],
+        "summary": "The purpose of the interface is to provide a dynamic method to ask a service instance at runtime what interfaces that are accessible, and what payload formats and version that are valid.",
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseCapabilityObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/Description": {
+      "get": {
+        "tags": [
+          "Description"
+        ],
+        "summary": "The purpose of the interface is to provide a dynamic method to ask for operational/user description of the specific service instance.",
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/EncryptionKey": {
+      "get": {
+        "tags": [
+          "EncryptionKey"
+        ],
+        "summary": "The purpose of the interface is to exchange a temporary encryption key.",
+        "requestBody": {
+          "description": "Object with symmetric encryption key",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EncryptionKeyObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/object": {
+      "get": {
+        "tags": [
+          "Get"
+        ],
+        "summary": "The Get interface is used for pulling information from a service provider.",
+        "parameters": [
+          {
+            "name": "dataReference",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "nullable": true
+            }
+          },
+          {
+            "name": "dataType",
+            "in": "query",
+            "description": "Data Type requested",
+            "schema": {
+              "$ref": "#/components/schemas/DataTypeEnum"
+            }
+          },
+          {
+            "name": "productSpecification",
+            "in": "query",
+            "description": "Product type requested",
+            "schema": {
+              "type": "string",
+              "description": "Product type requested",
+              "nullable": true
+            }
+          },
+          {
+            "name": "geometry",
+            "in": "query",
+            "description": "Geometry as search parameter.",
+            "schema": {
+              "type": "string",
+              "description": "Geometry as search parameter.",
+              "nullable": true
+            }
+          },
+          {
+            "name": "unlocode",
+            "in": "query",
+            "description": "See UN web page",
+            "schema": {
+              "type": "string",
+              "description": "See UN web page",
+              "nullable": true
+            }
+          },
+          {
+            "name": "fromTime",
+            "in": "query",
+            "description": "Time related to validity period start for information object",
+            "schema": {
+              "type": "string",
+              "description": "Time related to validity period start for information object",
+              "format": "date-time",
+              "nullable": true
+            }
+          },
+          {
+            "name": "toTime",
+            "in": "query",
+            "description": "Time related to validity period end for information object",
+            "schema": {
+              "type": "string",
+              "description": "Time related to validity period end for information object",
+              "format": "date-time",
+              "nullable": true
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Pagination information",
+            "schema": {
+              "type": "integer",
+              "description": "Pagination information",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Pagination information",
+            "schema": {
+              "type": "integer",
+              "description": "Pagination information",
+              "format": "int32",
+              "default": 100
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Comma separated list of enumeration values (e.g. “1,2,3”) See Table 16",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AreaNameEnum"
+                },
+                "description": "Comma separated list of enumeration values (e.g. “1,2,3”) See Table 16",
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetMessageResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Upload"
+        ],
+        "summary": "The interface shall be used for uploading (pushing) data to a consumer. The operation expects one single data object and its metadata.",
+        "requestBody": {
+          "description": "The data (payload) package with its metadata",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseUploadObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseUploadObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseUploadObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseUploadObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/object/summary": {
+      "get": {
+        "tags": [
+          "Get"
+        ],
+        "parameters": [
+          {
+            "name": "dataType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DataTypeEnum"
+            }
+          },
+          {
+            "name": "productSpecification",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "geometry",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "unlocode",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "fromTime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
+          },
+          {
+            "name": "toTime",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "nullable": true
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 100
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AreaNameEnum"
+                },
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSummaryResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/object/link": {
+      "get": {
+        "tags": [
+          "Get"
+        ],
+        "summary": "The Get By Link interface is used for pulling information from a data storage handled by the information owner.",
+        "parameters": [
+          {
+            "name": "TransactionIdentifier",
+            "in": "query",
+            "description": "Indentifier from the uploaded link",
+            "schema": {
+              "type": "string",
+              "description": "Indentifier from the uploaded link",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Upload"
+        ],
+        "summary": "The purpose with this interface is to upload (push) a link to information to a consumer.",
+        "requestBody": {
+          "description": "The message link with its metadata",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadLinkObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            },
+            "400": {
+              "description": "Bad request",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ResponseObject"
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Not authorized",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ResponseObject"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal server error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ResponseObject"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/Status": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "The purpose of the interface is to provide a dynamic method to ask for the technical status of the specific service instance.",
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/Subscription": {
+      "post": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "The purpose of the interface is to request subscription on information, either specific information according to parameters, or the information accessible upon decision by information provider.",
+        "requestBody": {
+          "description": "Specific id on the information object subscription is requested for specific status on the information or specific area of interest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSubscriptionRequestObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "This interface shall be used by the consumer to request removal of subscription.",
+        "requestBody": {
+          "description": "Specific identity of the information object to remove subscription for. If no id entity provided, all subscriptions for the caller is removed",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveSubscriptionRequestObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "A list of active subscriptions is retrieved through this interface.",
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "",
+                "nullable": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseSubscriptionListObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/Subscription/Notification": {
+      "post": {
+        "tags": [
+          "Subscription"
+        ],
+        "summary": "The interface receives notifications when subscription is created or removed by information producer.",
+        "requestBody": {
+          "description": "Contains the identity of the information object in focus and type of event; Create or Delete.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionNotificationRequestObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The operation was performed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ReasonEnum": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "description": "TBD",
+        "format": "int32"
+      },
+      "RequestAccessRequestObject": {
+        "required": [
+          "reason",
+          "reasonEnum"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Human readable reason for requesting access"
+          },
+          "reasonEnum": {
+            "$ref": "#/components/schemas/ReasonEnum"
+          },
+          "filterObject": {
+            "type": "string",
+            "description": "TBD",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseObject": {
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Success or error response message"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DecisionReasonEnum": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "description": "TBD",
+        "format": "int32"
+      },
+      "AccessNotificationRequestObject": {
+        "required": [
+          "decision",
+          "decisionReasonEnum",
+          "decisonReason"
+        ],
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "boolean",
+            "description": "Access request decision, yes or no"
+          },
+          "decisonReason": {
+            "type": "string",
+            "description": "Human readable reason for decision"
+          },
+          "decisionReasonEnum": {
+            "$ref": "#/components/schemas/DecisionReasonEnum"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AckTypeEnum": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "AcknowledgementObject": {
+        "required": [
+          "messageIdentifier",
+          "time",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "messageIdentifier": {
+            "type": "string",
+            "description": "Reference identifier given in upload",
+            "format": "uuid"
+          },
+          "time": {
+            "type": "string",
+            "description": "Creation time for the acknowledgement",
+            "format": "date-time"
+          },
+          "type": {
+            "$ref": "#/components/schemas/AckTypeEnum"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ImplementedInterfaces": {
+        "type": "object",
+        "properties": {
+          "upload": {
+            "type": "boolean"
+          },
+          "get": {
+            "type": "boolean"
+          },
+          "getSummary": {
+            "type": "boolean"
+          },
+          "subscription": {
+            "type": "boolean"
+          },
+          "access": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseCapabilityObject": {
+        "required": [
+          "implementedInterfaces",
+          "payloadName",
+          "payloadSchemaUrl",
+          "payloadVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "payloadName": {
+            "type": "string",
+            "description": ""
+          },
+          "payloadVersion": {
+            "type": "string",
+            "description": ""
+          },
+          "payloadSchemaUrl": {
+            "type": "string",
+            "description": ""
+          },
+          "implementedInterfaces": {
+            "$ref": "#/components/schemas/ImplementedInterfaces"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EncryptionKeyObject": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "DataTypeEnum": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "AreaNameEnum": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "DigitalSignatureValueObject": {
+        "required": [
+          "digitalSignature",
+          "signedPublicKey",
+          "signedPublicKeyID",
+          "signedPublicKeyRootKey"
+        ],
+        "type": "object",
+        "properties": {
+          "signedPublicKeyID": {
+            "type": "string",
+            "description": "(S100) Claimed identity of signer"
+          },
+          "signedPublicKeyRootKey": {
+            "type": "string",
+            "description": "(S100) Claimed root key related to the protection scheme chosen"
+          },
+          "signedPublicKey": {
+            "type": "string",
+            "description": "(S100) Public Key for claimed identity"
+          },
+          "digitalSignature": {
+            "type": "string",
+            "description": "(S100) The digital signature in HEX format as one row"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ClassificationEnum": {
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "ExchangeMetadata": {
+        "required": [
+          "dataProtection",
+          "digitalSignatureReference",
+          "digitalSignatureValue",
+          "protectionScheme"
+        ],
+        "type": "object",
+        "properties": {
+          "dataProtection": {
+            "type": "boolean",
+            "description": "(S-100) Indicates if the data is encrypted. \r\n0 indicates unencrypted data\r\n1 indicates encrypted data"
+          },
+          "protectionScheme": {
+            "type": "string",
+            "description": "(S-100) Specification or method used for data protection Such as S-63, SECOM"
+          },
+          "digitalSignatureReference": {
+            "type": "string",
+            "description": "(S-100) Specifies the algorithm used to compute digitalSignatureValue Such as “dsa”"
+          },
+          "digitalSignatureValue": {
+            "$ref": "#/components/schemas/DigitalSignatureValueObject"
+          },
+          "classification": {
+            "$ref": "#/components/schemas/ClassificationEnum"
+          },
+          "compressionFlag": {
+            "type": "boolean",
+            "description": "(S-100) Indicates if data is compressed.\r\n0 indicates uncompressed\r\n1 indicates compressed",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "The exchange metadata contains information regarding protection scheme, compression, signature and claimed identity."
+      },
+      "PaginationObject": {
+        "required": [
+          "maxItemsPerPage"
+        ],
+        "type": "object",
+        "properties": {
+          "totalItems": {
+            "type": "integer",
+            "description": "The total number of items that satisfy the query. This is always returned unless the requested page is set to 0.",
+            "format": "int32"
+          },
+          "maxItemsPerPage": {
+            "type": "integer",
+            "description": "The maximum number of items the service shall return per page.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetMessageResponseObject": {
+        "required": [
+          "exchangeMetadata",
+          "pagination",
+          "payload"
+        ],
+        "type": "object",
+        "properties": {
+          "payload": {
+            "type": "string",
+            "description": "The data according to Product Specification embedded in JSON. The data may be encrypted and signed.",
+            "format": "byte"
+          },
+          "exchangeMetadata": {
+            "$ref": "#/components/schemas/ExchangeMetadata"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationObject"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MessageTypeEnum": {
+        "enum": [
+          0,
+          1,
+          2
+        ],
+        "type": "integer",
+        "description": "Type of message in the data object",
+        "format": "int32"
+      },
+      "AckRequestEnum": {
+        "enum": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "UploadObject": {
+        "required": [
+          "data",
+          "exchangeMetadata",
+          "fromSubscription",
+          "messageType",
+          "transactionIdentifier"
+        ],
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "description": "The payload XML (e.g. S100_ExchangeSet, S100_DataSet), ZIP or binary The data can be open or encrypted.",
+            "format": "byte"
+          },
+          "messageType": {
+            "$ref": "#/components/schemas/MessageTypeEnum"
+          },
+          "exchangeMetadata": {
+            "$ref": "#/components/schemas/ExchangeMetadata"
+          },
+          "fromSubscription": {
+            "type": "boolean",
+            "description": "Flag to indicate whether the data has been uploaded within an active subscription or not."
+          },
+          "ackRequest": {
+            "$ref": "#/components/schemas/AckRequestEnum"
+          },
+          "ackEndpoint": {
+            "type": "string",
+            "description": "Flag to indicate whether the data has been uploaded within an active subscription or not.",
+            "nullable": true
+          },
+          "transactionIdentifier": {
+            "type": "string",
+            "description": "Transaction identifier to be used in acknowledgement",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Secom_ErrorCodeEnum": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "ResponseUploadObject": {
+        "required": [
+          "message",
+          "secoM_ErrorCode"
+        ],
+        "type": "object",
+        "properties": {
+          "secoM_ErrorCode": {
+            "$ref": "#/components/schemas/Secom_ErrorCodeEnum"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success or error response message"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InformationSummaryObject": {
+        "required": [
+          "description",
+          "identifier",
+          "messageIdentifier",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "messageIdentifier": {
+            "type": "string",
+            "description": "Reference to data"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Identifier of the information object"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the information object"
+          },
+          "statusEnum": {
+            "type": "string",
+            "description": "Status of the information object",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the information object"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetSummaryResponseObject": {
+        "required": [
+          "pagination"
+        ],
+        "type": "object",
+        "properties": {
+          "informationSummaryObject": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InformationSummaryObject"
+            },
+            "description": "Description of the information object",
+            "nullable": true
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationObject"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UploadLinkObject": {
+        "required": [
+          "exchangeMetadata",
+          "timeToLive",
+          "transactionIdentifier"
+        ],
+        "type": "object",
+        "properties": {
+          "timeToLive": {
+            "type": "string",
+            "description": "DateTime when data will be deleted on server. The data need to be fetched before this time.",
+            "format": "date-time"
+          },
+          "transactionIdentifier": {
+            "type": "string",
+            "description": "Transaction identifier to be used in acknowledgement",
+            "format": "uuid"
+          },
+          "exchangeMetadata": {
+            "$ref": "#/components/schemas/ExchangeMetadata"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestSubscriptionRequestObject": {
+        "type": "object",
+        "properties": {
+          "dataType": {
+            "$ref": "#/components/schemas/DataTypeEnum"
+          },
+          "productSpecification": {
+            "type": "string",
+            "description": "Product type requested",
+            "nullable": true
+          },
+          "geometry": {
+            "type": "string",
+            "description": "Geometry condition for geolocated information objects",
+            "nullable": true
+          },
+          "areaName": {
+            "$ref": "#/components/schemas/AreaNameEnum"
+          },
+          "unlocode": {
+            "type": "string",
+            "description": "Code of defined object",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RemoveSubscriptionRequestObject": {
+        "required": [
+          "subscriptionIdentifier"
+        ],
+        "type": "object",
+        "properties": {
+          "subscriptionIdentifier": {
+            "type": "string",
+            "description": "Subscription identifer to the subscripotion to be removed. Received in subscription request or subscription notification.",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubscriptionFilter": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponseSubscriptionListObject": {
+        "required": [
+          "subscriptionIdentifier"
+        ],
+        "type": "object",
+        "properties": {
+          "subscriptionIdentifier": {
+            "type": "string",
+            "description": "Subscription identifier. Can be used when removing the subscription.",
+            "format": "uuid"
+          },
+          "subscriptionFilter": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionFilter"
+            },
+            "description": "Description of the subscription filter parameters",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubscriptionEventEnum": {
+        "enum": [
+          0,
+          1
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "SubscriptionNotificationRequestObject": {
+        "required": [
+          "eventEnum",
+          "subscriptionIdentifier"
+        ],
+        "type": "object",
+        "properties": {
+          "subscriptionIdentifier": {
+            "type": "string",
+            "description": "",
+            "format": "uuid"
+          },
+          "eventEnum": {
+            "$ref": "#/components/schemas/SubscriptionEventEnum"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

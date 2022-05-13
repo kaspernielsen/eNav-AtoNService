@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 GLA Research and Development Directorate
+ * Copyright (c) 2022 GLA Research and Development Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,19 @@
 package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.apache.lucene.spatial.prefix.RecursivePrefixTreeStrategy;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.models.domain.AtonMessage;
-import org.grad.eNav.atonService.models.dtos.datatables.DtPage;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
-import org.grad.eNav.atonService.repos.AtonMessageRepo;
+import org.grad.eNav.atonService.repos.AidsToNavigationRepo;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -48,20 +50,18 @@ import javax.persistence.EntityManager;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 /**
- * The AtoN Message Service Class
+ * The Aids to Navigation Service.
  *
- * Service Implementation for managing AtoN messages.
+ * Service Implementation for managing the S-125 Aids to Navigation objects.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Service
 @Slf4j
-@Transactional
-public class AtonMessageService {
+public class AidsToNavigationService {
 
     /**
      * The Entity Manager.
@@ -70,128 +70,38 @@ public class AtonMessageService {
     EntityManager entityManager;
 
     /**
-     * The AtoN Message Repo.
+     * The Generic Aids to Navigation Repo.
      */
     @Autowired
-    AtonMessageRepo sNodeRepo;
+    AidsToNavigationRepo aidsToNavigationRepo;
 
     // Service Variables
     private final String[] searchFields = new String[] {
-            "uid",
-            "type",
-            "message"
+            "aton_number"
     };
     private final String[] searchFieldsWithSort = new String[] {
-            "id",
-            "message"
+            "id"
     };
 
     /**
-     * Get all the AtoN messages.
-     *
-     * @return the list of AtoN messages
-     */
-    @Transactional(readOnly = true)
-    public List<AtonMessage> findAll() {
-        log.debug("Request to get all AtoN messages");
-        return this.sNodeRepo.findAll();
-    }
-
-    /**
-     * Get all the AtoN messages in a pageable search.
+     * Get all the Aids to Navigation in a pageable search.
      *
      * @param pageable the pagination information
-     * @return the list of AtoN messages
+     * @return the list of Aids to Navigation
      */
     @Transactional(readOnly = true)
-    public Page<AtonMessage> findAll(Optional<String> uid,
+    public Page<AidsToNavigation> findAll(Optional<String> atonNumber,
                                      Optional<Geometry> geometry,
                                      Pageable pageable) {
         log.debug("Request to get AtoN messages in a pageable search");
         // Create the search query - always sort by name
-        SearchQuery searchQuery = this.getMessageSearchQuery(uid, geometry, new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true)));
+        SearchQuery searchQuery = this.getAidsToNavigationSearchQuery(atonNumber, geometry, new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true)));
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
-                .map(searchResult -> new PageImpl<AtonMessage>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .map(searchResult -> new PageImpl<AidsToNavigation>(searchResult.hits(), pageable, searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
-
-    }
-
-    /**
-     * Get one AtoN message by ID.
-     *
-     * @param id the ID of the AtoN message
-     * @return the AtoN message
-     */
-    @Transactional(readOnly = true)
-    public AtonMessage findOne(BigInteger id) {
-        log.debug("Request to get AtoN message : {}", id);
-        return this.sNodeRepo.findById(id)
-                .orElseThrow(() ->
-                        new DataNotFoundException(String.format("No station node found for the provided ID: %d", id))
-                );
-    }
-
-    /**
-     * Get one AtoN message by UID.
-     *
-     * @param uid the UID of the AtoN message
-     * @return the AtoN message
-     */
-    @Transactional(readOnly = true)
-    public AtonMessage findOneByUid(String uid) {
-        log.debug("Request to get Node with UID : {}", uid);
-        return Optional.ofNullable(uid)
-                .map(this.sNodeRepo::findByUid)
-                .orElseThrow(() ->
-                        new DataNotFoundException(String.format("No station node found for the provided UID: %s", uid))
-                );
-    }
-
-    /**
-     * Save a AtoN message.
-     *
-     * @param AtonMessage the entity to save
-     * @return the persisted entity
-     */
-    @Transactional
-    public AtonMessage save(AtonMessage AtonMessage) {
-        log.debug("Request to save AtoN message : {}", AtonMessage);
-        return this.sNodeRepo.save(AtonMessage);
-    }
-
-    /**
-     * Delete the AtoN message by ID.
-     *
-     * @param id the ID of the AtoN message
-     */
-    @Transactional
-    public void delete(BigInteger id) {
-        log.debug("Request to delete AtoN message with ID : {}", id);
-        // Make sure the station node exists
-        final AtonMessage atonMessage = this.sNodeRepo.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(String.format("No station node found for the provided ID: %d", id)));
-
-        // Now delete the station node
-        this.sNodeRepo.delete(atonMessage);
-    }
-
-    /**
-     * Delete the node by UID.
-     *
-     * @param uid the UID the node
-     */
-    public void deleteByUid(String uid) throws DataNotFoundException {
-        log.debug("Request to delete AtoN message with UID : {}", uid);
-        BigInteger id = Optional.ofNullable(uid)
-                .map(this.sNodeRepo::findByUid)
-                .map(AtonMessage::getId)
-                .orElseThrow(() ->
-                        new DataNotFoundException(String.format("No station node found for the provided UID: %s", uid))
-                );
-        this.delete(id);
     }
 
     /**
@@ -202,9 +112,9 @@ public class AtonMessageService {
      * @return the Datatables paged response
      */
     @Transactional(readOnly = true)
-    public Page<AtonMessage> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+    public Page<AidsToNavigation> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
-        SearchQuery searchQuery = this.getSearchMessageQueryByText(
+        SearchQuery searchQuery = this.getSearchAidsToNavigationQueryByText(
                 dtPagingRequest.getSearch().getValue(),
                 dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort))
         );
@@ -212,8 +122,60 @@ public class AtonMessageService {
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
-                .map(searchResult -> new PageImpl<AtonMessage>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
+                .map(searchResult -> new PageImpl<AidsToNavigation>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
+    }
+
+    /**
+     * A simple saving operation that persists the models in the database using
+     * the correct repository based on the instance type.
+     *
+     * @param aidsToNavigation the Aids to Navigation entity to be saved
+     * @return the saved Aids to Navigation entity
+     */
+    @Transactional
+    public AidsToNavigation save(AidsToNavigation aidsToNavigation) {
+        log.debug("Request to save Aids to Navigation : {}", aidsToNavigation);
+
+        // Update the entity ID if the Code ID was found
+        this.aidsToNavigationRepo.findByAtonNumber(aidsToNavigation.getAtonNumber())
+                .ifPresent(aton -> aidsToNavigation.setId(aton.getId()));
+
+        // Now save for each type
+        return this.aidsToNavigationRepo.save(aidsToNavigation);
+    }
+
+    /**
+     * Delete the Aids to Navigation by ID.
+     *
+     * @param id the ID of the Aids to Navigation
+     */
+    @Transactional
+    public void delete(BigInteger id) {
+        log.debug("Request to delete Aids to Navigation with ID : {}", id);
+
+        // Make sure the station node exists
+        final AidsToNavigation aidsToNavigation = this.aidsToNavigationRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException(String.format("No station node found for the provided ID: %d", id)));
+
+        // Now delete the station node
+        this.aidsToNavigationRepo.delete(aidsToNavigation);
+    }
+
+    /**
+     * Delete the Aids to Navigation by its AtoN number.
+     *
+     * @param atonNumber the AtoN number of the Aids to Navigation
+     */
+    @Transactional
+    public void deleteByAtonNumber(String atonNumber) throws DataNotFoundException {
+        log.debug("Request to delete ids to Navigation with AtoN number : {}", atonNumber);
+        BigInteger id = this.aidsToNavigationRepo.findByAtonNumber(atonNumber)
+                .map(AidsToNavigation::getId)
+                .orElseThrow(() ->
+                        new DataNotFoundException(String.format("No Aids to Navigation found for the provided AtoN number: %s", atonNumber))
+                );
+        this.delete(id);
     }
 
     /**
@@ -228,9 +190,9 @@ public class AtonMessageService {
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<AtonMessage> getSearchMessageQueryByText(String searchText, Sort sort) {
+    protected SearchQuery<AidsToNavigation> getSearchAidsToNavigationQueryByText(String searchText, Sort sort) {
         SearchSession searchSession = Search.session( entityManager );
-        SearchScope<AtonMessage> scope = searchSession.scope( AtonMessage.class );
+        SearchScope<AidsToNavigation> scope = searchSession.scope( AidsToNavigation.class );
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
                 .where(f -> f.wildcard()
@@ -249,20 +211,20 @@ public class AtonMessageService {
      * For any more elaborate search, the getSearchMessageQueryByText funtion
      * can be used.
      *
-     * @param uid the AtoN UID to be searched
+     * @param atonNumber the AtoN UID to be searched
      * @param geometry the geometry that the results should intersect with
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<AtonMessage> getMessageSearchQuery(Optional<String> uid, Optional<Geometry> geometry, Sort sort) {
+    protected SearchQuery<AidsToNavigation> getAidsToNavigationSearchQuery(Optional<String> atonNumber, Optional<Geometry> geometry, Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( entityManager );
-        SearchScope<AtonMessage> scope = searchSession.scope( AtonMessage.class );
+        SearchScope<AidsToNavigation> scope = searchSession.scope( AidsToNavigation.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
                             b.must(f.matchAll());
-                            uid.ifPresent(v -> b.must(f.match()
-                                    .field("uid")
+                            atonNumber.ifPresent(v -> b.must(f.match()
+                                    .field("aton_number")
                                     .matching(v)));
                             geometry.ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
@@ -294,5 +256,6 @@ public class AtonMessageService {
                 .map(strategy::makeQuery)
                 .orElse(null);
     }
+
 
 }
