@@ -100,12 +100,12 @@ public class HTMLViewerController {
      * @param model The application UI model
      * @return The index page
      */
-    @GetMapping("/messages")
+    @GetMapping("/atons")
     public String messages(Model model) {
         model.addAttribute("appName", this.appName);
         model.addAttribute("appOperatorUrl", this.appOperatorUrl);
         model.addAttribute("appCopyright", this.appCopyright);
-        return "messages";
+        return "atons";
     }
 
     /**

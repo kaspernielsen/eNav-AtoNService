@@ -14,84 +14,69 @@
  * limitations under the License.
  */
 
-package org.grad.eNav.atonService.models.domain.s125;
+package org.grad.eNav.atonService.models.dtos.s125;
 
-import org.grad.eNav.atonService.utils.GeometryBinder;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.NonStandardField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.ScaledNumberField;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
+import org.grad.eNav.atonService.utils.GeometryJSONSerializer;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.locationtech.jts.geom.Geometry;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
 
 /**
- * The S-125 Aids to Navigation Entity Class.
+ * The S-125 Aids to Navigation DTO Entity Class.
  * <p>
- * This is the basic class for implementing the S-125-compatible Aids to
- * Navigation type. It is modelled as an entity class on hibernate, but it is
- * abstract so that we can extend this for each Aids to Navigation type.
+ * This is the basic class for transmitting the S-125 Aids to Navigation data
+ * onto third parties. This is going to be encoded as a JSON object and it
+ * does not contain AtoN type specific information, just the basics for
+ * identifying an AtoN, so the commin fields.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType
+ * @see org.grad.eNav.atonService.models.domain.s125.AidsToNavigation
  */
-@Entity
-@Cacheable
-@Indexed
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public abstract class AidsToNavigation {
+public class AidsToNavigationDto {
 
     // Class Variables
-    @Id
-    @ScaledNumberField(name = "id_sort", decimalScale=0, sortable = Sortable.YES)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "aids_to_navigation_generator")
-    @SequenceGenerator(name="aids_to_navigation_generator", sequenceName = "aids_to_navigation_seq", allocationSize=1)
     private BigInteger id;
 
-    @NotNull
-    @KeywordField(name="aton_number", sortable = Sortable.YES)
-    @Column(unique=true)
     private String atonNumber;
 
-    @NotNull
-    @KeywordField(name="id_code", sortable = Sortable.YES)
-    @Column(unique=true)
     private String idCode;
 
+    @GenericField(name="date_end")
     private LocalDate dateEnd;
 
+    @GenericField(name="date_start")
     private LocalDate dateStart;
 
     private LocalDate periodEnd;
 
     private LocalDate periodStart;
 
-    @ElementCollection
     private List<String> informations;
 
-    @ElementCollection
     private List<String> informationInNationalLanguages;
 
     private String textualDescription;
 
     private String textualDescriptionInNationalLanguage;
 
-    @ElementCollection
     private List<String> seasonalActionRequireds;
 
     private BigInteger scaleMinimum;
 
     private String pictorialRepresentation;
 
-    @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
+    @JsonSerialize(using = GeometryJSONSerializer.class)
+    @JsonDeserialize(using = GeometryJSONDeserializer.class)
     private Geometry geometry;
+
+    private String atonType;
+    private String content;
 
     /**
      * Gets id.
@@ -361,5 +346,41 @@ public abstract class AidsToNavigation {
      */
     public void setGeometry(Geometry geometry) {
         this.geometry = geometry;
+    }
+
+    /**
+     * Gets aton type.
+     *
+     * @return the aton type
+     */
+    public String getAtonType() {
+        return atonType;
+    }
+
+    /**
+     * Sets aton type.
+     *
+     * @param atonType the aton type
+     */
+    public void setAtonType(String atonType) {
+        this.atonType = atonType;
+    }
+
+    /**
+     * Gets content.
+     *
+     * @return the content
+     */
+    public String getContent() {
+        return content;
+    }
+
+    /**
+     * Sets content.
+     *
+     * @param content the content
+     */
+    public void setContent(String content) {
+        this.content = content;
     }
 }
