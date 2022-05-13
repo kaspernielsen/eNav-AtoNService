@@ -19,7 +19,6 @@ package org.grad.eNav.atonService;
 import org.geotools.data.DataStore;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.config.GlobalConfig;
-import org.grad.eNav.atonService.models.domain.AtonMessage;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
@@ -40,14 +39,6 @@ import static org.mockito.Mockito.mock;
 @TestConfiguration
 @Import(GlobalConfig.class)
 public class TestingConfiguration {
-
-	/**
-	 * AtoN message Mapper from Domain to DTO.
-	 */
-	@Bean
-	public DomainDtoMapper<AtonMessage, S125Node> atonMessageToS125Mapper() {
-		return new DomainDtoMapper<>();
-	}
 
 	/**
 	 * Aids to Navigation Mapper from Domain to DTO.
