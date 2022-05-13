@@ -223,7 +223,7 @@ class AidsToNavigationControllerTest {
         doThrow(DataNotFoundException.class).when(this.aidsToNavigationService).delete(any());
 
         // Perform the MVC request
-        this.mockMvc.perform(delete("/api/aton/{id}", this.existingAidsToNavigation.getId()))
+        this.mockMvc.perform(delete("/api/atons/{id}", this.existingAidsToNavigation.getId()))
                 .andExpect(status().isNotFound());
     }
 
