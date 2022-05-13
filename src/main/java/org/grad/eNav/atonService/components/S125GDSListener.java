@@ -30,7 +30,6 @@ import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.dtos.S100AbstractNode;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
-import org.grad.eNav.atonService.services.AtonMessageService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.s125.utils.S125Utils;
@@ -78,12 +77,6 @@ public class S125GDSListener implements FeatureListener {
     @Autowired
     @Qualifier("publishSubscribeChannel")
     PublishSubscribeChannel publishSubscribeChannel;
-
-    /**
-     * The Station Node Service.
-     */
-    @Autowired
-    AtonMessageService atonMessageService;
 
     /**
      * The Aids to Navigation Service.

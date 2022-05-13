@@ -17,7 +17,6 @@
 package org.grad.eNav.atonService.services;
 
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.models.domain.AtonMessage;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
@@ -129,8 +128,8 @@ class AidsToNavigationServiceTest {
     @Test
     void testFindAllPaged() {
         // Mock the full text query
-        SearchQuery<AtonMessage> mockedQuery = mock(SearchQuery.class);
-        SearchResult<AtonMessage> searchResult = mock(SearchResult.class);
+        SearchQuery<AidsToNavigation> mockedQuery = mock(SearchQuery.class);
+        SearchResult<AidsToNavigation> searchResult = mock(SearchResult.class);
         SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
         doReturn(searchResult).when(mockedQuery).fetch(any(), any());
         doReturn(this.aidsToNavigationList.subList(0, 5)).when(searchResult).hits();
