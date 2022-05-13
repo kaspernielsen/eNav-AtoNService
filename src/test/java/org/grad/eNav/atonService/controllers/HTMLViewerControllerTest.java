@@ -62,12 +62,12 @@ class HTMLViewerControllerTest {
     }
 
     /**
-     * Test that we can access the AtoN messages HTML page.
+     * Test that we can access the AtoNs HTML page.
      */
     @Test
-    void testGetMessages() throws Exception {
+    void testGetAtons() throws Exception {
         // Perform the MVC request
-        this.mockMvc.perform(get("/messages")
+        this.mockMvc.perform(get("/atons")
                         .contentType(MediaType.TEXT_HTML))
                 .andExpect(status().isOk());
     }

@@ -45,14 +45,26 @@ public enum S125AtonTypes {
     ISOLATED_DANGER_BUOY("Isolated Danger Buoy", S125BuoyIsolatedDangerType.class, BuoyIsolatedDanger.class, false),
     SAFE_WATER_BUOY("Safe Water Buoy", S125BuoySafeWaterType.class, BuoySafeWater.class, false),
     SPECIAL_PURPOSE_BUOY("Special Purpose Beacon", S125BuoySpecialPurposeGeneralType.class, BuoySpecialPurpose.class, false),
+    DAYMARK("Daymark", S125DaymarkType.class, Daymark.class, false),
+    FOG_SIGNAL("Fog Signal", S125FogSignalType.class, FogSignal.class, true),
+    LIGHT("Light", S125LightType.class, Light.class, true),
+    LIGHT_FLOAT("Light Float", S125LightFloatType.class, LightFloat.class, false),
     LANDMARK("Cardinal Beacon", S125LandmarkType.class, Landmark.class, false),
     LIGHTHOUSE("Lighthouse", S125LighthouseType.class, Lighthouse.class, false),
     LIGHT_VESSEL("Light Vessel", S125LightVesselType.class, LightVessel.class, false),
-    PHYSICAL_AIS_ATON("Physical AIS AtoN", S125PhysicalAISAidToNavigationType.class, PhysicalAISAidToNavigation.class, true),
-    VIRTUAL_AIS_ATON("Virtual AtoN", S125VirtualAISAidToNavigationType.class, VirtualAISAidToNavigation.class, true),
-    SYNTHETIC_AIS_ATON("Virtual AtoN", S125SyntheticAISAidToNavigationType.class, SyntheticAISAidToNavigation.class, true),
     NAVIGATION_LINE("Navigation Line", S125NavigationLineType.class, NavigationLine.class, false),
-    RECOMMENDED_TRACK("Recommended Track", S125RecommendedTrackType.class, RecommendedTrack.class, false);
+    OFFSHORE_PLATFORM("Offshore Platform", S125OffshorePlatformType.class, OffshorePlatform.class, false),
+    PHYSICAL_AIS_ATON("Physical AIS AtoN", S125PhysicalAISAidToNavigationType.class, PhysicalAISAidToNavigation.class, true),
+    PILE("Pile", S125PileType.class, Pile.class, false),
+    RADAR_REFLECTOR("Radar Reflector", S125RadarReflectorType.class, RadarReflector.class, true),
+    RADIO_STATION("Radio Station", S125RadioStationType.class, RadioStation.class, true),
+    RECOMMENDED_TRACK("Recommended Track", S125RecommendedTrackType.class, RecommendedTrack.class, false),
+    RETRO_REFLECTOR("Retro Reflector", S125RetroReflectorType.class, RetroReflector.class, true),
+    SILO_TANK("Silo Tank", S125SiloTankType.class, SiloTank.class, true),
+    SYNTHETIC_AIS_ATON("Virtual AtoN", S125SyntheticAISAidToNavigationType.class, SyntheticAISAidToNavigation.class, true),
+    TOPMARK("Topmark", S125TopmarkType.class, Topmark.class, true),
+    VIRTUAL_AIS_ATON("Virtual AtoN", S125VirtualAISAidToNavigationType.class, VirtualAISAidToNavigation.class, true),
+    UNKNOWN("Unknown", S125AidsToNavigationType.class, AidsToNavigation.class, false);
 
     // Enum Variables
     final Class<? extends S125AidsToNavigationType> s125Class;
@@ -121,7 +133,7 @@ public enum S125AtonTypes {
         return Arrays.stream(S125AtonTypes.values())
                 .filter(t -> t.getS125Class().equals(s125Class))
                 .findFirst()
-                .orElse(null);
+                .orElse(UNKNOWN);
     }
 
     /**
@@ -135,7 +147,7 @@ public enum S125AtonTypes {
         return Arrays.stream(S125AtonTypes.values())
                 .filter(t -> t.getLocalClass().equals(localClass))
                 .findFirst()
-                .orElse(null);
+                .orElse(UNKNOWN);
     }
 
     /**
@@ -144,13 +156,13 @@ public enum S125AtonTypes {
      * @return the type of the geometry that the S-125 type supports
      * @throws NoSuchFieldException
      */
-    public Class<?> getS125GeometryType() throws NoSuchFieldException {
+    public Field getS125GeometryField() throws NoSuchFieldException {
         Class current = this.getS125Class();
         // Look for the geometry field and iterate to the super class if necessary
         while(!Arrays.stream(current.getDeclaredFields()).map(Field::getName).anyMatch("geometry"::equals) && current.getSuperclass() != null) {
             current = current.getSuperclass();
         }
         // Once found (or not) return the type of the geometry
-        return current.getDeclaredField("geometry").getType();
+        return current.getDeclaredField("geometry");
     }
 }

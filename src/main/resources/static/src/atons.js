@@ -11,27 +11,57 @@ var drawnItems = undefined;
  */
 var nodesColumnDefs = [
 {
-    data: "atonUID",
-    title: "AtoN UID",
-    hoverMsg: "The S125 UID",
-    placeholder: "The S125 UID"
+    data: "id",
+    title: "ID",
+    hoverMsg: "The AtoN ID",
+    placeholder: "The AtoN ID",
+    visible: false,
+    searchable: false
+}, {
+    data: "atonNumber",
+    title: "AtoN Number",
+    hoverMsg: "The AtoN Number",
+    placeholder: "The AtoN Number"
  }, {
-     data: "bbox",
-     title: "Bounding Box",
-     hoverMsg: "The S125 Bounding Box",
-     placeholder: "The S125 Bounding Box",
-     visible: false,
-     searchable: false
+     data: "idCode",
+     title: "ID Code",
+     hoverMsg: "The AtoN ID Code",
+     placeholder: "The AtoN ID Code",
  }, {
+    data: "dateStart",
+    title: "Start Date",
+    hoverMsg: "The AtoN Start Date",
+    placeholder: "The AtoN Start Date",
+}, {
+    data: "dateEnd",
+    title: "End Date",
+    hoverMsg: "The AtoN End Date",
+    placeholder: "The AtoN End Date",
+ }, {
+     data: "atonType",
+     title: "Type",
+     hoverMsg: "The AtoN Type",
+     placeholder: "The AtoN Type",
+}, {
+    data: "textualDescription",
+    title: "Description",
+    hoverMsg: "The AtoN Description",
+    placeholder: "The AtoN Description",
+ }, {
+    data: "geometry",
+    title: "Geometry",
+    hoverMsg: "The AtoN Geometry",
+    placeholder: "The AtoN Geometry",
+    visible: false,
+    searchable: false
+ },{
     data: "content",
     title: "Content",
     type: "textarea",
-    hoverMsg: "The S125 Content",
-    placeholder: "The S125 Content",
-    width: "70%",
-    render: function (data, type, row) {
-        return "<textarea style=\"width: 100%; max-height: 300px\" readonly>" + data + "</textarea>";
-    }
+    hoverMsg: "The AtoN S-125 Content",
+    placeholder: "The AtoN S-125 Content",
+    visible: false,
+    searchable: false
 }];
 
 // Run when the document is ready
@@ -45,7 +75,7 @@ $(function () {
         serverSide: true,
         ajax: {
             type: "POST",
-            url: "./api/messages/dt",
+            url: "./api/atons/dt",
             contentType: "application/json",
             data: function (d) {
                 return JSON.stringify(d);
@@ -62,24 +92,33 @@ $(function () {
         altEditor: true, // Enable altEditor
         buttons: [{
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fa-solid fa-map-location"></i>',
-            titleAttr: 'View Message Geometry',
-            name: 'messageGeometry', // do not change name
-            className: 'message-geometry-toggle',
-            action: (e, dt, node, config) => {
-                loadMessageGeometry(e, dt, node, config);
-            }
-        }, {
-            extend: 'selected', // Bind to Selected row
             text: '<i class="fa-solid fa-trash-can"></i>',
             titleAttr: 'Delete Node',
             name: 'delete' // do not change name
+        }, {
+            extend: 'selected', // Bind to Selected row
+            text: '<i class="fa-solid fa-map-location"></i>',
+            titleAttr: 'View Message Geometry',
+            name: 'messageGeometry', // do not change name
+            className: 'aton-geometry-toggle',
+            action: (e, dt, node, config) => {
+                loadAtonGeometry(e, dt, node, config);
+            }
+        }, {
+            extend: 'selected', // Bind to Selected row
+            text: '<i class="fa-solid fa-code"></i>',
+            titleAttr: 'View AtoN S-125 Content',
+            name: 'atonContent', // do not change name
+            className: 'aton-content-toggle',
+            action: (e, dt, node, config) => {
+                loadAtonContent(e, dt, node, config);
+            }
         }],
         onDeleteRow: function (datatable, selectedRows, success, error) {
             selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
                 $.ajax({
                     type: 'DELETE',
-                    url: `./api/messages/uid/${this.data()["atonUID"]}`,
+                    url: `./api/atons/${this.data()["id"]}`,
                     success: success,
                     error: error
                 });
@@ -87,15 +126,22 @@ $(function () {
         }
     });
 
-    // We also need to link the message geometry toggle button with the the modal
+    // We also need to link the aton geometry toggle button with the the modal
     // panel so that by clicking the button the panel pops up. It's easier done
     // with jQuery.
-    atonMessagesTable.buttons('.message-geometry-toggle')
+    atonMessagesTable.buttons('.aton-geometry-toggle')
         .nodes()
-        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#messageGeometryPanel" });
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#atonGeometryPanel" });
 
-    // Now also initialise the station map before we need it
-    atonMessagesMap = L.map('atonMessagesMap').setView([54.910, -3.432], 5);
+    // We also need to link the aton content toggle button with the the modal
+    // panel so that by clicking the button the panel pops up. It's easier done
+    // with jQuery.
+    atonMessagesTable.buttons('.aton-content-toggle')
+        .nodes()
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#atonContentPanel" });
+
+    // Now also initialise the aton geometry map before we need it
+    atonMessagesMap = L.map('atonGeometryMap').setView([54.910, -3.432], 5);
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(atonMessagesMap);
@@ -113,7 +159,7 @@ $(function () {
     });
 
     // Invalidate the map size on show to fix the presentation
-    $('#messageGeometryPanel').on('shown.bs.modal', function() {
+    $('#atonGeometryPanel').on('shown.bs.modal', function() {
         setTimeout(function() {
             atonMessagesMap.invalidateSize();
         }, 10);
@@ -121,18 +167,18 @@ $(function () {
 });
 
 /**
- * This function will load the message geometry onto the drawnItems variable
+ * This function will load the AtoN geometry onto the drawnItems variable
  * so that it is shown in the AtoN message maps layers.
  *
  * @param {Event}         event         The event that took place
- * @param {DataTable}     table         The AtoN type table
+ * @param {DataTable}     table         The AtoN messages table
  * @param {Node}          button        The button node that was pressed
  * @param {Configuration} config        The table configuration
  */
-function loadMessageGeometry(event, table, button, config) {
+function loadAtonGeometry(event, table, button, config) {
     var idx = table.cell('.selected', 0).index();
     var data = table.rows(idx.row).data();
-    var geometry = data[0].bbox;
+    var geometry = data[0].geometry;
 
     // Recreate the drawn items feature group
     drawnItems.clearLayers();
@@ -141,6 +187,25 @@ function loadMessageGeometry(event, table, button, config) {
         addNonGroupLayers(geomLayer, drawnItems);
         atonMessagesMap.setView(geomLayer.getBounds().getCenter(), 5);
     }
+}
+
+/**
+ * This function will load the AtoN content onto the AtoN content dialog text
+ * area.
+ *
+ * @param {Event}         event         The event that took place
+ * @param {DataTable}     table         The AtoN messages table
+ * @param {Node}          button        The button node that was pressed
+ * @param {Configuration} config        The table configuration
+ */
+function loadAtonContent(event, table, button, config) {
+    var idx = table.cell('.selected', 0).index();
+    var data = table.rows(idx.row).data();
+    var content = data[0].content;
+
+    // Show the content
+    $('#atonContentTextArea').val(content);
+
 }
 
 // Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
