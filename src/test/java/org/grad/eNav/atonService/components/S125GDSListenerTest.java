@@ -24,6 +24,7 @@ import org.geotools.data.FeatureListener;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FidFilterImpl;
 import org.geotools.filter.text.cql2.CQLException;
+import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.GeomesaS125;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.dtos.S125Node;
@@ -69,7 +70,7 @@ class S125GDSListenerTest {
     S125GDSListener s125GDSListener;
 
     /**
-     * The Model Mapper injection.
+     * The Model Mapper.
      */
     @Spy
     ModelMapper modelMapper;
@@ -153,7 +154,6 @@ class S125GDSListenerTest {
         assertEquals(this.s125GDSListener.geomesaData, this.geomesaData);
         assertEquals(this.s125GDSListener.geometry, this.geometry);
         assertNotNull(this.s125GDSListener.modelMapper);
-        assertFalse(this.modelMapper.getTypeMaps().isEmpty());
         assertTrue(this.featureListeners.size() == 1);
     }
 
@@ -193,6 +193,9 @@ class S125GDSListenerTest {
         doReturn(FeatureEvent.Type.CHANGED).when(featureEvent).getType();
         doReturn(simpleFeatureList.stream().findFirst().orElse(null)).when(featureEvent).feature();
 
+        // We need to use the actual Spring model mapper to pick up the type-maps
+        this.s125GDSListener.modelMapper = new GlobalConfig().modelMapper();
+
         // Init and perform the component call
         this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry, false);
         this.s125GDSListener.changed(featureEvent);
@@ -224,6 +227,9 @@ class S125GDSListenerTest {
         KafkaFeatureEvent.KafkaFeatureChanged featureEvent = mock(KafkaFeatureEvent.KafkaFeatureChanged.class);
         doReturn(FeatureEvent.Type.CHANGED).when(featureEvent).getType();
         doReturn(simpleFeatureList.stream().findFirst().orElse(null)).when(featureEvent).feature();
+
+        // We need to use the actual Spring model mapper to pick up the type-maps
+        this.s125GDSListener.modelMapper = new GlobalConfig().modelMapper();
 
         // Init and perform the component call
         this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry, false);

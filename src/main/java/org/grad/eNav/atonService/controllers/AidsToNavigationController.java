@@ -66,12 +66,6 @@ import java.util.stream.Collectors;
 public class AidsToNavigationController {
 
     /**
-     * The Application Operator Name Information.
-     */
-    @Value("${gla.rad.aton-service.info.operatorName:Unknown}")
-    private String appOperatorName;
-
-    /**
      * The Aids to Navigation Service.
      */
     @Autowired
@@ -82,42 +76,6 @@ public class AidsToNavigationController {
      */
     @Autowired
     DomainDtoMapper<AidsToNavigation, AidsToNavigationDto> aidsToNavigationToDtoMapper;
-
-    /**
-     * Setup up addition model mapper configurations.
-     */
-    @PostConstruct
-    void init() {
-        // Create the Base Aids to Navigation type map
-        this.aidsToNavigationToDtoMapper.getModelMapper().createTypeMap(AidsToNavigation.class, AidsToNavigationDto.class)
-                .addMappings(mapper -> {
-                    mapper.using(ctx -> S125AtonTypes.fromLocalClass(((AidsToNavigation) ctx.getSource()).getClass()).getDescription())
-                            .map(src -> src, AidsToNavigationDto::setAtonType);
-                    mapper.using(ctx -> this.convertTos125DataSet(Collections.singletonList((AidsToNavigation) ctx.getSource())))
-                            .map(src -> src, AidsToNavigationDto::setContent);
-                });
-        // Add the base to all Aids to Navigation Mappings
-        for(S125AtonTypes atonType : S125AtonTypes.values()) {
-            // Skip the unknown type, we don't need it
-            if(atonType == S125AtonTypes.UNKNOWN) {
-                continue;
-            }
-            this.aidsToNavigationToDtoMapper.getModelMapper().createTypeMap(atonType.getLocalClass(), AidsToNavigationDto.class)
-                    .includeBase(AidsToNavigation.class, AidsToNavigationDto.class);
-            this.aidsToNavigationToDtoMapper.getModelMapper().createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
-                    .addMappings(mapper -> {
-                            mapper.map(AidsToNavigation::getId, S125AidsToNavigationType::setId);
-                            mapper.using(ctx -> this.convertToS125Geometry((AidsToNavigation) ctx.getSource()))
-                                    .map(src -> src, (dest, val) -> {
-                                        try {
-                                            new PropertyDescriptor("geometry", atonType.getS125Class()).getWriteMethod().invoke(dest, val);
-                                        } catch (Exception ex) {
-                                            this.log.error(ex.getMessage());
-                                        }
-                                    });
-                    });
-        }
-    }
 
     /**
      * GET /api/atons : Returns a paged list of all current Aids to navigation.
@@ -174,51 +132,4 @@ public class AidsToNavigationController {
                 .build();
     }
 
-    /**
-     * Converts a whole list of Aids to Navigation objects into an XML string
-     * representation conforming to the S-125 data product specification.
-     *
-     * @param atons the list of the Aids to Navigation objects
-     * @return the respective S-125 data string representation
-     */
-    protected String convertTos125DataSet(List<AidsToNavigation> atons) {
-        final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.aidsToNavigationToDtoMapper.getModelMapper());
-        final S125DatasetInfo datasetInfo = new S125DatasetInfo(
-                "AtoN Dataset for " + atons.stream().map(AidsToNavigation::getAtonNumber).collect(Collectors.joining(" ")),
-                appOperatorName.replaceAll(" ","_"),
-                atons
-        );
-        final DataSet dataset = s125DatasetBuilder.packageToDataset(datasetInfo, atons);
-        try {
-            return S125Utils.marshalS125(dataset);
-        } catch (JAXBException ex) {
-            this.log.error(ex.getMessage());
-        }
-        return "";
-    }
-
-    /**
-     * Converts the geometry for an Aids to Navigation object for the local JTS
-     * format used for persistence to the S-125 data product specification
-     * compatible one.
-     *
-     * @param aidsToNavigation the Aids to Navigation to get the geometry from
-     * @return the S-125 compliant geometry description
-     */
-    protected Object convertToS125Geometry(AidsToNavigation aidsToNavigation) {
-        PointCurveSurfaceProperty pointCurveSurfaceProperty = new GeometryS125Converter().convertFromGeometry(aidsToNavigation);
-        if(pointCurveSurfaceProperty.getSurfaceProperty() != null) {
-            SurfaceProperty surfaceProperty = new SurfaceProperty();
-            surfaceProperty.setSurfaceProperty(pointCurveSurfaceProperty.getSurfaceProperty());
-            return surfaceProperty;
-        } else if(pointCurveSurfaceProperty.getSurfaceProperty() != null) {
-            CurveProperty curveProperty = new CurveProperty();
-            curveProperty.setCurveProperty(pointCurveSurfaceProperty.getCurveProperty());
-            return curveProperty;
-        } else {
-            PointProperty pointProperty = new PointProperty();
-            pointProperty.setPointProperty(pointCurveSurfaceProperty.getPointProperty());
-            return pointProperty;
-        }
-    }
 }

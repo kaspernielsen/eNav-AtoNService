@@ -108,9 +108,6 @@ public class S125GDSListener implements FeatureListener {
         this.geometry = geometry;
         this.deletionHandler = handleDeletions;
 
-        // Configure the model mapper for S-125
-        Optional.ofNullable(this.modelMapper).ifPresent(this::initialiseModelMapper);
-
         // And add the feature listener to start reading
         this.featureSource = this.consumer.getFeatureSource(this.geomesaData.getTypeName());
         Optional.ofNullable(this.featureSource).ifPresent(fs -> fs.addFeatureListener(this));
@@ -217,28 +214,6 @@ public class S125GDSListener implements FeatureListener {
                 .map(s125Aton -> this.modelMapper.map(s125Aton, S125AtonTypes.fromS125Class(s125Aton.getClass()).getLocalClass()))
                 .filter(Objects::nonNull)
                 .forEach(this.aidsToNavigationService::save);
-    }
-
-    /**
-     * This helper function initialises the model mapper for the S-125 to
-     * local Aids to Navigation entity objects.
-     *
-     * Note that since the local {@link AidsToNavigation) class is abstract
-     * we need to specify the mapping for each of the implementation classes.
-     *
-     * @param modelMapper the model mapper to be initialised
-     */
-    protected void initialiseModelMapper(ModelMapper modelMapper) {
-        // Loop all the mapped S-125 AtoN types and configure the model mapper
-        for(S125AtonTypes type : S125AtonTypes.values()) {
-            modelMapper.createTypeMap(type.getS125Class(), type.getLocalClass())
-                    .implicitMappings()
-                    .addMappings(mapper -> {
-                        mapper.skip(AidsToNavigation::setId);
-                        mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((S125AidsToNavigationType) ctx.getSource())))
-                                .map(src-> src, AidsToNavigation::setGeometry);
-                    });
-        }
     }
 
 }

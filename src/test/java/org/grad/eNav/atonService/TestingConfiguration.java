@@ -60,7 +60,7 @@ public class TestingConfiguration {
 	}
 
 	/**
-	 * MOck a Geomesa Data Store bean so that we pretend we have a connection
+	 * Mock a Geomesa Data Store bean so that we pretend we have a connection
 	 * while the actual GS Data Store configuration is not enabled.
 	 *
 	 * @return the Geomesa Data Store bean
