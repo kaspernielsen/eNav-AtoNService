@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 GLA Research and Development Directorate
+ * Copyright (c) 2022 GLA Research and Development Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package org.grad.eNav.atonService.feign;
+package org.grad.eNav.atonService.models.domain.s125;
 
-import org.grad.eNav.atonService.config.FeignClientConfig;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.stereotype.Component;
+import javax.persistence.Entity;
 
 /**
- * The Feign Interface For the Niord Client.
+ * The S-125 Beacon Safe Water Entity Class.
+ * <p>
+ * This is the basic class for implementing the S-125-compatible Beacon Safe
+ * Water type. It is modelled as an entity that extends the {@link GenericBeacon}
+ * super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ * @see _int.iala_aism.s125.gml._0_0.S125BeaconSafeWaterType
  */
-@Component
-@FeignClient(name = "niord", configuration = FeignClientConfig.class)
-public interface NiordClient {
+@Entity
+public class BeaconSafeWater extends GenericBeacon {
 
 }
