@@ -274,7 +274,7 @@
 		<dependency>
 			<groupId>org.grad.eNav</groupId>
 			<artifactId>S125</artifactId>
-			<version>0.5.10</version>
+			<version>0.5.11</version>
 		</dependency>
 
 		<!-- VDES-1000 -->
