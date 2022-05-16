@@ -31,6 +31,7 @@ import org.locationtech.jts.geom.*;
 import org.modelmapper.ModelMapper;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -82,7 +83,7 @@ public class S125DatasetBuilder {
         dataSetIdentificationType.setProductEdition(datasetInfo.getProductionEdition());
         dataSetIdentificationType.setDatasetFileIdentifier(datasetInfo.getFileIdentifier());
         dataSetIdentificationType.setDatasetTitle(datasetInfo.getTitle());
-        dataSetIdentificationType.setDatasetReferenceDate(new Date());
+        dataSetIdentificationType.setDatasetReferenceDate(LocalDate.now());
         dataSetIdentificationType.setDatasetLanguage(ISO6391.EN);
         dataSetIdentificationType.setDatasetAbstract(datasetInfo.getAbstractText());
         s125Dataset.setDatasetIdentificationInformation(dataSetIdentificationType);
@@ -119,7 +120,6 @@ public class S125DatasetBuilder {
      */
     protected BoundingShapeType generateBoundingShape(Collection<AidsToNavigation> atonNodes) {
         // Calculate the bounding by envelope
-        final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         final Envelope envelope = new Envelope();
         atonNodes.stream()
                 .map(AidsToNavigation::getGeometry)
@@ -144,6 +144,13 @@ public class S125DatasetBuilder {
         return boundingShapeType;
     }
 
+    /**
+     * Adds the enclosing geometry boundaries to the provided envelop.
+     *
+     * @param envelope      The envelope to be updated
+     * @param geometry      The geometry to update the envelope boundaries with
+     * @return the updates envelope
+     */
     protected Envelope enclosingEnvelopFromGeometry(Envelope envelope, Geometry geometry) {
         final Geometry enclosingGeometry = geometry.getEnvelope();
         final Coordinate[] enclosingCoordinates = enclosingGeometry.getCoordinates();
