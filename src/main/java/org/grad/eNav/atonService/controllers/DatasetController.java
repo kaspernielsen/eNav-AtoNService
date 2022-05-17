@@ -33,7 +33,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 @RestController
@@ -52,6 +55,12 @@ public class DatasetController {
      */
     @Autowired
     DomainDtoMapper<S125DataSet, S125DataSetDto> datasetDtoMapper;
+
+    /**
+     * Object Mapper from DTO to Domain.
+     */
+    @Autowired
+    DomainDtoMapper<S125DataSetDto, S125DataSet> datasetDomainMapper;
 
     /**
      * GET /api/dataset : Returns a paged list of all current Datasets.
@@ -85,6 +94,45 @@ public class DatasetController {
         this.log.debug("REST request to get page of Dataset for datatables");
         return ResponseEntity.ok()
                 .body(this.datasetDtoMapper.convertToDtPage(this.datasetService.handleDatatablesPagingRequest(dtPagingRequest), dtPagingRequest, S125DataSetDto.class));
+    }
+
+    /**
+     * POST /api/dataset : Create a new dataset.
+     *
+     * @param dataSetDto the dataset to create
+     * @return the ResponseEntity with status 201 (Created) and with body the new instance, or with status 400 (Bad Request) if the instance has already an ID
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<S125DataSetDto> createInstance(@Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
+        log.debug("REST request to save Dataset : {}", dataSetDto);
+        if (dataSetDto.getId() != null) {
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("instance", "idexists", "A new dataset cannot already have an ID"))
+                    .build();
+        }
+        return ResponseEntity.created(new URI(""))
+                .body(this.datasetDtoMapper.convertTo(
+                        this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class)), S125DataSetDto.class)
+                );
+    }
+
+    /**
+     * PUT /api/dataset/{id} : Updates an existing "ID" dataset.
+     *
+     * @param id the ID of the dataset to be updated
+     * @param dataSetDto the dataset to update
+     * @return the ResponseEntity with status 200 (OK) and with body the updated instance
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<S125DataSetDto> updateInstance(@PathVariable BigInteger id, @Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
+        log.debug("REST request to update Dataset : {}", dataSetDto);
+        dataSetDto.setId(id);
+        return ResponseEntity.created(new URI(""))
+                .body(this.datasetDtoMapper.convertTo(
+                        this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class)), S125DataSetDto.class)
+                );
     }
 
     /**

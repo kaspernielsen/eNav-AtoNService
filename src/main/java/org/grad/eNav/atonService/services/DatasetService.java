@@ -79,7 +79,13 @@ public class DatasetService {
 
     // Service Variables
     private final String[] searchFields = new String[] {
-            "aton_number"
+            "datasetIdentificationInformation.encodingSpecification",
+            "datasetIdentificationInformation.encodingSpecificationEdition",
+            "datasetIdentificationInformation.productIdentifier",
+            "datasetIdentificationInformation.productEdition",
+            "datasetIdentificationInformation.applicationProfile",
+            "datasetIdentificationInformation.datasetFileIdentifier",
+            "datasetIdentificationInformation.datasetAbstract",
     };
     private final String[] searchFieldsWithSort = new String[] {
             "id"

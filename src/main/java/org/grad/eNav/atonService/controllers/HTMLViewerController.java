@@ -95,13 +95,27 @@ public class HTMLViewerController {
     }
 
     /**
-     * The AtoN messages page of the AtoN Service Application.
+     * The Datasets page of the AtoN Service Application.
+     *
+     * @param model The application UI model
+     * @return The index page
+     */
+    @GetMapping("/datasets")
+    public String datasets(Model model) {
+        model.addAttribute("appName", this.appName);
+        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
+        model.addAttribute("appCopyright", this.appCopyright);
+        return "datasets";
+    }
+
+    /**
+     * The Aids to Navigation page of the AtoN Service Application.
      *
      * @param model The application UI model
      * @return The index page
      */
     @GetMapping("/atons")
-    public String messages(Model model) {
+    public String atons(Model model) {
         model.addAttribute("appName", this.appName);
         model.addAttribute("appOperatorUrl", this.appOperatorUrl);
         model.addAttribute("appCopyright", this.appCopyright);
