@@ -18,21 +18,23 @@ package org.grad.eNav.atonService.utils;
 
 import _int.iala_aism.s125.gml._0_0.DataSet;
 import _int.iala_aism.s125.gml._0_0.MemberType;
-import _int.iho.s100.gml.base._1_0.DataSetIdentificationType;
 import _int.iho.s100.gml.base._1_0.DataSetStructureInformationType;
-import _int.iho.s100.gml.base._1_0.ISO6391;
 import _net.opengis.gml.profiles.BoundingShapeType;
 import _net.opengis.gml.profiles.EnvelopeType;
 import _net.opengis.gml.profiles.Pos;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
-import org.grad.eNav.atonService.models.domain.s125.S125DatasetInfo;
-import org.locationtech.jts.geom.*;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class S125DatasetBuilder {
@@ -57,36 +59,20 @@ public class S125DatasetBuilder {
     }
 
     /**
-     * This is the main   the provided list of AtoN nodess into an S125 dataset as
-     * dictated by the NIPWG S-125 data product specification.
+     * This is the main   the provided list of AtoN nodes into an S125 dataset
+     * as dictated by the NIPWG S-125 data product specification.
      *
-     * @param datasetInfo   The dataset information
-     * @param atons         The list of S-125 AtoN nodes
+     * @param s125Dataset   The S-125 local dataset object
+     * @param atons         The list of S-125 local AtoN object list
      */
-    public DataSet packageToDataset(S125DatasetInfo datasetInfo, List<AidsToNavigation> atons) {
+    public DataSet packageToDataset(S125Dataset s125Dataset, List<AidsToNavigation> atons) {
         // Initialise the dataset
-        DataSet s125Dataset = new DataSet();
-        s125Dataset.setId(datasetInfo.getDatasetId());
+        DataSet dataset = this.modelMapper.map(s125Dataset, DataSet.class);
 
         //====================================================================//
         //                       BOUNDED BY SECTION                           //
         //====================================================================//
-        s125Dataset.setBoundedBy(this.generateBoundingShape(atons));
-
-        //====================================================================//
-        //                  DATASET IDENTIFICATION SECTION                    //
-        //====================================================================//
-        DataSetIdentificationType dataSetIdentificationType = new DataSetIdentificationType();
-        dataSetIdentificationType.setEncodingSpecification(datasetInfo.getEncodingSpecification());
-        dataSetIdentificationType.setEncodingSpecificationEdition(datasetInfo.getEncodingSpecificationEdition());
-        dataSetIdentificationType.setProductIdentifier(datasetInfo.getProductionIdentifier());
-        dataSetIdentificationType.setProductEdition(datasetInfo.getProductionEdition());
-        dataSetIdentificationType.setDatasetFileIdentifier(datasetInfo.getFileIdentifier());
-        dataSetIdentificationType.setDatasetTitle(datasetInfo.getTitle());
-        dataSetIdentificationType.setDatasetReferenceDate(LocalDate.now());
-        dataSetIdentificationType.setDatasetLanguage(ISO6391.EN);
-        dataSetIdentificationType.setDatasetAbstract(datasetInfo.getAbstractText());
-        s125Dataset.setDatasetIdentificationInformation(dataSetIdentificationType);
+        dataset.setBoundedBy(this.generateBoundingShape(atons));
 
         //====================================================================//
         //              DATASET STRUCTURE INFORMATION SECTION                 //
@@ -95,6 +81,7 @@ public class S125DatasetBuilder {
         dataSetStructureInformationType.setCoordMultFactorX(BigInteger.ONE);
         dataSetStructureInformationType.setCoordMultFactorY(BigInteger.ONE);
         dataSetStructureInformationType.setCoordMultFactorZ(BigInteger.ONE);
+        dataset.setDatasetStructureInformation(dataSetStructureInformationType);
 
         //====================================================================//
         //                      DATASET MEMBERS SECTION                       //
@@ -105,10 +92,10 @@ public class S125DatasetBuilder {
                 .map(aton -> this.modelMapper.map(aton, S125AtonTypes.fromLocalClass(aton.getClass()).getS125Class()))
                 .map(aton -> this.s125GMLFactory.createS125AidsToNavigation(aton))
                 .map(jaxb -> { MemberType m = new MemberType(); m.setAbstractFeature(jaxb); return m; })
-                .forEach(s125Dataset.getImembersAndMembers()::add);
+                .forEach(dataset.getImembersAndMembers()::add);
 
         // Return the dataset
-        return s125Dataset;
+        return dataset;
     }
 
     /**
