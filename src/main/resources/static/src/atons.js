@@ -30,13 +30,15 @@ var nodesColumnDefs = [
  }, {
     data: "dateStart",
     title: "Start Date",
+    type: "date",
     hoverMsg: "The AtoN Start Date",
-    placeholder: "The AtoN Start Date",
+    placeholder: "The AtoN Start Date"
 }, {
     data: "dateEnd",
     title: "End Date",
+    type: "date",
     hoverMsg: "The AtoN End Date",
-    placeholder: "The AtoN End Date",
+    placeholder: "The AtoN End Date"
  }, {
      data: "atonType",
      title: "Type",
