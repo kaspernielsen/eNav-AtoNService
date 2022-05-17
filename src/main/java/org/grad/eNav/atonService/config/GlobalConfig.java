@@ -16,17 +16,14 @@
 
 package org.grad.eNav.atonService.config;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
-import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
+import _int.iala_aism.s125.gml._0_0.*;
 import _int.iho.s100.gml.base._1_0_Ext.CurveProperty;
 import _int.iho.s100.gml.base._1_0_Ext.PointCurveSurfaceProperty;
 import _int.iho.s100.gml.base._1_0_Ext.PointProperty;
 import _int.iho.s100.gml.base._1_0_Ext.SurfaceProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
@@ -39,6 +36,7 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.xml.bind.JAXBException;
 import java.beans.PropertyDescriptor;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -85,13 +83,27 @@ public class GlobalConfig {
 
         // Loop all the mapped S-125 AtoN types and configure the model mapper
         // to translate correctly from the S-125 onto the local classes
-        for(S125AtonTypes type : S125AtonTypes.values()) {
-            modelMapper.createTypeMap(type.getS125Class(), type.getLocalClass())
+        for(S125AtonTypes atonType : S125AtonTypes.values()) {
+            modelMapper.createTypeMap(atonType.getS125Class(), atonType.getLocalClass())
                     .implicitMappings()
                     .addMappings(mapper -> {
                         mapper.skip(AidsToNavigation::setId); // We don't know if the ID is correct so skip it
                         mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((S125AidsToNavigationType) ctx.getSource())))
                                 .map(src-> src, AidsToNavigation::setGeometry);
+
+                        // For some reason the MMSI code doesn't get mapped properly?!
+                        if(atonType == S125AtonTypes.VIRTUAL_AIS_ATON) {
+                            mapper.map(src -> ((S125VirtualAISAidToNavigationType)src).getMMSICode(),
+                                    (dest, val) -> ((VirtualAISAidToNavigation)dest).setMmsiCode((BigDecimal) val));
+                        }
+                        if(atonType == S125AtonTypes.PHYSICAL_AIS_ATON) {
+                            mapper.map(src -> ((S125PhysicalAISAidToNavigationType)src).getMMSICode(),
+                                    (dest, val) -> ((PhysicalAISAidToNavigation)dest).setMmsiCode((BigDecimal) val));
+                        }
+                        if(atonType == S125AtonTypes.SYNTHETIC_AIS_ATON) {
+                            mapper.map(src -> ((S125SyntheticAISAidToNavigationType)src).getMMSICode(),
+                                    (dest, val) -> ((SyntheticAISAidToNavigation)dest).setMmsiCode((BigDecimal) val));
+                        }
                     });
         }
 
@@ -112,6 +124,7 @@ public class GlobalConfig {
                 continue;
             }
             modelMapper.createTypeMap(atonType.getLocalClass(), AidsToNavigationDto.class)
+                    .implicitMappings()
                     .includeBase(AidsToNavigation.class, AidsToNavigationDto.class);
             modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
                     .implicitMappings()
