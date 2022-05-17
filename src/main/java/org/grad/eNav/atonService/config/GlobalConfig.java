@@ -70,8 +70,17 @@ public class GlobalConfig {
         ModelMapper modelMapper = new ModelMapper();
 
         // ================================================================== //
-        // Provide a configuration for all the mapping here to keep things tidy
+        // Provide a configuration for all the mappings here to keep tidy     //
         // ================================================================== //
+
+        // Since the S-125 objects contains lists that do NOT have a setter,
+        // we can use the protected fields directly to perform the mapping.
+        // Note that this creates ambiguity with the existing setters, so we
+        // should account for that.
+        modelMapper.getConfiguration()
+                .setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PROTECTED)
+                .setFieldMatchingEnabled(true)
+                .setAmbiguityIgnored(true);
 
         // Loop all the mapped S-125 AtoN types and configure the model mapper
         // to translate correctly from the S-125 onto the local classes
@@ -87,6 +96,7 @@ public class GlobalConfig {
 
         // Create the Base Aids to Navigation type map
         modelMapper.createTypeMap(AidsToNavigation.class, AidsToNavigationDto.class)
+                .implicitMappings()
                 .addMappings(mapper -> {
                     mapper.using(ctx -> S125AtonTypes.fromLocalClass(((AidsToNavigation) ctx.getSource()).getClass()).getDescription())
                             .map(src -> src, AidsToNavigationDto::setAtonType);
@@ -103,6 +113,7 @@ public class GlobalConfig {
             modelMapper.createTypeMap(atonType.getLocalClass(), AidsToNavigationDto.class)
                     .includeBase(AidsToNavigation.class, AidsToNavigationDto.class);
             modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
+                    .implicitMappings()
                     .addMappings(mapper -> {
                         mapper.map(AidsToNavigation::getId, S125AidsToNavigationType::setId);
                         mapper.using(ctx -> this.convertToS125Geometry((AidsToNavigation) ctx.getSource()))
@@ -110,7 +121,8 @@ public class GlobalConfig {
                                     try {
                                         new PropertyDescriptor("geometry", atonType.getS125Class()).getWriteMethod().invoke(dest, val);
                                     } catch (Exception ex) {
-                                        this.log.error(ex.getMessage());
+                                        System.out.println(ex.getMessage());
+                                        //this.log.error(ex.getMessage());
                                     }
                                 });
                     });
