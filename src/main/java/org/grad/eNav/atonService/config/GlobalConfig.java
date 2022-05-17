@@ -23,9 +23,10 @@ import _int.iho.s100.gml.base._1_0_Ext.PointCurveSurfaceProperty;
 import _int.iho.s100.gml.base._1_0_Ext.PointProperty;
 import _int.iho.s100.gml.base._1_0_Ext.SurfaceProperty;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.text.CaseUtils;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
-import org.grad.eNav.atonService.models.domain.s125.S125DatasetInfo;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
@@ -142,12 +143,11 @@ public class GlobalConfig {
      */
     protected String convertTos125DataSet(ModelMapper modelMapper, List<AidsToNavigation> atons) {
         final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(modelMapper);
-        final S125DatasetInfo datasetInfo = new S125DatasetInfo(
-                "AtoN Dataset for " + atons.stream().map(AidsToNavigation::getAtonNumber).collect(Collectors.joining(" ")),
-                appOperatorName.replaceAll(" ","_"),
-                atons
-        );
-        final DataSet dataset = s125DatasetBuilder.packageToDataset(datasetInfo, atons);
+        final String datasetTitle = CaseUtils.toCamelCase("AtoN Dataset for " + atons.stream()
+                .map(AidsToNavigation::getAtonNumber)
+                .collect(Collectors.joining(" ")), true, ' ');
+        final S125Dataset s125Dataset = new S125Dataset(datasetTitle);
+        final DataSet dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atons);
         try {
             return S125Utils.marshalS125(dataset);
         } catch (JAXBException ex) {

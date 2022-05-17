@@ -16,44 +16,26 @@
 
 package org.grad.eNav.atonService.controllers;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
-import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
-import _int.iho.s100.gml.base._1_0_Ext.CurveProperty;
-import _int.iho.s100.gml.base._1_0_Ext.PointCurveSurfaceProperty;
-import _int.iho.s100.gml.base._1_0_Ext.PointProperty;
-import _int.iho.s100.gml.base._1_0_Ext.SurfaceProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
-import org.grad.eNav.atonService.models.domain.s125.S125DatasetInfo;
-import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPage;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
-import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.HeaderUtil;
-import org.grad.eNav.s125.utils.S125Utils;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.PostConstruct;
-import javax.xml.bind.JAXBException;
-import java.beans.PropertyDescriptor;
 import java.math.BigInteger;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * REST controller for managing Aids to Navigation.
