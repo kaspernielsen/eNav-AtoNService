@@ -14,101 +14,72 @@
  * limitations under the License.
  */
 
-package org.grad.eNav.atonService.models.domain.s125;
+package org.grad.eNav.atonService.models.dtos.s125;
 
-import _int.iho.s100.gml.base._1_0.ISO6391;
-import _int.iho.s100.gml.base._1_0.MDTopicCategoryCode;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 
-import javax.persistence.*;
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.util.List;
 
 /**
- * The Dataset Identification Entity Class
+ * The Dataset Identification DTO Class
  * <p>
- * This class contains all the dataset identification information that will
- * be used to populate the S-125 dataset identification information structure.
+ * This is the basic class for transmitting the S-125 Dataset Identification
+ * Information onto third parties. This is going to be encoded as a JSON object,
+ * and it does contain all the fields of the locally persisted class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ * @see org.grad.eNav.atonService.models.domain.s125.S125DataSetIdentification
  */
-@Entity
-@Cacheable
-@Indexed
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class S125DataSetIdentification {
+public class S125DataSetIdentificationDto {
 
     // Class Variables
-    @Id
-    @ScaledNumberField(name = "id_sort", decimalScale=0, sortable = Sortable.YES)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dataset_identification_generator")
-    @SequenceGenerator(name="dataset_identification_generator", sequenceName = "dataset_identification_generator_seq", allocationSize=1)
     private BigInteger id;
 
-    @OneToOne(mappedBy = "datasetIdentificationInformation")
-    private S125DataSet s125Dataset;
-
-    @KeywordField(sortable = Sortable.YES)
     private String encodingSpecification;
 
-    @KeywordField(sortable = Sortable.YES)
     private String encodingSpecificationEdition;
 
-    @KeywordField(sortable = Sortable.YES)
     private String productIdentifier;
 
-    @KeywordField(sortable = Sortable.YES)
     private String productEdition;
 
-    @KeywordField(sortable = Sortable.YES)
     private String applicationProfile;
 
-    @KeywordField(sortable = Sortable.YES)
     private String datasetFileIdentifier;
 
-    @KeywordField(sortable = Sortable.YES)
     private String datasetTitle;
 
-    @GenericField()
+    @JsonFormat(pattern="yyyy-MM-dd")
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate datasetReferenceDate;
 
-    @Enumerated(EnumType.STRING)
-    @KeywordField(sortable = Sortable.YES)
-    private ISO6391 datasetLanguage;
+    private String datasetLanguage;
 
-    @FullTextField()
     private String datasetAbstract;
 
     /**
-     * Instantiates a new Data set identification.
+     * Gets id.
+     *
+     * @return the id
      */
-    public S125DataSetIdentification() {
-
+    public BigInteger getId() {
+        return id;
     }
 
     /**
-     * Instantiates a new Data set identification.
+     * Sets id.
      *
-     * @param datasetFileIdentifier the dataset file identifier
+     * @param id the id
      */
-    public S125DataSetIdentification(String datasetFileIdentifier) {
-        this.encodingSpecification = "S100 Part 10b";
-        this.encodingSpecificationEdition = "1.0";
-        this.productIdentifier = "S-125";
-        this.productEdition = "0.0.1";
-        this.applicationProfile = "AtoN Service";
-        this.datasetFileIdentifier = datasetFileIdentifier;
-        this.datasetTitle = "GRAD e-Navigation S-125 Dataset";
-        this.datasetReferenceDate = LocalDate.now();
-        this.datasetLanguage = ISO6391.EN;
+    public void setId(BigInteger id) {
+        this.id = id;
     }
-
-    @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = MDTopicCategoryCode.class)
-    private List<MDTopicCategoryCode> datasetTopicCategories;
 
     /**
      * Gets encoding specification.
@@ -259,7 +230,7 @@ public class S125DataSetIdentification {
      *
      * @return the dataset language
      */
-    public ISO6391 getDatasetLanguage() {
+    public String getDatasetLanguage() {
         return datasetLanguage;
     }
 
@@ -268,7 +239,7 @@ public class S125DataSetIdentification {
      *
      * @param datasetLanguage the dataset language
      */
-    public void setDatasetLanguage(ISO6391 datasetLanguage) {
+    public void setDatasetLanguage(String datasetLanguage) {
         this.datasetLanguage = datasetLanguage;
     }
 
@@ -288,23 +259,5 @@ public class S125DataSetIdentification {
      */
     public void setDatasetAbstract(String datasetAbstract) {
         this.datasetAbstract = datasetAbstract;
-    }
-
-    /**
-     * Gets dataset topic categories.
-     *
-     * @return the dataset topic categories
-     */
-    public List<MDTopicCategoryCode> getDatasetTopicCategories() {
-        return datasetTopicCategories;
-    }
-
-    /**
-     * Sets dataset topic categories.
-     *
-     * @param datasetTopicCategories the dataset topic categories
-     */
-    public void setDatasetTopicCategories(List<MDTopicCategoryCode> datasetTopicCategories) {
-        this.datasetTopicCategories = datasetTopicCategories;
     }
 }
