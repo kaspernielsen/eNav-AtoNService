@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.services;
 
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -27,9 +28,9 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
-import org.grad.eNav.atonService.repos.AidsToNavigationRepo;
+import org.grad.eNav.atonService.repos.DatasetRepo;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -53,15 +54,15 @@ import java.util.Collections;
 import java.util.Optional;
 
 /**
- * The Aids to Navigation Service.
+ * The S-125 Dataset Service.
  *
- * Service Implementation for managing the S-125 Aids to Navigation objects.
+ * Service Implementation for managing the S-125 Dataset objects.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Service
 @Slf4j
-public class AidsToNavigationService {
+public class DatasetService {
 
     /**
      * The Entity Manager.
@@ -69,11 +70,12 @@ public class AidsToNavigationService {
     @Autowired
     EntityManager entityManager;
 
+
     /**
-     * The Generic Aids to Navigation Repo.
+     * The Dataset Repo.
      */
     @Autowired
-    AidsToNavigationRepo aidsToNavigationRepo;
+    DatasetRepo datasetRepo;
 
     // Service Variables
     private final String[] searchFields = new String[] {
@@ -84,23 +86,23 @@ public class AidsToNavigationService {
     };
 
     /**
-     * Get all the Aids to Navigation in a pageable search.
+     * Get all the Datasets in a pageable search.
      *
      * @param pageable the pagination information
-     * @return the list of Aids to Navigation
+     * @return the list of Datasets
      */
     @Transactional(readOnly = true)
-    public Page<AidsToNavigation> findAll(Optional<String> atonNumber,
+    public Page<S125DataSet> findAll(Optional<String> datasetTitle,
                                      Optional<Geometry> geometry,
                                      Pageable pageable) {
-        log.debug("Request to get Aids to Navigation in a pageable search");
+        log.debug("Request to get S-125 Datasets in a pageable search");
         // Create the search query - always sort by name
-        SearchQuery searchQuery = this.getAidsToNavigationSearchQuery(atonNumber, geometry, new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true)));
+        SearchQuery searchQuery = this.geDatasetSearchQuery(datasetTitle, geometry, new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true)));
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
-                .map(searchResult -> new PageImpl<AidsToNavigation>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .map(searchResult -> new PageImpl<S125DataSet>(searchResult.hits(), pageable, searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
     }
 
@@ -112,10 +114,10 @@ public class AidsToNavigationService {
      * @return the Datatables paged response
      */
     @Transactional(readOnly = true)
-    public Page<AidsToNavigation> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
-        log.debug("Request to get Aids to Navigation in a Datatables pageable search");
+    public Page<S125DataSet> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+        log.debug("Request to get S-125 Datasets in a Datatables pageable search");
         // Create the search query
-        SearchQuery searchQuery = this.getSearchAidsToNavigationQueryByText(
+        SearchQuery searchQuery = this.getSearchDatasetQueryByText(
                 dtPagingRequest.getSearch().getValue(),
                 dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort))
         );
@@ -123,7 +125,7 @@ public class AidsToNavigationService {
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
-                .map(searchResult -> new PageImpl<AidsToNavigation>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
+                .map(searchResult -> new PageImpl<S125DataSet>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
@@ -131,19 +133,15 @@ public class AidsToNavigationService {
      * A simple saving operation that persists the models in the database using
      * the correct repository based on the instance type.
      *
-     * @param aidsToNavigation the Aids to Navigation entity to be saved
-     * @return the saved Aids to Navigation entity
+     * @param dataSet the Dataset entity to be saved
+     * @return the saved Dataset entity
      */
     @Transactional
-    public AidsToNavigation save(AidsToNavigation aidsToNavigation) {
-        log.debug("Request to save Aids to Navigation : {}", aidsToNavigation);
-
-        // Update the entity ID if the Code ID was found
-        this.aidsToNavigationRepo.findByAtonNumber(aidsToNavigation.getAtonNumber())
-                .ifPresent(aton -> aidsToNavigation.setId(aton.getId()));
+    public S125DataSet save(S125DataSet dataSet) {
+        log.debug("Request to save Dataset : {}", dataSet);
 
         // Now save for each type
-        return this.aidsToNavigationRepo.save(aidsToNavigation);
+        return this.datasetRepo.save(dataSet);
     }
 
     /**
@@ -153,47 +151,29 @@ public class AidsToNavigationService {
      */
     @Transactional
     public void delete(BigInteger id) {
-        log.debug("Request to delete Aids to Navigation with ID : {}", id);
+        log.debug("Request to delete Dataset with ID : {}", id);
 
         // Make sure the station node exists
-        final AidsToNavigation aidsToNavigation = this.aidsToNavigationRepo.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(String.format("No Aids to Navigation found for the provided ID: %d", id)));
+        final S125DataSet dataSet = this.datasetRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException(String.format("No Dataset found for the provided ID: %d", id)));
 
         // Now delete the station node
-        this.aidsToNavigationRepo.delete(aidsToNavigation);
-    }
-
-    /**
-     * Delete the Aids to Navigation by its AtoN number.
-     *
-     * @param atonNumber the AtoN number of the Aids to Navigation
-     */
-    @Transactional
-    public void deleteByAtonNumber(String atonNumber) throws DataNotFoundException {
-        log.debug("Request to delete ids to Navigation with AtoN number : {}", atonNumber);
-        BigInteger id = this.aidsToNavigationRepo.findByAtonNumber(atonNumber)
-                .map(AidsToNavigation::getId)
-                .orElseThrow(() ->
-                        new DataNotFoundException(String.format("No Aids to Navigation found for the provided AtoN number: %s", atonNumber))
-                );
-        this.delete(id);
+        this.datasetRepo.delete(dataSet);
     }
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
      * search test. This query will be based solely on the station nodes table
      * and will include the following fields:
-     * - UID
-     * - Type
-     * - Message
+     * -
      *
      * @param searchText the text to be searched
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<AidsToNavigation> getSearchAidsToNavigationQueryByText(String searchText, Sort sort) {
+    protected SearchQuery<S125DataSet> getSearchDatasetQueryByText(String searchText, Sort sort) {
         SearchSession searchSession = Search.session( entityManager );
-        SearchScope<AidsToNavigation> scope = searchSession.scope( AidsToNavigation.class );
+        SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
                 .where(f -> f.wildcard()
@@ -207,25 +187,24 @@ public class AidsToNavigationService {
      * Constructs a hibernate search query using Lucene based on the provided
      * AtoN UID and geometry. This query will be based solely on the aton
      * messages table and will include the following fields:
-     * - UID
-     * - Geometry
+     * -
      * For any more elaborate search, the getSearchMessageQueryByText funtion
      * can be used.
      *
-     * @param atonNumber the AtoN UID to be searched
+     * @param datasetTitle the Dataset title to be searched
      * @param geometry the geometry that the results should intersect with
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<AidsToNavigation> getAidsToNavigationSearchQuery(Optional<String> atonNumber, Optional<Geometry> geometry, Sort sort) {
+    protected SearchQuery<S125DataSet> geDatasetSearchQuery(Optional<String> datasetTitle, Optional<Geometry> geometry, Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( entityManager );
-        SearchScope<AidsToNavigation> scope = searchSession.scope( AidsToNavigation.class );
+        SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
                             b.must(f.matchAll());
-                            atonNumber.ifPresent(v -> b.must(f.match()
-                                    .field("aton_number")
+                            datasetTitle.ifPresent(v -> b.must(f.match()
+                                    .field("datasetIdentificationInformation.datasetTitle")
                                     .matching(v)));
                             geometry.ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
@@ -257,6 +236,4 @@ public class AidsToNavigationService {
                 .map(strategy::makeQuery)
                 .orElse(null);
     }
-
-
 }
