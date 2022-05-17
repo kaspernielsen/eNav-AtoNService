@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
-import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
@@ -146,7 +146,7 @@ public class GlobalConfig {
         final String datasetTitle = CaseUtils.toCamelCase("AtoN Dataset for " + atons.stream()
                 .map(AidsToNavigation::getAtonNumber)
                 .collect(Collectors.joining(" ")), true, ' ');
-        final S125Dataset s125Dataset = new S125Dataset(datasetTitle);
+        final S125DataSet s125Dataset = new S125DataSet(datasetTitle);
         final DataSet dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atons);
         try {
             return S125Utils.marshalS125(dataset);
