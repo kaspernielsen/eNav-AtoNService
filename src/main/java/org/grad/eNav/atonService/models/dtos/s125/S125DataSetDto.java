@@ -16,6 +16,12 @@
 
 package org.grad.eNav.atonService.models.dtos.s125;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
+import org.grad.eNav.atonService.utils.GeometryJSONSerializer;
 import org.locationtech.jts.geom.Geometry;
 
 import java.math.BigInteger;
@@ -38,10 +44,16 @@ public class S125DataSetDto {
 
     private S125DataSetIdentificationDto datasetIdentificationInformation;
 
+    @JsonSerialize(using = GeometryJSONSerializer.class)
+    @JsonDeserialize(using = GeometryJSONDeserializer.class)
     private Geometry geometry;
 
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime createdAt;
 
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime lastUpdatedAt;
 
     /**

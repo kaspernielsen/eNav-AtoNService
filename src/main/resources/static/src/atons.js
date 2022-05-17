@@ -69,7 +69,7 @@ var nodesColumnDefs = [
 // Run when the document is ready
 $(function () {
     // And re-initialise it
-    atonMessagesTable = $('#nodes_table').DataTable({
+    atonMessagesTable = $('#atons_table').DataTable({
         processing: true,
         language: {
             processing: '<i class="fa-solid fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
