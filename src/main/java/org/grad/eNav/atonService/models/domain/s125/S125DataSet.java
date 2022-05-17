@@ -36,7 +36,7 @@ import java.util.Date;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
-public class S125Dataset {
+public class S125DataSet {
 
     // Class Variables
     @Id
@@ -59,7 +59,7 @@ public class S125Dataset {
     /**
      * Instantiates a new Dataset.
      */
-    public S125Dataset() {
+    public S125DataSet() {
 
     }
 
@@ -68,7 +68,7 @@ public class S125Dataset {
      *
      * @param datasetFileIdentifier the dataset file identifier
      */
-    public S125Dataset(String datasetFileIdentifier) {
+    public S125DataSet(String datasetFileIdentifier) {
         this.datasetIdentificationInformation = new S125DataSetIdentification(datasetFileIdentifier);
     }
 

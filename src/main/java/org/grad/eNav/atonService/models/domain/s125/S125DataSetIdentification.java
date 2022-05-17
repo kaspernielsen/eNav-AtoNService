@@ -42,7 +42,7 @@ public class S125DataSetIdentification {
     private BigInteger id;
 
     @OneToOne(mappedBy = "datasetIdentificationInformation")
-    private S125Dataset s125Dataset;
+    private S125DataSet s125Dataset;
 
     private String encodingSpecification;
 

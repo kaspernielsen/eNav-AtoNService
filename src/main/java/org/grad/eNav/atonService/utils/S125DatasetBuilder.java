@@ -24,7 +24,7 @@ import _net.opengis.gml.profiles.EnvelopeType;
 import _net.opengis.gml.profiles.Pos;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
-import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -65,7 +65,7 @@ public class S125DatasetBuilder {
      * @param s125Dataset   The S-125 local dataset object
      * @param atons         The list of S-125 local AtoN object list
      */
-    public DataSet packageToDataset(S125Dataset s125Dataset, List<AidsToNavigation> atons) {
+    public DataSet packageToDataset(S125DataSet s125Dataset, List<AidsToNavigation> atons) {
         // Initialise the dataset
         DataSet dataset = this.modelMapper.map(s125Dataset, DataSet.class);
 
