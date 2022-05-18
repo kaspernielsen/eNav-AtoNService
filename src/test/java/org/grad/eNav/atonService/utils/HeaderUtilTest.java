@@ -24,17 +24,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class HeaderUtilTest {
 
     /**
-     * Test that we can create the alert headers with both the "X-vdesCtrl-alert"
-     * and "X-vdesCtrl-params" fields.
+     * Test that we can create the alert headers with both the "X-atonService-alert"
+     * and "X-atonService-params" fields.
      */
     @Test
     void testCreateAlert() {
         HttpHeaders headers = HeaderUtil.createAlert("message", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-vdesCtrl-alert"));
-        assertEquals("[message]", headers.get("X-vdesCtrl-alert").toString());
-        assertTrue(headers.containsKey("X-vdesCtrl-params"));
-        assertEquals("[param]", headers.get("X-vdesCtrl-params").toString());
+        assertTrue(headers.containsKey("X-atonService-alert"));
+        assertEquals("[message]", headers.get("X-atonService-alert").toString());
+        assertTrue(headers.containsKey("X-atonService-params"));
+        assertEquals("[param]", headers.get("X-atonService-params").toString());
     }
 
     /**
@@ -44,9 +44,9 @@ class HeaderUtilTest {
     void testCreateEntityCreationAlert() {
         HttpHeaders headers = HeaderUtil.createEntityCreationAlert("entity", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-vdesCtrl-alert"));
-        assertTrue(headers.containsKey("X-vdesCtrl-params"));
-        assertEquals("[param]", headers.get("X-vdesCtrl-params").toString());
+        assertTrue(headers.containsKey("X-atonService-alert"));
+        assertTrue(headers.containsKey("X-atonService-params"));
+        assertEquals("[param]", headers.get("X-atonService-params").toString());
     }
 
     /**
@@ -56,9 +56,9 @@ class HeaderUtilTest {
     void testCreateEntityUpdateAlert() {
         HttpHeaders headers = HeaderUtil.createEntityUpdateAlert("entity", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-vdesCtrl-alert"));
-        assertTrue(headers.containsKey("X-vdesCtrl-params"));
-        assertEquals("[param]", headers.get("X-vdesCtrl-params").toString());
+        assertTrue(headers.containsKey("X-atonService-alert"));
+        assertTrue(headers.containsKey("X-atonService-params"));
+        assertEquals("[param]", headers.get("X-atonService-params").toString());
     }
 
     /**
@@ -68,9 +68,9 @@ class HeaderUtilTest {
     void testCreateEntityDeletionAlert() {
         HttpHeaders headers = HeaderUtil.createEntityDeletionAlert("entity", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-vdesCtrl-alert"));
-        assertTrue(headers.containsKey("X-vdesCtrl-params"));
-        assertEquals("[param]", headers.get("X-vdesCtrl-params").toString());
+        assertTrue(headers.containsKey("X-atonService-alert"));
+        assertTrue(headers.containsKey("X-atonService-params"));
+        assertEquals("[param]", headers.get("X-atonService-params").toString());
     }
 
     /**
@@ -80,10 +80,10 @@ class HeaderUtilTest {
     void testCreateFailureAlert() {
         HttpHeaders headers = HeaderUtil.createFailureAlert("entity", "key", "message");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-vdesCtrl-error"));
-        assertEquals("[error.key]", headers.get("X-vdesCtrl-error").toString());
-        assertTrue(headers.containsKey("X-vdesCtrl-params"));
-        assertEquals("[entity]", headers.get("X-vdesCtrl-params").toString());
+        assertTrue(headers.containsKey("X-atonService-error"));
+        assertEquals("[error.key]", headers.get("X-atonService-error").toString());
+        assertTrue(headers.containsKey("X-atonService-params"));
+        assertEquals("[entity]", headers.get("X-atonService-params").toString());
     }
 
 }

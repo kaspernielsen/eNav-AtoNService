@@ -123,7 +123,7 @@ public class DatasetService {
     public Page<S125DataSet> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         log.debug("Request to get S-125 Datasets in a Datatables pageable search");
         // Create the search query
-        SearchQuery searchQuery = this.getSearchDatasetQueryByText(
+        SearchQuery searchQuery = this.getDatasetSearchQueryByText(
                 dtPagingRequest.getSearch().getValue(),
                 dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort))
         );
@@ -177,7 +177,7 @@ public class DatasetService {
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<S125DataSet> getSearchDatasetQueryByText(String searchText, Sort sort) {
+    protected SearchQuery<S125DataSet> getDatasetSearchQueryByText(String searchText, Sort sort) {
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
         return searchSession.search( scope )
@@ -219,7 +219,6 @@ public class DatasetService {
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
                 .toQuery();
     }
-
 
     /**
      * Creates a Lucene geo-spatial query based on the provided geometry. The
