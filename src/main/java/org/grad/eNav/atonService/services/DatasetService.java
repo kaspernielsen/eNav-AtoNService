@@ -79,6 +79,7 @@ public class DatasetService {
 
     // Service Variables
     private final String[] searchFields = new String[] {
+            "datasetIdentificationInformation.datasetTitle",
             "datasetIdentificationInformation.encodingSpecification",
             "datasetIdentificationInformation.encodingSpecificationEdition",
             "datasetIdentificationInformation.productIdentifier",
