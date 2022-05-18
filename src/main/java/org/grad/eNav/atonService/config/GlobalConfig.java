@@ -16,14 +16,17 @@
 
 package org.grad.eNav.atonService.config;
 
-import _int.iala_aism.s125.gml._0_0.*;
+import _int.iala_aism.s125.gml._0_0.DataSet;
+import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
 import _int.iho.s100.gml.base._1_0_Ext.CurveProperty;
 import _int.iho.s100.gml.base._1_0_Ext.PointCurveSurfaceProperty;
 import _int.iho.s100.gml.base._1_0_Ext.PointProperty;
 import _int.iho.s100.gml.base._1_0_Ext.SurfaceProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
-import org.grad.eNav.atonService.models.domain.s125.*;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
@@ -36,7 +39,6 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.xml.bind.JAXBException;
 import java.beans.PropertyDescriptor;
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,38 +78,43 @@ public class GlobalConfig {
         // we can use the protected fields directly to perform the mapping.
         // Note that this creates ambiguity with the existing setters, so we
         // should account for that.
-        modelMapper.getConfiguration()
+        org.modelmapper.config.Configuration s125MappingConfig = modelMapper.getConfiguration()
+                .copy()
                 .setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PROTECTED)
                 .setFieldMatchingEnabled(true)
                 .setAmbiguityIgnored(true);
 
         // Loop all the mapped S-125 AtoN types and configure the model mapper
-        // to translate correctly from the S-125 onto the local classes
+        // to translate correctly from the S-125 onto the local classes and
+        // vice versa
         for(S125AtonTypes atonType : S125AtonTypes.values()) {
+            // Skip the unknown type, we don't need it
+            if(atonType == S125AtonTypes.UNKNOWN) {
+                continue;
+            }
             modelMapper.createTypeMap(atonType.getS125Class(), atonType.getLocalClass())
                     .implicitMappings()
                     .addMappings(mapper -> {
                         mapper.skip(AidsToNavigation::setId); // We don't know if the ID is correct so skip it
                         mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((S125AidsToNavigationType) ctx.getSource())))
                                 .map(src-> src, AidsToNavigation::setGeometry);
-
-                        // For some reason the MMSI code doesn't get mapped properly?!
-                        if(atonType == S125AtonTypes.VIRTUAL_AIS_ATON) {
-                            mapper.map(src -> ((S125VirtualAISAidToNavigationType)src).getMMSICode(),
-                                    (dest, val) -> ((VirtualAISAidToNavigation)dest).setMmsiCode((BigDecimal) val));
-                        }
-                        if(atonType == S125AtonTypes.PHYSICAL_AIS_ATON) {
-                            mapper.map(src -> ((S125PhysicalAISAidToNavigationType)src).getMMSICode(),
-                                    (dest, val) -> ((PhysicalAISAidToNavigation)dest).setMmsiCode((BigDecimal) val));
-                        }
-                        if(atonType == S125AtonTypes.SYNTHETIC_AIS_ATON) {
-                            mapper.map(src -> ((S125SyntheticAISAidToNavigationType)src).getMMSICode(),
-                                    (dest, val) -> ((SyntheticAISAidToNavigation)dest).setMmsiCode((BigDecimal) val));
-                        }
+                    });
+            modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class(), s125MappingConfig)
+                    .implicitMappings()
+                    .addMappings(mapper -> {
+                        mapper.map(AidsToNavigation::getId, S125AidsToNavigationType::setId);
+                        mapper.using(ctx -> this.convertToS125Geometry((AidsToNavigation) ctx.getSource()))
+                                .map(src -> src, (dest, val) -> {
+                                    try {
+                                        new PropertyDescriptor("geometry", atonType.getS125Class()).getWriteMethod().invoke(dest, val);
+                                    } catch (Exception ex) {
+                                        log.error(ex.getMessage());
+                                    }
+                                });
                     });
         }
 
-        // Create the Base Aids to Navigation type map
+        // Create the Base Aids to Navigation type map for the DTOs
         modelMapper.createTypeMap(AidsToNavigation.class, AidsToNavigationDto.class)
                 .implicitMappings()
                 .addMappings(mapper -> {
@@ -117,7 +124,7 @@ public class GlobalConfig {
                             .map(src -> src, AidsToNavigationDto::setContent);
                 });
 
-        // Add the base to all Aids to Navigation Mappings
+        // Add the base to all Aids to Navigation DTO Mappings
         for(S125AtonTypes atonType : S125AtonTypes.values()) {
             // Skip the unknown type, we don't need it
             if(atonType == S125AtonTypes.UNKNOWN) {
@@ -126,20 +133,6 @@ public class GlobalConfig {
             modelMapper.createTypeMap(atonType.getLocalClass(), AidsToNavigationDto.class)
                     .implicitMappings()
                     .includeBase(AidsToNavigation.class, AidsToNavigationDto.class);
-            modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
-                    .implicitMappings()
-                    .addMappings(mapper -> {
-                        mapper.map(AidsToNavigation::getId, S125AidsToNavigationType::setId);
-                        mapper.using(ctx -> this.convertToS125Geometry((AidsToNavigation) ctx.getSource()))
-                                .map(src -> src, (dest, val) -> {
-                                    try {
-                                        new PropertyDescriptor("geometry", atonType.getS125Class()).getWriteMethod().invoke(dest, val);
-                                    } catch (Exception ex) {
-                                        System.out.println(ex.getMessage());
-                                        //this.log.error(ex.getMessage());
-                                    }
-                                });
-                    });
         }
 
         // ================================================================== //
