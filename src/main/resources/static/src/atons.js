@@ -99,7 +99,7 @@ $(function () {
             name: 'delete' // do not change name
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fa-solid fa-map-location"></i>',
+            text: '<i class="fa-solid fa-map-location-dot"></i>',
             titleAttr: 'View Message Geometry',
             name: 'messageGeometry', // do not change name
             className: 'aton-geometry-toggle',
