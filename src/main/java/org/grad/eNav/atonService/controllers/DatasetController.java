@@ -63,10 +63,10 @@ public class DatasetController {
     DomainDtoMapper<S125DataSetDto, S125DataSet> datasetDomainMapper;
 
     /**
-     * GET /api/dataset : Returns a paged list of all current Datasets.
+     * GET /api/dataset : Returns a paged list of all current datasets.
      *
      * @param datasetTitle the S-125 Dataset Title
-     * @param geometry the geometry for AtoN message filtering
+     * @param geometry the geometry for Dataset filtering
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
@@ -83,7 +83,7 @@ public class DatasetController {
     }
 
     /**
-     * POST /api/dataset/dt : Returns a paged list of all current Datasets
+     * POST /api/dataset/dt : Returns a paged list of all current datasets
      * for the datatables front-end.
      *
      * @param dtPagingRequest the datatables paging request
@@ -104,17 +104,24 @@ public class DatasetController {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<S125DataSetDto> createInstance(@Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
+    public ResponseEntity<S125DataSetDto> createDataset(@Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
         log.debug("REST request to save Dataset : {}", dataSetDto);
+        // Check for an ID
         if (dataSetDto.getId() != null) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", "idexists", "A new dataset cannot already have an ID"))
                     .build();
         }
-        return ResponseEntity.created(new URI(""))
-                .body(this.datasetDtoMapper.convertTo(
-                        this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class)), S125DataSetDto.class)
-                );
+        // Save the station
+        try {
+            S125DataSet s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class));
+            return ResponseEntity.created(new URI(String.format("/api/dataset/%d", s125DataSet.getId())))
+                    .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("dataset", e.getMessage(), e.toString()))
+                    .body(dataSetDto);
+        }
     }
 
     /**
@@ -126,17 +133,24 @@ public class DatasetController {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<S125DataSetDto> updateInstance(@PathVariable BigInteger id, @Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
+    public ResponseEntity<S125DataSetDto> updateDataset(@PathVariable BigInteger id, @Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
         log.debug("REST request to update Dataset : {}", dataSetDto);
+        // Make sure we gor the ID
         dataSetDto.setId(id);
-        return ResponseEntity.created(new URI(""))
-                .body(this.datasetDtoMapper.convertTo(
-                        this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class)), S125DataSetDto.class)
-                );
+        // Save the station
+        try {
+            S125DataSet s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class));
+            return ResponseEntity.ok()
+                    .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("dataset", e.getMessage(), e.toString()))
+                    .body(dataSetDto);
+        }
     }
 
     /**
-     * DELETE /api/dataset/{id} : Delete the "id" Dataset.
+     * DELETE /api/dataset/{id} : Delete the "ID" Dataset.
      *
      * @param id the ID of the Dataset to be deleted
      * @return the ResponseEntity with status 200 (OK)
@@ -149,4 +163,5 @@ public class DatasetController {
                 .headers(HeaderUtil.createEntityDeletionAlert("dataset", id.toString()))
                 .build();
     }
+
 }

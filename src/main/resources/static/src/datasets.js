@@ -3,6 +3,7 @@
  */
 var datasetTable = undefined;
 var datasetMap = undefined;
+var drawControl = undefined;
 var drawnItems = undefined;
 
 /**
@@ -22,32 +23,54 @@ var datasetColumnDefs = [
     data: "datasetIdentificationInformation.encodingSpecification",
     title: "Encoding",
     hoverMsg: "The Dataset Encoding",
-    placeholder: "The Dataset Encoding"
+    placeholder: "The Dataset Encoding",
+    type: "select",
+    options: {
+        "S100 Part 10b":"S100 Part 10b"
+    },
+    required: true
  }, {
-     data: "datasetIdentificationInformation.encodingSpecificationEdition",
-     title: "Encoding Edition",
-     hoverMsg: "The Dataset Encoding Edition",
-     placeholder: "The Dataset Encoding Edition",
+    data: "datasetIdentificationInformation.encodingSpecificationEdition",
+    title: "Encoding Edition",
+    hoverMsg: "The Dataset Encoding Edition",
+    placeholder: "The Dataset Encoding Edition",
+    type: "select",
+    options: {
+        "1.0.0":"1.0.0"
+    },
+    required: true
  }, {
     data: "datasetIdentificationInformation.productIdentifier",
     title: "Product Identifier",
     hoverMsg: "The Dataset Product Identifier",
-    placeholder: "The Dataset Product Identifier"
+    placeholder: "The Dataset Product Identifier",
+    type: "select",
+    options: {
+        "S-125":"S-125"
+    },
+    required: true
 }, {
     data: "datasetIdentificationInformation.productEdition",
     title: "Product Edition",
     hoverMsg: "The Dataset Product Edition",
-    placeholder: "The Dataset Product Edition"
+    placeholder: "The Dataset Product Edition",
+    type: "select",
+    options: {
+        "0.0.1":"0.0.1"
+    },
+    required: true
  }, {
-     data: "datasetIdentificationInformation.applicationProfile",
-     title: "Application Profile",
-     hoverMsg: "The Dataset Application Profile",
-     placeholder: "The Dataset Application Profile",
+    data: "datasetIdentificationInformation.applicationProfile",
+    title: "Application Profile",
+    hoverMsg: "The Dataset Application Profile",
+    placeholder: "The Dataset Application Profile",
+    required: true
 }, {
     data: "datasetIdentificationInformation.datasetFileIdentifier",
     title: "File Identifier",
     hoverMsg: "The Dataset File Identifier",
     placeholder: "The Dataset File Identifier",
+    required: true
  }, {
     data: "geometry",
     title: "Geometry",
@@ -108,7 +131,7 @@ $(function () {
             name: 'delete' // do not change name
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fa-solid fa-map-location"></i>',
+            text: '<i class="fa-solid fa-map-location-dot"></i>',
             titleAttr: 'View Dataset Area',
             name: 'datasetGeometry', // do not change name
             className: 'dataset-geometry-toggle',
@@ -214,6 +237,22 @@ $(function () {
     drawnItems = new L.FeatureGroup();
     datasetMap.addLayer(drawnItems);
 
+    // Add the draw toolbar
+    drawControl = new L.Control.Draw({
+        draw: {
+            marker: false,
+            polyline: false,
+            polygon: true,
+            rectangle: true,
+            circle: true,
+            circlemarker: true,
+        },
+        edit: {
+            featureGroup: drawnItems,
+            remove: true
+        }
+    });
+
     datasetMap.on('draw:created', function (e) {
         var type = e.layerType;
         var layer = e.layer;
@@ -231,11 +270,11 @@ $(function () {
 });
 
 /**
- * This function will load the AtoN geometry onto the drawnItems variable
- * so that it is shown in the AtoN message maps layers.
+ * This function will load the dataset geometry onto the drawnItems variable
+ * so that it is shown in the dataset message maps layers.
  *
  * @param {Event}         event         The event that took place
- * @param {DataTable}     table         The AtoN messages table
+ * @param {DataTable}     table         The dataset table
  * @param {Node}          button        The button node that was pressed
  * @param {Configuration} config        The table configuration
  */
@@ -243,6 +282,10 @@ function loadDatasetGeometry(event, table, button, config) {
     var idx = table.cell('.selected', 0).index();
     var data = table.rows(idx.row).data();
     var geometry = data[0].geometry;
+
+    // Refresh the stations map control
+    datasetMap.removeControl(drawControl);
+    datasetMap.addControl(drawControl);
 
     // Recreate the drawn items feature group
     drawnItems.clearLayers();
@@ -283,4 +326,36 @@ function addNonGroupLayers(sourceLayer, targetGroup) {
     }
 }
 
+/**
+ * Saves the dataset geometry into the selected station entry from the dataset
+ * table. The current geometry selection is found in the global drawnItems
+ * variable. The Leaflet Draw geometry object should first be translated into
+ * GeoJSON and then be set as the selected station's geometry.
+ */
+function saveGeometry() {
+    // Get the selected station
+    var dataset = datasetTable.row({selected : true}).data();
+
+    // If a selection has been made
+    if(dataset) {
+        // Convert the feature collection to a geometry collection
+        dataset.geometry = {
+            type: "GeometryCollection",
+            geometries: []
+        };
+        drawnItems.toGeoJSON().features.forEach(feature => {
+            dataset.geometry.geometries.push(feature.geometry);
+        });
+
+        $.ajax({
+            url: `./api/dataset/${dataset.id}`,
+            type: 'PUT',
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            data: JSON.stringify(dataset),
+            success: () => {console.log("success")},
+            error: () => {console.error("error")}
+        });
+    }
+}
 
