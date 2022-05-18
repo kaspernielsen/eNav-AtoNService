@@ -92,6 +92,19 @@ public class DatasetService {
             "id"
     };
 
+
+    /**
+     * Find one dataset by ID.
+     *
+     * @param id the id
+     * @return the dataset
+     */
+    @Transactional(readOnly = true)
+    public S125DataSet findOne(BigInteger id) {
+        return this.datasetRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with ID %d was not found", id)));
+    }
+
     /**
      * Get all the Datasets in a pageable search.
      *

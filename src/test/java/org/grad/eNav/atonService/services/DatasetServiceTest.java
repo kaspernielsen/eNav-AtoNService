@@ -109,6 +109,45 @@ class DatasetServiceTest {
     }
 
     /**
+     * Test that we can search for a single dataset based on it's ID.
+     */
+    @Test
+    void testFindOne() {
+        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(this.existingDataset.getId());
+
+        // Perform the service call
+        S125DataSet result = this.datasetService.findOne(this.existingDataset.getId());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingDataset.getId(), result.getId());
+        assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
+        assertNotNull(result.getDatasetIdentificationInformation());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecification(), result.getDatasetIdentificationInformation().getEncodingSpecification());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getDatasetIdentificationInformation().getEncodingSpecificationEdition());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductIdentifier(),result.getDatasetIdentificationInformation().getProductIdentifier());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductEdition(), result.getDatasetIdentificationInformation().getProductEdition());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+    }
+
+    /**
+     * Test that we if we try to find a dataset with an ID that does not exist,
+     * a DataNotFoundException will be thrown.
+     */
+    @Test
+    void testFindOneNotFound() {
+        doReturn(Optional.empty()).when(this.datasetRepo).findById(this.existingDataset.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.datasetService.delete(this.existingDataset.getId())
+        );
+    }
+
+    /**
      * Test that we can search for all the datasets currently present in the
      * database and matching the provided criteria, through a paged call.
      */
