@@ -16,8 +16,8 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import _int.iala_aism.s125.gml._0_0.S125CategoryOfVirtualAISAidToNavigation;
 import _int.iala_aism.s125.gml._0_0.S125Status;
-import _int.iala_aism.s125.gml._0_0.S125VirtualAISAidToNavigationPurposeType;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -37,7 +37,7 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125VirtualAISAidToNavigationPurposeType virtualAISAidToNavigationType;
+    private S125CategoryOfVirtualAISAidToNavigation virtualAISAidToNavigationType;
 
     private String objectNameInNationalLanguage;
 
@@ -55,7 +55,7 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      *
      * @return the virtual ais aid to navigation type
      */
-    public S125VirtualAISAidToNavigationPurposeType getVirtualAISAidToNavigationType() {
+    public S125CategoryOfVirtualAISAidToNavigation getVirtualAISAidToNavigationType() {
         return virtualAISAidToNavigationType;
     }
 
@@ -64,7 +64,7 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      *
      * @param virtualAISAidToNavigationType the virtual ais aid to navigation type
      */
-    public void setVirtualAISAidToNavigationType(S125VirtualAISAidToNavigationPurposeType virtualAISAidToNavigationType) {
+    public void setVirtualAISAidToNavigationType(S125CategoryOfVirtualAISAidToNavigation virtualAISAidToNavigationType) {
         this.virtualAISAidToNavigationType = virtualAISAidToNavigationType;
     }
 
