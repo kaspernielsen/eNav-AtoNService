@@ -20,6 +20,12 @@ var datasetColumnDefs = [
     visible: false,
     searchable: false
 }, {
+    data: "datasetIdentificationInformation.datasetTitle",
+    title: "Title",
+    hoverMsg: "The Dataset Title",
+    placeholder: "The Dataset Title",
+    required: true
+ }, {
     data: "datasetIdentificationInformation.encodingSpecification",
     title: "Encoding",
     hoverMsg: "The Dataset Encoding",
@@ -158,6 +164,7 @@ $(function () {
                 data: JSON.stringify({
                     id: rowdata["id"],
                     datasetIdentificationInformation: {
+                        datasetTitle: rowdata["datasetIdentificationInformation.datasetTitle"],
                         encodingSpecification: rowdata["datasetIdentificationInformation.encodingSpecification"],
                         encodingSpecificationEdition: rowdata["datasetIdentificationInformation.encodingSpecificationEdition"],
                         productIdentifier: rowdata["datasetIdentificationInformation.productIdentifier"],
@@ -186,6 +193,7 @@ $(function () {
                 data: JSON.stringify({
                     id: rowdata["id"],
                     datasetIdentificationInformation: {
+                        datasetTitle: rowdata["datasetIdentificationInformation.datasetTitle"],
                         encodingSpecification: rowdata["datasetIdentificationInformation.encodingSpecification"],
                         encodingSpecificationEdition: rowdata["datasetIdentificationInformation.encodingSpecificationEdition"],
                         productIdentifier: rowdata["datasetIdentificationInformation.productIdentifier"],
@@ -194,7 +202,7 @@ $(function () {
                         datasetFileIdentifier: rowdata["datasetIdentificationInformation.datasetFileIdentifier"],
                         datasetAbstract: rowdata["datasetIdentificationInformation.datasetAbstract"],
                     },
-                    geometry: rowdata["geometry"]
+                    geometry: geometry
                 }),
                 success: success,
                 error: error

@@ -148,6 +148,7 @@ class DatasetControllerTest {
             assertEquals(page.getContent().get(i).getId(), result.getContent().get(i).getId());
             assertEquals(page.getContent().get(i).getGeometry(), result.getContent().get(i).getGeometry());
             assertNotNull(result.getContent().get(i).getDatasetIdentificationInformation());
+            assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecification(), result.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecification());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecificationEdition());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getProductIdentifier(), result.getContent().get(i).getDatasetIdentificationInformation().getProductIdentifier());
@@ -200,6 +201,7 @@ class DatasetControllerTest {
             assertEquals(page.getContent().get(i).getId(), result.getData().get(i).getId());
             assertEquals(page.getContent().get(i).getGeometry(), result.getData().get(i).getGeometry());
             assertNotNull(result.getData().get(i).getDatasetIdentificationInformation());
+            assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle(), result.getData().get(i).getDatasetIdentificationInformation().getDatasetTitle());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecification(), result.getData().get(i).getDatasetIdentificationInformation().getEncodingSpecification());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getData().get(i).getDatasetIdentificationInformation().getEncodingSpecificationEdition());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getProductIdentifier(),result.getData().get(i).getDatasetIdentificationInformation().getProductIdentifier());
@@ -236,6 +238,7 @@ class DatasetControllerTest {
         assertEquals(this.existingDataset.getId(), result.getId());
         assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
         assertNotNull(result.getDatasetIdentificationInformation());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecification(), result.getDatasetIdentificationInformation().getEncodingSpecification());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getDatasetIdentificationInformation().getEncodingSpecificationEdition());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductIdentifier(),result.getDatasetIdentificationInformation().getProductIdentifier());
@@ -285,6 +288,7 @@ class DatasetControllerTest {
         assertEquals(this.existingDataset.getId(), result.getId());
         assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
         assertNotNull(result.getDatasetIdentificationInformation());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecification(), result.getDatasetIdentificationInformation().getEncodingSpecification());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getDatasetIdentificationInformation().getEncodingSpecificationEdition());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductIdentifier(),result.getDatasetIdentificationInformation().getProductIdentifier());

@@ -137,6 +137,7 @@ class DatasetServiceTest {
             assertEquals(this.datasetList.get(i).getId(), result.getContent().get(i).getId());
             assertEquals(this.datasetList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
             assertNotNull(result.getContent().get(i).getDatasetIdentificationInformation());
+            assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getDatasetTitle(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getEncodingSpecification(), result.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecification());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecificationEdition());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getProductIdentifier(), result.getContent().get(i).getDatasetIdentificationInformation().getProductIdentifier());
@@ -199,6 +200,7 @@ class DatasetServiceTest {
             assertEquals(this.datasetList.get(i).getId(), result.getContent().get(i).getId());
             assertEquals(this.datasetList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
             assertNotNull(result.getContent().get(i).getDatasetIdentificationInformation());
+            assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getDatasetTitle(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getEncodingSpecification(), result.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecification());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getContent().get(i).getDatasetIdentificationInformation().getEncodingSpecificationEdition());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getProductIdentifier(), result.getContent().get(i).getDatasetIdentificationInformation().getProductIdentifier());
@@ -225,6 +227,7 @@ class DatasetServiceTest {
         assertEquals(this.newDataset.getId(), result.getId());
         assertEquals(this.newDataset.getGeometry(), result.getGeometry());
         assertNotNull(result.getDatasetIdentificationInformation());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getEncodingSpecification(), result.getDatasetIdentificationInformation().getEncodingSpecification());
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getDatasetIdentificationInformation().getEncodingSpecificationEdition());
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getProductIdentifier(),result.getDatasetIdentificationInformation().getProductIdentifier());
