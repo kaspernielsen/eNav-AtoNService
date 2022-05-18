@@ -24,7 +24,8 @@ var datasetColumnDefs = [
     title: "Title",
     hoverMsg: "The Dataset Title",
     placeholder: "The Dataset Title",
-    required: true
+    required: true,
+    width: "20%"
  }, {
     data: "datasetIdentificationInformation.encodingSpecification",
     title: "Encoding",
