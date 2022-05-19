@@ -24,11 +24,11 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * The S-125 Dataset Entity Class
@@ -41,6 +41,7 @@ import java.util.Date;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Cacheable
 @Indexed
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)

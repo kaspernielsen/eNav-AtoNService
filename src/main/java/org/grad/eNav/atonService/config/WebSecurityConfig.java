@@ -18,7 +18,6 @@ package org.grad.eNav.atonService.config;
 
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
 import org.keycloak.adapters.springsecurity.KeycloakSecurityComponents;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
@@ -74,7 +73,7 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
     }
 
     /**
-     * Forwarded header filter filter registration bean.
+     * Forwarded header filter registration bean.
      * <p>
      * This corrects the urls produced by the microservice when accessed from a proxy server.
      * E.g. Api gateway:

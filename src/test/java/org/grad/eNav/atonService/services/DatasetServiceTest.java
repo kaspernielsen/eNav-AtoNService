@@ -161,10 +161,10 @@ class DatasetServiceTest {
         doReturn(this.datasetList.subList(0, 5)).when(searchResult).hits();
         doReturn(searchResultTotal).when(searchResult).total();
         doReturn(10L).when(searchResultTotal).hitCount();
-        doReturn(mockedQuery).when(this.datasetService).geDatasetSearchQuery(any(), any(), any());
+        doReturn(mockedQuery).when(this.datasetService).geDatasetSearchQuery(any(), any(), any(), any(), any());
 
         // Perform the service call
-        Page<S125DataSet> result = this.datasetService.findAll(Optional.of("uid"), Optional.empty(), pageable);
+        Page<S125DataSet> result = this.datasetService.findAll("uid", null, null, null, pageable);
 
         // Test the result
         assertNotNull(result);

@@ -77,7 +77,13 @@ public class DatasetController {
         this.log.debug("REST request to get page of Dataset");
         datasetTitle.ifPresent(v -> this.log.debug("Dataset title specified as: {}", datasetTitle));
         geometry.ifPresent(v -> this.log.debug("Dataset geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
-        Page<S125DataSet> datasetPage = this.datasetService.findAll(datasetTitle, geometry, pageable);
+        Page<S125DataSet> datasetPage = this.datasetService.findAll(
+                datasetTitle.orElse(null),
+                geometry.orElse(null),
+                null,
+                null,
+                pageable
+        );
         return ResponseEntity.ok()
                 .body(this.datasetDtoMapper.convertToPage(datasetPage, S125DataSetDto.class));
     }

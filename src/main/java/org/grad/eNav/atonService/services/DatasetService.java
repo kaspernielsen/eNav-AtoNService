@@ -49,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -112,12 +113,20 @@ public class DatasetService {
      * @return the list of Datasets
      */
     @Transactional(readOnly = true)
-    public Page<S125DataSet> findAll(Optional<String> datasetTitle,
-                                     Optional<Geometry> geometry,
+    public Page<S125DataSet> findAll(String datasetTitle,
+                                     Geometry geometry,
+                                     LocalDateTime fromTime,
+                                     LocalDateTime toTime,
                                      Pageable pageable) {
         log.debug("Request to get S-125 Datasets in a pageable search");
         // Create the search query - always sort by name
-        SearchQuery searchQuery = this.geDatasetSearchQuery(datasetTitle, geometry, new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true)));
+        SearchQuery searchQuery = this.geDatasetSearchQuery(
+                datasetTitle,
+                geometry,
+                fromTime,
+                toTime,
+                new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true))
+        );
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
@@ -213,20 +222,32 @@ public class DatasetService {
      *
      * @param datasetTitle the Dataset title to be searched
      * @param geometry the geometry that the results should intersect with
+     * @param fromTime the date-time the results should match from
+     * @param toTime the date-time the results should match to
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<S125DataSet> geDatasetSearchQuery(Optional<String> datasetTitle, Optional<Geometry> geometry, Sort sort) {
+    protected SearchQuery<S125DataSet> geDatasetSearchQuery(String datasetTitle,
+                                                            Geometry geometry,
+                                                            LocalDateTime fromTime,
+                                                            LocalDateTime toTime,
+                                                            Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
                             b.must(f.matchAll());
-                            datasetTitle.ifPresent(v -> b.must(f.match()
+                            Optional.ofNullable(datasetTitle).ifPresent(v -> b.must(f.match()
                                     .field("datasetIdentificationInformation.datasetTitle")
                                     .matching(v)));
-                            geometry.ifPresent(g-> b.must(f.extension(LuceneExtension.get())
+                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
+                                    .field("dateStart")
+                                    .atLeast(fromTime)));
+                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
+                                    .field("dateEnd")
+                                    .atMost(toTime)));
+                            Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
                         })
                 )

@@ -130,7 +130,7 @@ class DatasetControllerTest {
     void testGetDatasets() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<S125DataSet> page = new PageImpl<>(this.datasetList.subList(0, 5), this.pageable, this.datasetList.size());
-        doReturn(page).when(this.datasetService).findAll(any(), any(), any());
+        doReturn(page).when(this.datasetService).findAll(any(), any(), any(), any(), any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/dataset"))

@@ -48,6 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -86,16 +87,28 @@ public class AidsToNavigationService {
     /**
      * Get all the Aids to Navigation in a pageable search.
      *
+     * @param atonNumber the Aids to Navigation number
+     * @param geometry the geometry to match the Aids to Navigation for
+     * @param fromTime the time to match the Aids to Navigation from
+     * @param toTime the time to match the Aids to Navigation to
      * @param pageable the pagination information
      * @return the list of Aids to Navigation
      */
     @Transactional(readOnly = true)
-    public Page<AidsToNavigation> findAll(Optional<String> atonNumber,
-                                     Optional<Geometry> geometry,
-                                     Pageable pageable) {
+    public Page<AidsToNavigation> findAll(String atonNumber,
+                                          Geometry geometry,
+                                          LocalDateTime fromTime,
+                                          LocalDateTime toTime,
+                                          Pageable pageable) {
         log.debug("Request to get Aids to Navigation in a pageable search");
         // Create the search query - always sort by name
-        SearchQuery searchQuery = this.getAidsToNavigationSearchQuery(atonNumber, geometry, new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true)));
+        SearchQuery searchQuery = this.getAidsToNavigationSearchQuery(
+                atonNumber,
+                geometry,
+                fromTime,
+                toTime,
+                new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true))
+        );
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
@@ -214,21 +227,33 @@ public class AidsToNavigationService {
      *
      * @param atonNumber the AtoN UID to be searched
      * @param geometry the geometry that the results should intersect with
+     * @param geometry the geometry that the results should intersect with
+     * @param fromTime the date-time the results should match from
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<AidsToNavigation> getAidsToNavigationSearchQuery(Optional<String> atonNumber, Optional<Geometry> geometry, Sort sort) {
+    protected SearchQuery<AidsToNavigation> getAidsToNavigationSearchQuery(String atonNumber,
+                                                                           Geometry geometry,
+                                                                           LocalDateTime fromTime,
+                                                                           LocalDateTime toTime,
+                                                                           Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<AidsToNavigation> scope = searchSession.scope( AidsToNavigation.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
                             b.must(f.matchAll());
-                            atonNumber.ifPresent(v -> b.must(f.match()
+                            Optional.ofNullable(atonNumber).ifPresent(v -> b.must(f.match()
                                     .field("aton_number")
                                     .matching(v)));
-                            geometry.ifPresent(g-> b.must(f.extension(LuceneExtension.get())
+                            Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
+                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
+                                    .field("createdAt")
+                                    .atLeast(fromTime)));
+                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
+                                    .field("createdAt")
+                                    .atMost(toTime)));
                         })
                 )
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
