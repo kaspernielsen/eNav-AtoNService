@@ -133,7 +133,7 @@ class AidsToNavigationControllerTest {
     void testGetAidsToNavigation() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<AidsToNavigation> page = new PageImpl<>(this.aidsToNavigationList.subList(0, 5), this.pageable, this.aidsToNavigationList.size());
-        doReturn(page).when(this.aidsToNavigationService).findAll(any(), any(), any());
+        doReturn(page).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/atons"))

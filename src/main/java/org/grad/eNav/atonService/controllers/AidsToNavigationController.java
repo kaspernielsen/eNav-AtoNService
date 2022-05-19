@@ -34,7 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -72,17 +72,23 @@ public class AidsToNavigationController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<AidsToNavigationDto>> getAidsToNavigation(@RequestParam("atonNumber") Optional<String> atonNumber,
                                                                          @RequestParam("geometry") Optional<Geometry> geometry,
-                                                                         @RequestParam("startDate") Optional<Date> startDate,
-                                                                         @RequestParam("endDate") Optional<Date> endDate,
+                                                                         @RequestParam("startDate") Optional<LocalDateTime> startDate,
+                                                                         @RequestParam("endDate") Optional<LocalDateTime> endDate,
                                                                          Pageable pageable) {
         this.log.debug("REST request to get page of Aids to Navigation");
         atonNumber.ifPresent(v -> this.log.debug("Aids to Navigation number specified as: {}", atonNumber));
         geometry.ifPresent(v -> this.log.debug("Aids to Navigation geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
         startDate.ifPresent(v -> this.log.debug("Aids to Navigation start date specified as: {}", startDate));
         endDate.ifPresent(v -> this.log.debug("Aids to Navigation end date specified as: {}", endDate));
-        Page<AidsToNavigation> nodePage = this.aidsToNavigationService.findAll(atonNumber, geometry, pageable);
+        Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
+                atonNumber.orElse(null),
+                geometry.orElse(null),
+                startDate.orElse(null),
+                endDate.orElse(null),
+                pageable
+        );
         return ResponseEntity.ok()
-                .body(this.aidsToNavigationToDtoMapper.convertToPage(nodePage, AidsToNavigationDto.class));
+                .body(this.aidsToNavigationToDtoMapper.convertToPage(atonPage, AidsToNavigationDto.class));
     }
 
     /**
@@ -95,8 +101,11 @@ public class AidsToNavigationController {
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<AidsToNavigationDto>> getAidsToNavigationForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
         this.log.debug("REST request to get page of Aids to Navigation for datatables");
+        Page<AidsToNavigation> atonPage = this.aidsToNavigationService.handleDatatablesPagingRequest(
+                dtPagingRequest
+        );
         return ResponseEntity.ok()
-                .body(this.aidsToNavigationToDtoMapper.convertToDtPage(this.aidsToNavigationService.handleDatatablesPagingRequest(dtPagingRequest), dtPagingRequest, AidsToNavigationDto.class));
+                .body(this.aidsToNavigationToDtoMapper.convertToDtPage(atonPage, dtPagingRequest, AidsToNavigationDto.class));
     }
 
     /**

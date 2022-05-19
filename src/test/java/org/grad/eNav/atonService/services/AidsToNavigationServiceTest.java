@@ -135,10 +135,10 @@ class AidsToNavigationServiceTest {
         doReturn(this.aidsToNavigationList.subList(0, 5)).when(searchResult).hits();
         doReturn(searchResultTotal).when(searchResult).total();
         doReturn(10L).when(searchResultTotal).hitCount();
-        doReturn(mockedQuery).when(this.aidsToNavigationService).getAidsToNavigationSearchQuery(any(), any(), any());
+        doReturn(mockedQuery).when(this.aidsToNavigationService).getAidsToNavigationSearchQuery(any(), any(), any(), any(), any());
 
         // Perform the service call
-        Page<AidsToNavigation> result = this.aidsToNavigationService.findAll(Optional.of("uid"), Optional.empty(), pageable);
+        Page<AidsToNavigation> result = this.aidsToNavigationService.findAll("uid", null, null, null, pageable);
 
         // Test the result
         assertNotNull(result);

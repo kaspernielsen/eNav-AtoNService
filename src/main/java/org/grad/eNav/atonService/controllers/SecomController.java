@@ -19,16 +19,21 @@ package org.grad.eNav.atonService.controllers;
 import _int.iala_aism.s125.gml._0_0.DataSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
-import org.grad.eNav.atonService.models.dtos.secom.DataTypeEnum;
-import org.grad.eNav.atonService.models.dtos.secom.ExchangeMetadata;
-import org.grad.eNav.atonService.models.dtos.secom.GetMessageResponseObject;
-import org.grad.eNav.atonService.models.dtos.secom.PaginationObject;
+import org.grad.eNav.atonService.models.dtos.secom.*;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
+import org.grad.eNav.atonService.services.UnLoCodeService;
+import org.grad.eNav.atonService.utils.HeaderUtil;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
+import org.grad.eNav.atonService.utils.WKTUtil;
 import org.grad.eNav.s125.utils.S125Utils;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.locationtech.jts.io.ParseException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,10 +47,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.xml.bind.JAXBException;
 import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/secom/v1/dataset")
+@RequestMapping("/api/secom/v1")
 @Slf4j
 public class SecomController {
 
@@ -74,7 +82,17 @@ public class SecomController {
     AidsToNavigationService aidsToNavigationService;
 
     /**
-     * GET /api/secom/v1/dataset : Returns the S-125 dataset entries as
+     * The UN/LOCODE Service.
+     */
+    @Autowired
+    UnLoCodeService unLoCodeService;
+
+    // Class Variables
+    private final DateTimeFormatter dateFormat = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+    private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(),4326);
+
+    /**
+     * GET /api/secom/v1/dataset/summary : Returns the S-125 dataset summary as
      * specified by the SECOM standard.
      *
      * @param dataReference the dataset data reference
@@ -86,9 +104,9 @@ public class SecomController {
      * @param fromTime the dataset entries from time
      * @param toTime the dataset enries to time
      * @param pageable the pageable information
-     * @return
+     * @return the SECOM-complianet dataset information
      */
-    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetMessageResponseObject> getDataset(@RequestParam("dataReference") Optional<String> dataReference,
                                                                @RequestParam("dataType") Optional<DataTypeEnum> dataType,
                                                                @RequestParam("productSpecification") Optional<String> productSpecification,
@@ -108,11 +126,45 @@ public class SecomController {
         fromTime.ifPresent(v -> this.log.debug("From time specified as: {}", fromTime));
         toTime.ifPresent(v -> this.log.debug("To time specified as: {}", toTime));
 
-        // Handle the input conditions
+        // Parse the arguments
+        Geometry jtsGeometry = null;
+        LocalDateTime fromLocalDateTime = null;
+        LocalDateTime toLocalDateTime = null;
+        if(geometry.isPresent()) {
+            try {
+                jtsGeometry = WKTUtil.convertWKTtoGeometry(geometry.get());
+            } catch (ParseException e) {
+                return ResponseEntity.badRequest()
+                        .headers(HeaderUtil.createFailureAlert("dataset","geometry","Could not parse WKT geometry"))
+                        .build();
+            }
+        }
+        if(unlocode.isPresent()) {
+            Geometry g = unlocode.map(this.unLoCodeService::getUnLoCodeMapEntry)
+                    .map(UnLoCodeMapEntry::getGeometry)
+                    .orElseGet(() -> this.geometryFactory.createEmpty(0));
+            jtsGeometry = jtsGeometry == null ? g : jtsGeometry.intersection(g);
+        }
+        if(areaName.isPresent()) {
+            //Handle the areas when ready
+        }
+        if(fromTime.isPresent()) {
+            fromLocalDateTime = LocalDateTime.parse(fromTime.get(), this.dateFormat);
+        }
+        if(toTime.isPresent()) {
+            toLocalDateTime = LocalDateTime.parse(toTime.get(), this.dateFormat);
+        }
+
+        // Handle the input request
         final S125DataSet s125DataSet = this.datasetService.findOne(new BigInteger(dataReference.get()));
-        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(Optional.empty(), Optional.ofNullable(s125DataSet).map(S125DataSet::getGeometry), pageable);
-        final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(modelMapper);
-        final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
+        jtsGeometry = s125DataSet.getGeometry() == null ? jtsGeometry : s125DataSet.getGeometry().intersection(jtsGeometry);
+        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
+                null,
+                jtsGeometry,
+                fromLocalDateTime,
+                toLocalDateTime,
+                pageable
+        );
 
         // Start building the response
         final GetMessageResponseObject getMessageResponseObject = new GetMessageResponseObject();
@@ -122,6 +174,8 @@ public class SecomController {
             case S100_DataSet:
             default:
                 try {
+                    final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(modelMapper);
+                    final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
                     getMessageResponseObject.setPayload(S125Utils.marshalS125(dataset, Boolean.FALSE));
                 } catch (JAXBException ex) {
                     this.log.error(ex.getMessage());
@@ -140,6 +194,107 @@ public class SecomController {
                 .body(getMessageResponseObject);
 
     }
+
+    /**
+     * GET /api/secom/v1/dataset : Returns the S-125 dataset entries as
+     * specified by the SECOM standard.
+     *
+     * @param dataType the dataset data type
+     * @param productSpecification the dataset product specification
+     * @param geometry the dataset geometry
+     * @param areaName the dataset area name
+     * @param unlocode the dataset entries UNLOCODE
+     * @param fromTime the dataset entries from time
+     * @param toTime the dataset enries to time
+     * @param pageable the pageable information
+     * @return the SECOM-compliant dataset summary information
+     */
+    @GetMapping(value = "/dataset/summary", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetSummaryResponseObject> getDatasetSummary(@RequestParam("dataType") Optional<DataTypeEnum> dataType,
+                                                                      @RequestParam("productSpecification") Optional<String> productSpecification,
+                                                                      @RequestParam("geometry") Optional<String> geometry,
+                                                                      @RequestParam("areaName") Optional<String> areaName,
+                                                                      @RequestParam("unlocode") Optional<String> unlocode,
+                                                                      @RequestParam("fromTime") Optional<String> fromTime,
+                                                                      @RequestParam("toTime") Optional<String> toTime,
+                                                                      Pageable pageable) {
+        this.log.debug("SECOM request to get page of Dataset Summary");
+        dataType.ifPresent(v -> this.log.debug("Data Type specified as: {}", dataType));
+        productSpecification.ifPresent(v -> this.log.debug("Product Specification specified as: {}", productSpecification));
+        geometry.ifPresent(v -> this.log.debug("Geometry specified as: {}", geometry));
+        areaName.ifPresent(v -> this.log.debug("Area Name specified as: {}", areaName));
+        unlocode.ifPresent(v -> this.log.debug("UNLOCODE specified as: {}", unlocode));
+        fromTime.ifPresent(v -> this.log.debug("From time specified as: {}", fromTime));
+        toTime.ifPresent(v -> this.log.debug("To time specified as: {}", toTime));
+
+        // Parse the arguments
+        Geometry jtsGeometry = null;
+        LocalDateTime fromLocalDateTime = null;
+        LocalDateTime toLocalDateTime = null;
+        if(geometry.isPresent()) {
+            try {
+                jtsGeometry = WKTUtil.convertWKTtoGeometry(geometry.get());
+            } catch (ParseException e) {
+                return ResponseEntity.badRequest()
+                        .headers(HeaderUtil.createAlert("atonservice.dataset.summary","geometry"))
+                        .build();
+            }
+        }
+        if(unlocode.isPresent()) {
+            Geometry g = unlocode.map(this.unLoCodeService::getUnLoCodeMapEntry)
+                    .map(UnLoCodeMapEntry::getGeometry)
+                    .orElseGet(() -> this.geometryFactory.createEmpty(0));
+            jtsGeometry = jtsGeometry == null ? g : jtsGeometry.intersection(g);
+        }
+        if(areaName.isPresent()) {
+            //Handle the areas when ready
+        }
+        if(fromTime.isPresent()) {
+            fromLocalDateTime = LocalDateTime.parse(fromTime.get(), this.dateFormat);
+        }
+        if(toTime.isPresent()) {
+            toLocalDateTime = LocalDateTime.parse(toTime.get(), this.dateFormat);
+        }
+
+        // Handle the input request
+        final Page<S125DataSet> s125Datasets = this.datasetService.findAll(
+                null,
+                jtsGeometry,
+                fromLocalDateTime,
+                toLocalDateTime,
+                pageable
+        );
+
+        // Start building the response
+        final GetSummaryResponseObject getSummaryResponseObject = new GetSummaryResponseObject();
+
+        // Now handle according to the data type
+        switch (dataType.orElse(DataTypeEnum.S100_DataSet)) {
+            case S100_DataSet:
+            default:
+                getSummaryResponseObject.setInformationSummaryObject(s125Datasets.stream()
+                        .map(s125Dataset -> {
+                            InformationSummaryObject informationSummaryObject = new InformationSummaryObject();
+                            informationSummaryObject.setMessageIdentifier(s125Dataset.getDatasetIdentificationInformation().getDatasetFileIdentifier());
+                            informationSummaryObject.setIdentifier(s125Dataset.getId().toString());
+                            informationSummaryObject.setName(s125Dataset.getDatasetIdentificationInformation().getDatasetTitle());
+                            informationSummaryObject.setDescription(s125Dataset.getDatasetIdentificationInformation().getDatasetAbstract());
+                            informationSummaryObject.setStatusEnum("present");
+                            return informationSummaryObject;
+                        })
+                        .collect(Collectors.toList()));
+                break;
+        }
+
+        // Now handle the pagination
+        getSummaryResponseObject.setPagination(new PaginationObject((int)s125Datasets.getTotalElements(), s125Datasets.getSize()));
+
+        // And return the Get Message Response Object
+        return ResponseEntity.ok()
+                .body(getSummaryResponseObject);
+    }
+
+    /**
 
     /**
      * This helper function is to be used to implement the SECOM exchange

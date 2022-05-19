@@ -123,7 +123,7 @@ $(function () {
         responsive: true,
         altEditor: true, // Enable altEditor
         buttons: [{
-            text: '<i class="fa-solid fa-plus"></i>',
+            text: '<i class="fa-solid fa-circle-plus"></i>',
             titleAttr: 'Add Dataset',
             name: 'add' // do not change name
         }, {
