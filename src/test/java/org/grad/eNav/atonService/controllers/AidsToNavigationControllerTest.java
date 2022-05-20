@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
@@ -60,7 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = AidsToNavigationController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
-@Import(TestingConfiguration.class)
+@Import({TestingConfiguration.class, TestFeignSecurityConfig.class})
 class AidsToNavigationControllerTest {
 
     /**
