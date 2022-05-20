@@ -35,6 +35,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -43,9 +44,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.xml.bind.JAXBException;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -56,6 +60,24 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/secom/v1")
 @Slf4j
 public class SecomController {
+
+    /**
+     * The AtoN Service Data Product Name.
+     */
+    @Value("${gla.rad.aton-service.data-product.name:S-125}")
+    private String dataProductName;
+
+    /**
+     * The AtoN Service Data Product Version.
+     */
+    @Value("${gla.rad.aton-service.data-product.version:0.0.0}")
+    private String dataProductVersion;
+
+    /**
+     * The AtoN Service Data Product Location.
+     */
+    @Value("${gla.rad.aton-service.data-product.location:/xsd/S125.xsd}")
+    private String dataProductLocation;
 
     /**
      * The Model Mapper.
@@ -310,6 +332,33 @@ public class SecomController {
     }
 
     /**
+     * GET /api/secom/v1/capability : Returns the service instance capabilities.
+     *
+     * @return the SECOM-compliant service capabilities
+     */
+    @GetMapping(value = "/capability", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CapabilityResponseObject> getCapabilities() throws MalformedURLException {
+        final String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+
+        // Start building the response
+        CapabilityResponseObject capabilityResponseObject = new CapabilityResponseObject();
+        capabilityResponseObject.setPayloadName(this.dataProductName);
+        capabilityResponseObject.setPayloadVersion(this.dataProductVersion);
+        capabilityResponseObject.setPayloadSchemaUrl(new URL(
+                (this.dataProductLocation.startsWith("http") ? "" : baseUrl)
+                     + this.dataProductLocation
+                ));
+
+        // Populate the implemented SECOM interfaces
+        SecomInterfaces secomInterfaces = new SecomInterfaces();
+        secomInterfaces.setGet(true);
+        secomInterfaces.setGetSummary(true);
+        capabilityResponseObject.setImplementedInterfaces(secomInterfaces);
+
+        // And return the Capability Response Object
+        return ResponseEntity.ok()
+                .body(capabilityResponseObject);
+    }
 
     /**
      * This helper function is to be used to implement the SECOM exchange

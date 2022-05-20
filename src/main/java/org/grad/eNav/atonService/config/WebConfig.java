@@ -54,16 +54,23 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/webjars/**",
-                    "/css/**",
-                    "/images/**",
-                    "/lib/**",
-                    "/src/**")
-                .addResourceLocations("classpath:/META-INF/resources/webjars/",
-                    "classpath:/static/css/",
-                    "classpath:/static/images/",
-                    "classpath:/static/lib/",
-                    "classpath:/static/src/")
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/")
+                .resourceChain(false);
+        registry.addResourceHandler("/css/**")
+                .addResourceLocations("classpath:/static/css/")
+                .resourceChain(false);
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("classpath:/static/images/")
+                .resourceChain(false);
+        registry.addResourceHandler("/lib/**")
+                .addResourceLocations("classpath:/static/lib/")
+                .resourceChain(false);
+        registry.addResourceHandler("/src/**")
+                .addResourceLocations("classpath:/static/src/")
+                .resourceChain(false);
+        registry.addResourceHandler("/xsd/**")
+                .addResourceLocations("classpath:/xsd/")
                 .resourceChain(false);
         registry.setOrder(1);
     }

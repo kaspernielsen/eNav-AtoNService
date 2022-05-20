@@ -188,7 +188,9 @@ $(function () {
                         datasetFileIdentifier: rowdata["datasetIdentificationInformation.datasetFileIdentifier"],
                         datasetAbstract: rowdata["datasetIdentificationInformation.datasetAbstract"],
                     },
-                    geometry: null
+                    geometry: null,
+                    createdAt: null,
+                    lastUpdatedAt: null
                 }),
                 success: success,
                 error: error
@@ -217,7 +219,9 @@ $(function () {
                         datasetFileIdentifier: rowdata["datasetIdentificationInformation.datasetFileIdentifier"],
                         datasetAbstract: rowdata["datasetIdentificationInformation.datasetAbstract"],
                     },
-                    geometry: geometry
+                    geometry: geometry,
+                    createdAt: rowdata["createdAt"],
+                    lastUpdatedAt: rowdata["lastUpdatedAt"]
                 }),
                 success: success,
                 error: error
