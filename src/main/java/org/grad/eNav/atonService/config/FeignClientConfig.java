@@ -2,6 +2,7 @@ package org.grad.eNav.atonService.config;
 
 import feign.RequestInterceptor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -18,13 +19,14 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
  * Note that this configuration is not annotated, but it should be injected
  * directly to the feign requests that do not already have authorization.
  * <p>
- * The best source for this type of an implementation cab be found here:
+ * The best source for this type of implementation can be found here:
  * <a>
  *     https://stackoverflow.com/questions/55308918/spring-security-5-calling-oauth2-secured-api-in-application-runner-results-in-il
  * </a>
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
+@Configuration
 public class FeignClientConfig {
 
     /**
@@ -75,7 +77,7 @@ public class FeignClientConfig {
         return requestTemplate -> {
             OAuth2AuthorizedClient client = manager.authorize(OAuth2AuthorizeRequest
                     .withClientRegistrationId("keycloak")
-                    .principal(new AnonymousAuthenticationToken("name", "vdes-ctrl", AuthorityUtils.createAuthorityList("ROLE_ACTUATOR")))
+                    .principal(new AnonymousAuthenticationToken("name", "aton-service", AuthorityUtils.createAuthorityList("ROLE_ACTUATOR")))
                     .build());
             String accessToken = client.getAccessToken().getTokenValue();
             requestTemplate.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);

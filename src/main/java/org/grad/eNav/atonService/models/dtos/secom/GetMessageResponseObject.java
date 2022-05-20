@@ -17,7 +17,6 @@
 package org.grad.eNav.atonService.models.dtos.secom;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.io.IOException;

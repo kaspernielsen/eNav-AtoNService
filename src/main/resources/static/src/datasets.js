@@ -94,6 +94,20 @@ var datasetColumnDefs = [
     placeholder: "The Dataset Abstract",
     visible: false,
     searchable: false
+}, {
+    data: "createdAt",
+    title: "Created At",
+    type: "hidden",
+    hoverMsg: "Dataset Created At",
+    placeholder: "Dataset Created At",
+    searchable: false
+}, {
+    data: "lastUpdatedAt",
+    title: "Updated At",
+    type: "hidden",
+    hoverMsg: "Dataset Updated At",
+    placeholder: "Dataset Updated At",
+    searchable: false
 }];
 
 // Run when the document is ready
@@ -317,11 +331,22 @@ function loadDatasetGeometry(event, table, button, config) {
 function loadDatasetContent(event, table, button, config) {
     var idx = table.cell('.selected', 0).index();
     var data = table.rows(idx.row).data();
-    var content = data[0].content;
+    var datasetId = data[0].id;
 
-    // Show the content
-    $('#datasetContentTextArea').val(content);
+    // First clear any previous output
+    $('#datasetContentTextArea').val("Loading...");
 
+    // And get the dataset content using the SECOM dataset endpoint
+    $.ajax({
+        url: `./api/secom/v1/dataset/?dataReference=${datasetId}`,
+        type: 'GET',
+        contentType: 'application/json; charset=utf-8',
+        success: (response) => {
+            // Show the content
+            $('#datasetContentTextArea').val(formatXml(response.payload));
+        },
+        error: () => {console.error("error")}
+    });
 }
 
 // Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
