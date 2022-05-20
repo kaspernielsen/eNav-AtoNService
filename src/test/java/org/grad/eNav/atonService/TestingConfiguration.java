@@ -21,14 +21,12 @@ import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
-import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.models.dtos.s125.S125DataSetDto;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-
-import javax.security.auth.message.config.RegistrationListener;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 
 import static org.mockito.Mockito.mock;
 
@@ -67,14 +65,12 @@ public class TestingConfiguration {
 	}
 
 	/**
-	 * Feign depends on the Eureka Registration Listener bean so let's mock one
-	 * up.
-	 *
-	 * @return the Eureka Registration Listener bean
+	 * The registration listener for feign registers the client inside a
+	 * client repository which is als needed, hence mocked.
 	 */
 	@Bean
-	RegistrationListener registrationListener() {
-		return mock(RegistrationListener.class);
+	public ClientRegistrationRepository clientRegistrationRepository() {
+		return mock(ClientRegistrationRepository.class);
 	}
 
 	/**

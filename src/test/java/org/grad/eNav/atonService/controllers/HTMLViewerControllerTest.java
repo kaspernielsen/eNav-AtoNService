@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.controllers;
 
+import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = HTMLViewerController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
-@Import(TestingConfiguration.class)
+@Import({TestingConfiguration.class, TestFeignSecurityConfig.class})
 class HTMLViewerControllerTest {
 
     /**
