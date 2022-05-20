@@ -17,7 +17,6 @@
 package org.grad.eNav.atonService.controllers;
 
 import _int.iala_aism.s125.gml._0_0.DataSet;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
@@ -49,6 +48,7 @@ import javax.xml.bind.JAXBException;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -56,12 +56,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/secom/v1")
 @Slf4j
 public class SecomController {
-
-    /**
-     * The Object Mapper.
-     */
-    @Autowired
-    ObjectMapper objectMapper;
 
     /**
      * The Model Mapper.
@@ -140,27 +134,37 @@ public class SecomController {
             }
         }
         if(unlocode.isPresent()) {
-            Geometry g = unlocode.map(this.unLoCodeService::getUnLoCodeMapEntry)
+            jtsGeometry = this.joinGeometries(jtsGeometry, unlocode.map(this.unLoCodeService::getUnLoCodeMapEntry)
                     .map(UnLoCodeMapEntry::getGeometry)
-                    .orElseGet(() -> this.geometryFactory.createEmpty(0));
-            jtsGeometry = jtsGeometry == null ? g : jtsGeometry.intersection(g);
+                    .orElseGet(() -> this.geometryFactory.createEmpty(0)));
         }
         if(areaName.isPresent()) {
-            //Handle the areas when ready
+            jtsGeometry = this.joinGeometries(jtsGeometry, null);
         }
         if(fromTime.isPresent()) {
-            fromLocalDateTime = LocalDateTime.parse(fromTime.get(), this.dateFormat);
+            try {
+                fromLocalDateTime = LocalDateTime.parse(fromTime.get(), this.dateFormat);
+            } catch (DateTimeParseException ex) {
+                return ResponseEntity.badRequest()
+                        .headers(HeaderUtil.createAlert("atonservice.dataset.get","fromTime"))
+                        .build();
+            }
         }
         if(toTime.isPresent()) {
-            toLocalDateTime = LocalDateTime.parse(toTime.get(), this.dateFormat);
+            try {
+                toLocalDateTime = LocalDateTime.parse(toTime.get(), this.dateFormat);
+            } catch (DateTimeParseException ex) {
+                return ResponseEntity.badRequest()
+                        .headers(HeaderUtil.createAlert("atonservice.dataset.get","toTime"))
+                        .build();
+            }
         }
 
         // Handle the input request
         final S125DataSet s125DataSet = this.datasetService.findOne(new BigInteger(dataReference.get()));
-        jtsGeometry = s125DataSet.getGeometry() == null ? jtsGeometry : s125DataSet.getGeometry().intersection(jtsGeometry);
         final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
                 null,
-                jtsGeometry,
+                this.joinGeometries(s125DataSet.getGeometry(), jtsGeometry),
                 fromLocalDateTime,
                 toLocalDateTime,
                 pageable
@@ -236,24 +240,35 @@ public class SecomController {
                 jtsGeometry = WKTUtil.convertWKTtoGeometry(geometry.get());
             } catch (ParseException e) {
                 return ResponseEntity.badRequest()
-                        .headers(HeaderUtil.createAlert("atonservice.dataset.summary","geometry"))
+                        .headers(HeaderUtil.createAlert("atonservice.dataset.getsummary","geometry"))
                         .build();
             }
         }
         if(unlocode.isPresent()) {
-            Geometry g = unlocode.map(this.unLoCodeService::getUnLoCodeMapEntry)
+            jtsGeometry = this.joinGeometries(jtsGeometry, unlocode.map(this.unLoCodeService::getUnLoCodeMapEntry)
                     .map(UnLoCodeMapEntry::getGeometry)
-                    .orElseGet(() -> this.geometryFactory.createEmpty(0));
-            jtsGeometry = jtsGeometry == null ? g : jtsGeometry.intersection(g);
+                    .orElseGet(() -> this.geometryFactory.createEmpty(0)));
         }
         if(areaName.isPresent()) {
-            //Handle the areas when ready
+            jtsGeometry = this.joinGeometries(jtsGeometry, null);
         }
         if(fromTime.isPresent()) {
-            fromLocalDateTime = LocalDateTime.parse(fromTime.get(), this.dateFormat);
+            try {
+                fromLocalDateTime = LocalDateTime.parse(fromTime.get(), this.dateFormat);
+            } catch (DateTimeParseException ex) {
+                return ResponseEntity.badRequest()
+                        .headers(HeaderUtil.createAlert("atonservice.dataset.getsummary","fromTime"))
+                        .build();
+            }
         }
         if(toTime.isPresent()) {
-            toLocalDateTime = LocalDateTime.parse(toTime.get(), this.dateFormat);
+            try {
+                toLocalDateTime = LocalDateTime.parse(toTime.get(), this.dateFormat);
+            } catch (DateTimeParseException ex) {
+                return ResponseEntity.badRequest()
+                        .headers(HeaderUtil.createAlert("atonservice.dataset.getsummary","toTime"))
+                        .build();
+            }
         }
 
         // Handle the input request
@@ -308,5 +323,23 @@ public class SecomController {
         final ExchangeMetadata exchangeMetadata = new ExchangeMetadata();
         exchangeMetadata.setDataProtection(false);
         return exchangeMetadata;
+    }
+
+    /**
+     * A helper function to simplify the joining of geometries without troubling
+     * ourselves for the null checking... which is a pain.
+     *
+     * @param a the first geometry to be joined
+     * @param b the second geometry to be joined
+     * @return the joined geometry
+     */
+    private Geometry joinGeometries(Geometry a, Geometry b) {
+        if(a == null && b == null) {
+            return null;
+        } else if(a == null || b == null) {
+            return Optional.ofNullable(a).orElse(b);
+        } else {
+            return a.intersection(b);
+        }
     }
 }
