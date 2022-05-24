@@ -277,11 +277,11 @@
 			<version>0.5.13</version>
 		</dependency>
 
-		<!-- VDES-1000 -->
+		<!-- SECOM -->
 		<dependency>
-			<groupId>org.grad.vdes1000</groupId>
-			<artifactId>vdes1000lib</artifactId>
-			<version>0.0.8</version>
+			<groupId>org.grad.secom</groupId>
+			<artifactId>SECOMLib</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<!-- Bouncy Castle -->
