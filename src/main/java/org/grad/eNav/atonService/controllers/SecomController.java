@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
-import org.grad.eNav.atonService.models.dtos.secom.*;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
@@ -29,6 +28,11 @@ import org.grad.eNav.atonService.utils.HeaderUtil;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.WKTUtil;
 import org.grad.eNav.s125.utils.S125Utils;
+import org.grad.secom.controllers.CapabilityInterface;
+import org.grad.secom.controllers.GetInterface;
+import org.grad.secom.controllers.GetSummaryInterface;
+import org.grad.secom.models.*;
+import org.grad.secom.models.enums.DataTypeEnum;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
@@ -59,7 +63,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/secom/v1")
 @Slf4j
-public class SecomController {
+public class SecomController implements GetInterface, GetSummaryInterface, CapabilityInterface {
 
     /**
      * The AtoN Service Data Product Name.
@@ -123,15 +127,15 @@ public class SecomController {
      * @return the SECOM-complianet dataset information
      */
     @GetMapping(value = "/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetMessageResponseObject> getDataset(@RequestParam("dataReference") Optional<String> dataReference,
-                                                               @RequestParam("dataType") Optional<DataTypeEnum> dataType,
-                                                               @RequestParam("productSpecification") Optional<String> productSpecification,
-                                                               @RequestParam("geometry") Optional<String> geometry,
-                                                               @RequestParam("areaName") Optional<String> areaName,
-                                                               @RequestParam("unlocode") Optional<String> unlocode,
-                                                               @RequestParam("fromTime") Optional<String> fromTime,
-                                                               @RequestParam("toTime") Optional<String> toTime,
-                                                               Pageable pageable) {
+    public ResponseEntity<GetMessageResponse> getObject(@RequestParam("dataReference") Optional<String> dataReference,
+                                                        @RequestParam("dataType") Optional<DataTypeEnum> dataType,
+                                                        @RequestParam("productSpecification") Optional<String> productSpecification,
+                                                        @RequestParam("geometry") Optional<String> geometry,
+                                                        @RequestParam("areaName") Optional<String> areaName,
+                                                        @RequestParam("unlocode") Optional<String> unlocode,
+                                                        @RequestParam("fromTime") Optional<String> fromTime,
+                                                        @RequestParam("toTime") Optional<String> toTime,
+                                                        Pageable pageable) {
         this.log.debug("SECOM request to get page of Dataset");
         dataReference.ifPresent(v -> this.log.debug("Data Reference specified as: {}", dataReference));
         dataType.ifPresent(v -> this.log.debug("Data Type specified as: {}", dataType));
@@ -193,7 +197,7 @@ public class SecomController {
         );
 
         // Start building the response
-        final GetMessageResponseObject getMessageResponseObject = new GetMessageResponseObject();
+        final GetMessageResponse getMessageResponseObject = new GetMessageResponse();
 
         // Now handle according to the data type
         switch (dataType.orElse(DataTypeEnum.S100_DataSet)) {
@@ -236,14 +240,14 @@ public class SecomController {
      * @return the SECOM-compliant dataset summary information
      */
     @GetMapping(value = "/dataset/summary", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetSummaryResponseObject> getDatasetSummary(@RequestParam("dataType") Optional<DataTypeEnum> dataType,
-                                                                      @RequestParam("productSpecification") Optional<String> productSpecification,
-                                                                      @RequestParam("geometry") Optional<String> geometry,
-                                                                      @RequestParam("areaName") Optional<String> areaName,
-                                                                      @RequestParam("unlocode") Optional<String> unlocode,
-                                                                      @RequestParam("fromTime") Optional<String> fromTime,
-                                                                      @RequestParam("toTime") Optional<String> toTime,
-                                                                      Pageable pageable) {
+    public ResponseEntity<GetSummaryResponse> getSummary(@RequestParam("dataType") Optional<DataTypeEnum> dataType,
+                                                         @RequestParam("productSpecification") Optional<String> productSpecification,
+                                                         @RequestParam("geometry") Optional<String> geometry,
+                                                         @RequestParam("areaName") Optional<String> areaName,
+                                                         @RequestParam("unlocode") Optional<String> unlocode,
+                                                         @RequestParam("fromTime") Optional<String> fromTime,
+                                                         @RequestParam("toTime") Optional<String> toTime,
+                                                         Pageable pageable) {
         this.log.debug("SECOM request to get page of Dataset Summary");
         dataType.ifPresent(v -> this.log.debug("Data Type specified as: {}", dataType));
         productSpecification.ifPresent(v -> this.log.debug("Product Specification specified as: {}", productSpecification));
@@ -303,15 +307,15 @@ public class SecomController {
         );
 
         // Start building the response
-        final GetSummaryResponseObject getSummaryResponseObject = new GetSummaryResponseObject();
+        final GetSummaryResponse getSummaryResponseObject = new GetSummaryResponse();
 
         // Now handle according to the data type
         switch (dataType.orElse(DataTypeEnum.S100_DataSet)) {
             case S100_DataSet:
             default:
-                getSummaryResponseObject.setInformationSummaryObject(s125Datasets.stream()
+                getSummaryResponseObject.setInformationSummary(s125Datasets.stream()
                         .map(s125Dataset -> {
-                            InformationSummaryObject informationSummaryObject = new InformationSummaryObject();
+                            InformationSummary informationSummaryObject = new InformationSummary();
                             informationSummaryObject.setMessageIdentifier(s125Dataset.getDatasetIdentificationInformation().getDatasetFileIdentifier());
                             informationSummaryObject.setIdentifier(s125Dataset.getId().toString());
                             informationSummaryObject.setName(s125Dataset.getDatasetIdentificationInformation().getDatasetTitle());
@@ -337,17 +341,18 @@ public class SecomController {
      * @return the SECOM-compliant service capabilities
      */
     @GetMapping(value = "/capability", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CapabilityResponseObject> getCapabilities() throws MalformedURLException {
+    public ResponseEntity<CapabilityResponse> getCapabilities() {
         final String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+        final URL payloadSchemaUrl = Optional.of(dataProductLocation)
+                .map(l -> l.startsWith("http") ? l :(baseUrl + l) )
+                .map(l -> { try { return new URL(l); } catch (MalformedURLException ex) { return null; } })
+                .orElse(null);
 
         // Start building the response
-        CapabilityResponseObject capabilityResponseObject = new CapabilityResponseObject();
+        CapabilityResponse capabilityResponseObject = new CapabilityResponse();
         capabilityResponseObject.setPayloadName(this.dataProductName);
         capabilityResponseObject.setPayloadVersion(this.dataProductVersion);
-        capabilityResponseObject.setPayloadSchemaUrl(new URL(
-                (this.dataProductLocation.startsWith("http") ? "" : baseUrl)
-                     + this.dataProductLocation
-                ));
+        capabilityResponseObject.setPayloadSchemaUrl(payloadSchemaUrl);
 
         // Populate the implemented SECOM interfaces
         SecomInterfaces secomInterfaces = new SecomInterfaces();

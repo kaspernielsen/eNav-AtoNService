@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.components;
 
-import org.grad.eNav.atonService.models.dtos.secom.DataTypeEnum;
+import org.grad.secom.models.enums.DataTypeEnum;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
