@@ -29,6 +29,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * The S-125 Dataset Entity Class
@@ -74,7 +75,9 @@ public class S125DataSet {
      * Instantiates a new Dataset.
      */
     public S125DataSet() {
-
+        this.datasetIdentificationInformation = new S125DataSetIdentification(
+                "auto_generated_s_125_dataset" + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        );
     }
 
     /**

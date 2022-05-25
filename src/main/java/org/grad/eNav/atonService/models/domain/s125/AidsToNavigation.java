@@ -20,10 +20,7 @@ import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.NonStandardField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.ScaledNumberField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.locationtech.jts.geom.Geometry;
 
 import javax.persistence.*;
@@ -65,12 +62,16 @@ public abstract class AidsToNavigation {
     @Column(unique=true)
     private String idCode;
 
+    @GenericField(indexNullAs = "9999-01-01")
     private LocalDate dateEnd;
 
+    @GenericField(indexNullAs = "1970-01-01")
     private LocalDate dateStart;
 
+    @GenericField(indexNullAs = "9999-01-01")
     private LocalDate periodEnd;
 
+    @GenericField(indexNullAs = "1970-01-01")
     private LocalDate periodStart;
 
     @ElementCollection

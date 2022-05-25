@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.controllers;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
@@ -39,6 +40,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 
+@Hidden
 @RestController
 @RequestMapping("/api/dataset")
 @Slf4j
@@ -110,12 +112,12 @@ public class DatasetController {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<S125DataSetDto> createDataset(@Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
+    public ResponseEntity<S125DataSetDto> createDataset(@RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
         log.debug("REST request to save Dataset : {}", dataSetDto);
         // Check for an ID
         if (dataSetDto.getId() != null) {
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("instance", "idexists", "A new dataset cannot already have an ID"))
+                    .headers(HeaderUtil.createFailureAlert("dataset", "idexists", "A new dataset cannot already have an ID"))
                     .build();
         }
         // Save the station

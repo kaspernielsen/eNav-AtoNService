@@ -155,6 +155,25 @@ class AidsToNavigationServiceTest {
     }
 
     /**
+     * Test that we can easily access the total number of results included in
+     * the search for all the Aids to Navigation currently present
+     * in the database and matching the provided criteria.
+     */
+    @Test
+    void testFindAllTotalCount() {
+        // Mock the full text query
+        SearchQuery<AidsToNavigation> mockedQuery = mock(SearchQuery.class);
+        doReturn(10L).when(mockedQuery).fetchTotalHitCount();
+        doReturn(mockedQuery).when(this.aidsToNavigationService).getAidsToNavigationSearchQuery(any(), any(), any(), any(), any());
+
+        // Perform the service call
+        long result = this.aidsToNavigationService.findAllTotalCount("uid", null, null, null);
+
+        // Test the result
+        assertEquals(10, result);
+    }
+
+    /**
      * Test that we can retrieve the paged list of station nodes for a
      * Datatables pagination request (which by the way also includes search and
      * sorting definitions).
