@@ -32,6 +32,7 @@ import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.AidsToNavigationRepo;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
+import org.hibernate.search.engine.search.query.SearchFetchable;
 import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
@@ -115,6 +116,35 @@ public class AidsToNavigationService {
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
                 .map(searchResult -> new PageImpl<AidsToNavigation>(searchResult.hits(), pageable, searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
+    }
+
+    /**
+     * Get the number of all the Aids to Navigation in the pageable search.
+     *
+     * @param atonNumber the Aids to Navigation number
+     * @param geometry the geometry to match the Aids to Navigation for
+     * @param fromTime the time to match the Aids to Navigation from
+     * @param toTime the time to match the Aids to Navigation to
+     * @return the number of all matching Aids to Navigation
+     */
+    public long findAllTotalCount(String atonNumber,
+                                 Geometry geometry,
+                                 LocalDateTime fromTime,
+                                 LocalDateTime toTime) {
+        log.debug("Request to get the total count of Aids to Navigation matching the pageable search");
+        // Create the search query - always sort by name
+        SearchQuery searchQuery = this.getAidsToNavigationSearchQuery(
+                atonNumber,
+                geometry,
+                fromTime,
+                toTime,
+                new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true))
+        );
+
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(SearchFetchable::fetchTotalHitCount)
+                .orElse(0L);
     }
 
     /**
@@ -249,11 +279,11 @@ public class AidsToNavigationService {
                             Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
                             Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
-                                    .field("createdAt")
-                                    .atLeast(fromTime)));
-                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
-                                    .field("createdAt")
-                                    .atMost(toTime)));
+                                    .field("dateEnd")
+                                    .atLeast(fromTime.toLocalDate())));
+                            Optional.ofNullable(toTime).map(LocalDateTime::toLocalDate).ifPresent(v -> b.must(f.range()
+                                    .field("dateStart")
+                                    .atMost(toTime.toLocalDate())));
                         })
                 )
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
