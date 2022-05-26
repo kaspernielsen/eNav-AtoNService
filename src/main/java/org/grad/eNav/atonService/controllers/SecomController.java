@@ -36,6 +36,7 @@ import org.grad.secom.interfaces.GetSummaryInterface;
 import org.grad.secom.models.*;
 import org.grad.secom.models.enums.AreaNameEnum;
 import org.grad.secom.models.enums.DataTypeEnum;
+import org.grad.secom.models.enums.InfoStatusEnum;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
@@ -175,10 +176,10 @@ public class SecomController implements GetInterface, GetSummaryInterface, Capab
             jtsGeometry = this.joinGeometries(jtsGeometry, Optional.ofNullable(unlocode)
                     .map(this.unLoCodeService::getUnLoCodeMapEntry)
                     .map(UnLoCodeMapEntry::getGeometry)
-                    .orElseGet(() -> this.geometryFactory.createEmpty(0)), true);
+                    .orElseGet(() -> this.geometryFactory.createEmpty(0)));
         }
         if(Objects.nonNull(areaName)) {
-            jtsGeometry = this.joinGeometries(jtsGeometry, null, true);
+            jtsGeometry = this.joinGeometries(jtsGeometry, null);
         }
 
         // Handle the input request
@@ -270,10 +271,10 @@ public class SecomController implements GetInterface, GetSummaryInterface, Capab
             jtsGeometry =  this.joinGeometries(jtsGeometry, Optional.of(unlocode)
                     .map(this.unLoCodeService::getUnLoCodeMapEntry)
                     .map(UnLoCodeMapEntry::getGeometry)
-                    .orElseGet(() -> this.geometryFactory.createEmpty(0)), true);
+                    .orElseGet(() -> this.geometryFactory.createEmpty(0)));
         }
         if(Objects.nonNull(areaName)) {
-            jtsGeometry = this.joinGeometries(jtsGeometry, null, true);
+            jtsGeometry = this.joinGeometries(jtsGeometry, null);
         }
 
         // Handle the input request
@@ -302,13 +303,13 @@ public class SecomController implements GetInterface, GetSummaryInterface, Capab
                             summaryObject.setInfo_identifier(s125Dataset.getDatasetIdentificationInformation().getDatasetFileIdentifier());
                             summaryObject.setInfo_name(s125Dataset.getDatasetIdentificationInformation().getDatasetTitle());
                             summaryObject.setInfo_description(s125Dataset.getDatasetIdentificationInformation().getDatasetAbstract());
-                            summaryObject.setInfo_status("present");
+                            summaryObject.setInfo_status(InfoStatusEnum.PRESENT.getValue());
                             summaryObject.setInfo_lastModifiedDate(s125Dataset.getLastUpdatedAt());
 
                             // Calculate the summary size
                             summaryObject.setInfo_size(this.aidsToNavigationService.findAllTotalCount(
                                     null,
-                                    this.joinGeometries(s125Dataset.getGeometry(), finalJTSGeometry, true),
+                                    this.joinGeometries(s125Dataset.getGeometry(), finalJTSGeometry),
                                     fromTime,
                                     toTime)
                             );
@@ -388,18 +389,13 @@ public class SecomController implements GetInterface, GetSummaryInterface, Capab
      * @param b the second geometry to be joined
      * @return the joined geometry
      */
-    private Geometry joinGeometries(Geometry a, Geometry b, boolean intersection) {
+    private Geometry joinGeometries(Geometry a, Geometry b) {
         if(a == null && b == null) {
             return null;
         } else if(a == null || b == null) {
             return Optional.ofNullable(a).orElse(b);
         } else {
-            // For intersection handle differently
-            if(intersection) {
-                return a.intersection(b);
-            }
-            // Otherwise, add up the two geometies
-            return this.geometryFactory.createGeometryCollection(new Geometry[]{a, b});
+            return a.intersection(b);
         }
     }
 }
