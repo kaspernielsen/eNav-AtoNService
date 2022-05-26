@@ -4,9 +4,9 @@
 function formatXml(xml) {
     var formatted = '';
     var reg = /(>)(<)(\/*)/g;
-    xml = xml.replace(reg, '$1\r\n$2$3');
+    var cleanedXml = xml.replace(reg, '$1\r\n$2$3');
     var pad = 0;
-    jQuery.each(xml.split('\r\n'), function(index, node) {
+    jQuery.each(cleanedXml.split('\r\n'), function(index, node) {
         var indent = 0;
         if (node.match( /.+<\/\w[^>]*>$/ )) {
             indent = 0;
