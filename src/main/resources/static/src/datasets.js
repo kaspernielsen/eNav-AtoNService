@@ -342,12 +342,16 @@ function loadDatasetContent(event, table, button, config) {
 
     // And get the dataset content using the SECOM dataset endpoint
     $.ajax({
-        url: `./api/secom/v1/dataset/?dataReference=${datasetId}`,
+        url: `api/secom/v1/dataset?dataReference=${datasetId}`,
         type: 'GET',
         contentType: 'application/json; charset=utf-8',
         success: (response) => {
             // Show the content
-            $('#datasetContentTextArea').val(formatXml(response.payload));
+            if(response.data) {
+                $('#datasetContentTextArea').val(formatXml(response.data.payload));
+            } else {
+                $('#datasetContentTextArea').val("No data found");
+            }
         },
         error: () => {console.error("error")}
     });
