@@ -48,12 +48,12 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.validation.constraints.Pattern;
 import javax.xml.bind.JAXBException;
@@ -64,6 +64,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/secom")
+@Validated
 @Slf4j
 public class SecomGetController implements GetInterface {
 
@@ -124,7 +125,7 @@ public class SecomGetController implements GetInterface {
                                                  @RequestParam(value = "dataProductType", required = false) SECOM_DataProductType dataProductType,
                                                  @RequestParam(value = "productVersion", required = false) String productVersion,
                                                  @RequestParam(value = "geometry", required = false) String geometry,
-                                                 @RequestParam(value = "unlocode", required = false) @Valid @Pattern(regexp = "[A-Z]{5}") String unlocode,
+                                                 @RequestParam(value = "unlocode", required = false) @Pattern(regexp = "[A-Z]{5}") String unlocode,
                                                  @RequestParam(value = "validFrom", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime validFrom,
                                                  @RequestParam(value = "validTo", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime validTo,
                                                  @PageableDefault(size = Integer.MAX_VALUE) Pageable pageable) {
@@ -140,7 +141,7 @@ public class SecomGetController implements GetInterface {
         // Init local variables
         Geometry jtsGeometry = null;
         String data = null;
-        S125DataSet s125DataSet = null;
+        S125DataSet s125DataSet = new S125DataSet();
 
         // Parse the arguments
         final ContainerTypeEnum reqContainerType = Optional.ofNullable(containerType)

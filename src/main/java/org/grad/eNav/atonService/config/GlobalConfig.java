@@ -31,11 +31,13 @@ import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.s125.utils.S125Utils;
+import org.grad.secom.config.SecomConfig;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import javax.xml.bind.JAXBException;
 import java.beans.PropertyDescriptor;
@@ -50,6 +52,7 @@ import java.util.stream.Collectors;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
+@Import(SecomConfig.class)
 @Configuration
 @Slf4j
 public class GlobalConfig {

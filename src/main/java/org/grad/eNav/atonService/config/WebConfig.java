@@ -16,8 +16,8 @@
 
 package org.grad.eNav.atonService.config;
 
-import org.grad.eNav.atonService.components.ContainerTypeEnumConverter;
 import org.grad.eNav.atonService.components.GeoJsonStringToGeometryConverter;
+import org.grad.secom.components.ContainerTypeEnumConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
