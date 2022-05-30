@@ -46,10 +46,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -117,7 +117,7 @@ class DatasetControllerTest {
 
         // Create a Dataset with an ID
         this.existingDataset = new S125DataSet("ExistingDataset");
-        this.existingDataset.setId(BigInteger.ONE);
+        this.existingDataset.setUuid(UUID.randomUUID());
         this.existingDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));
     }
 
@@ -144,7 +144,7 @@ class DatasetControllerTest {
         // Validate the entries one by one
         for(int i=0; i< page.getSize(); i++) {
             assertNotNull(result.getContent().get(i));
-            assertEquals(page.getContent().get(i).getId(), result.getContent().get(i).getId());
+            assertEquals(page.getContent().get(i).getUuid(), result.getContent().get(i).getUuid());
             assertEquals(page.getContent().get(i).getGeometry(), result.getContent().get(i).getGeometry());
             assertNotNull(result.getContent().get(i).getDatasetIdentificationInformation());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle());
@@ -197,7 +197,7 @@ class DatasetControllerTest {
         // Validate the entries one by one
         for(int i=0; i< page.getSize(); i++) {
             assertNotNull(result.getData().get(i));
-            assertEquals(page.getContent().get(i).getId(), result.getData().get(i).getId());
+            assertEquals(page.getContent().get(i).getUuid(), result.getData().get(i).getUuid());
             assertEquals(page.getContent().get(i).getGeometry(), result.getData().get(i).getGeometry());
             assertNotNull(result.getData().get(i).getDatasetIdentificationInformation());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle(), result.getData().get(i).getDatasetIdentificationInformation().getDatasetTitle());
@@ -214,7 +214,7 @@ class DatasetControllerTest {
     /**
      * Test that we can create a new dataset correctly through a POST request.
      * The incoming station should NOT have an ID, while the returned
-     * value will have the ID field populated.
+     * value will have the UUID field populated.
      */
     @Test
     void testCreateDataset() throws Exception {
@@ -227,14 +227,14 @@ class DatasetControllerTest {
                         .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.newDataset, S125DataSetDto.class))))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("location"))
-                .andExpect(header().string("location", String.format("/api/dataset/%d", this.existingDataset.getId())))
+                .andExpect(header().string("location", String.format("/api/dataset/%s", this.existingDataset.getUuid())))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 
         // Parse and validate the response
         S125DataSetDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), S125DataSetDto.class);
         assertNotNull(result);
-        assertEquals(this.existingDataset.getId(), result.getId());
+        assertEquals(this.existingDataset.getUuid(), result.getUuid());
         assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
         assertNotNull(result.getDatasetIdentificationInformation());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
@@ -248,7 +248,7 @@ class DatasetControllerTest {
     }
 
     /**
-     * Test that if we try to create a dataset with an existing ID field,
+     * Test that if we try to create a dataset with an existing UUID field,
      * an HTTP BAD_REQUEST response will be returns, with a description of
      * the error in the header.
      */
@@ -266,7 +266,7 @@ class DatasetControllerTest {
 
     /**
      * Test that we can update an existing dataset correctly through a PUT
-     * request. The incoming dataset should always have an ID.
+     * request. The incoming dataset should always have an UUID.
      */
     @Test
     void testUpdateDataset() throws Exception {
@@ -274,7 +274,7 @@ class DatasetControllerTest {
         doReturn(this.existingDataset).when(this.datasetService).save(any());
 
         // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(put("/api/dataset/{id}", this.existingDataset.getId())
+        MvcResult mvcResult = this.mockMvc.perform(put("/api/dataset/{uuid}", this.existingDataset.getUuid())
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.newDataset, S125DataSetDto.class))))
                 .andExpect(status().isOk())
@@ -284,7 +284,7 @@ class DatasetControllerTest {
         // Parse and validate the response
         S125DataSetDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), S125DataSetDto.class);
         assertNotNull(result);
-        assertEquals(this.existingDataset.getId(), result.getId());
+        assertEquals(this.existingDataset.getUuid(), result.getUuid());
         assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
         assertNotNull(result.getDatasetIdentificationInformation());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
@@ -308,7 +308,7 @@ class DatasetControllerTest {
         doThrow(RuntimeException.class).when(this.datasetService).save(any());
 
         // Perform the MVC request
-        this.mockMvc.perform(put("/api/dataset/{id}", this.existingDataset.getId())
+        this.mockMvc.perform(put("/api/dataset/{uuid}", this.existingDataset.getUuid())
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.newDataset, S125DataSetDto.class))))
                 .andExpect(status().isBadRequest())
@@ -318,12 +318,13 @@ class DatasetControllerTest {
     }
 
     /**
-     * Test that we can correctly delete an existing dataset by using a valid ID.
+     * Test that we can correctly delete an existing dataset by using a valid
+     * UUID.
      */
     @Test
     void testDeleteDataset() throws Exception {
         // Perform the MVC request
-        this.mockMvc.perform(delete("/api/dataset/{id}", this.existingDataset.getId())
+        this.mockMvc.perform(delete("/api/dataset/{uuid}", this.existingDataset.getUuid())
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -338,7 +339,7 @@ class DatasetControllerTest {
         doThrow(DataNotFoundException.class).when(this.datasetService).delete(any());
 
         // Perform the MVC request
-        this.mockMvc.perform(delete("/api/dataset/{id}", this.existingDataset.getId()))
+        this.mockMvc.perform(delete("/api/dataset/{uuid}", this.existingDataset.getUuid()))
                 .andExpect(status().isNotFound());
     }
 }

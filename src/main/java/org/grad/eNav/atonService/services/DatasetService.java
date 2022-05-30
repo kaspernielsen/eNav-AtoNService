@@ -20,8 +20,7 @@ package org.grad.eNav.atonService.services;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedNumericSortField;
+import org.apache.lucene.search.SortedSetSortField;
 import org.apache.lucene.spatial.prefix.RecursivePrefixTreeStrategy;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
@@ -48,11 +47,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The S-125 Dataset Service.
@@ -90,20 +89,20 @@ public class DatasetService {
             "datasetIdentificationInformation.datasetAbstract",
     };
     private final String[] searchFieldsWithSort = new String[] {
-            "id"
+
     };
 
 
     /**
-     * Find one dataset by ID.
+     * Find one dataset by UUID.
      *
-     * @param id the id
+     * @param uuid the UUID
      * @return the dataset
      */
     @Transactional(readOnly = true)
-    public S125DataSet findOne(BigInteger id) {
-        return this.datasetRepo.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with ID %d was not found", id)));
+    public S125DataSet findOne(UUID uuid) {
+        return this.datasetRepo.findById(uuid)
+                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
     }
 
     /**
@@ -120,18 +119,18 @@ public class DatasetService {
                                      Pageable pageable) {
         log.debug("Request to get S-125 Datasets in a pageable search");
         // Create the search query - always sort by name
-        SearchQuery searchQuery = this.geDatasetSearchQuery(
+        SearchQuery<S125DataSet> searchQuery = this.geDatasetSearchQuery(
                 datasetTitle,
                 geometry,
                 fromTime,
                 toTime,
-                new Sort(new SortedNumericSortField("id_sort", SortField.Type.LONG, true))
+                new Sort(new SortedSetSortField("uuid", false))
         );
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
-                .map(searchResult -> new PageImpl<S125DataSet>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .map(searchResult -> new PageImpl<>(searchResult.hits(), pageable, searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
     }
 
@@ -146,7 +145,7 @@ public class DatasetService {
     public Page<S125DataSet> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         log.debug("Request to get S-125 Datasets in a Datatables pageable search");
         // Create the search query
-        SearchQuery searchQuery = this.getDatasetSearchQueryByText(
+        SearchQuery<S125DataSet> searchQuery = this.getDatasetSearchQueryByText(
                 dtPagingRequest.getSearch().getValue(),
                 dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort))
         );
@@ -154,7 +153,7 @@ public class DatasetService {
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
-                .map(searchResult -> new PageImpl<S125DataSet>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
+                .map(searchResult -> new PageImpl<>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
@@ -174,17 +173,17 @@ public class DatasetService {
     }
 
     /**
-     * Delete the Aids to Navigation by ID.
+     * Delete the Aids to Navigation by UUID.
      *
-     * @param id the ID of the Aids to Navigation
+     * @param uuid the UUID of the Aids to Navigation 21ddfeb8-a647-49cd-a6a0-2df3b92251b9
      */
     @Transactional
-    public void delete(BigInteger id) {
-        log.debug("Request to delete Dataset with ID : {}", id);
+    public void delete(UUID uuid) {
+        log.debug("Request to delete Dataset with UUID : {}", uuid);
 
         // Make sure the station node exists
-        final S125DataSet dataSet = this.datasetRepo.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(String.format("No Dataset found for the provided ID: %d", id)));
+        final S125DataSet dataSet = this.datasetRepo.findById(uuid)
+                .orElseThrow(() -> new DataNotFoundException(String.format("No Dataset found for the provided UUID: %s", uuid)));
 
         // Now delete the station node
         this.datasetRepo.delete(dataSet);
@@ -217,7 +216,7 @@ public class DatasetService {
      * AtoN UID and geometry. This query will be based solely on the aton
      * messages table and will include the following fields:
      * -
-     * For any more elaborate search, the getSearchMessageQueryByText funtion
+     * For any more elaborate search, the getSearchMessageQueryByText function
      * can be used.
      *
      * @param datasetTitle the Dataset title to be searched

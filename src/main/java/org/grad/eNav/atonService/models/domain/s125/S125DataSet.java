@@ -18,18 +18,22 @@ package org.grad.eNav.atonService.models.domain.s125;
 
 import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.NonStandardField;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 /**
  * The S-125 Dataset Entity Class
@@ -50,10 +54,20 @@ public class S125DataSet {
 
     // Class Variables
     @Id
-    @ScaledNumberField(name = "id_sort", decimalScale=0, sortable = Sortable.YES)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dataset_generator")
-    @SequenceGenerator(name="dataset_generator", sequenceName = "dataset_generator_seq", allocationSize=1)
-    private BigInteger id;
+    @GenericField(sortable = Sortable.YES)
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator",
+            parameters = {
+                    @org.hibernate.annotations.Parameter (
+                            name = "uuid_gen_strategy_class",
+                            value = "org.hibernate.id.uuid.CustomVersionOneStrategy"
+                    )
+            }
+    )
+    @Column(columnDefinition="uuid", unique = true, updatable = false, nullable = false)
+    private UUID uuid;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "dataset_identification_id", referencedColumnName = "id")
@@ -89,23 +103,22 @@ public class S125DataSet {
         this.datasetIdentificationInformation = new S125DataSetIdentification(datasetFileIdentifier);
     }
 
-
     /**
-     * Gets id.
+     * Gets uuid.
      *
-     * @return the id
+     * @return the uuid
      */
-    public BigInteger getId() {
-        return id;
+    public UUID getUuid() {
+        return uuid;
     }
 
     /**
-     * Sets id.
+     * Sets uuid.
      *
-     * @param id the id
+     * @param uuid the uuid
      */
-    public void setId(BigInteger id) {
-        this.id = id;
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
     }
 
     /**

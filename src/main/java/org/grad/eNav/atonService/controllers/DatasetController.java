@@ -35,10 +35,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
+import java.util.UUID;
 
 @Hidden
 @RestController
@@ -115,7 +115,7 @@ public class DatasetController {
     public ResponseEntity<S125DataSetDto> createDataset(@RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
         log.debug("REST request to save Dataset : {}", dataSetDto);
         // Check for an ID
-        if (dataSetDto.getId() != null) {
+        if (dataSetDto.getUuid() != null) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("dataset", "idexists", "A new dataset cannot already have an ID"))
                     .build();
@@ -123,7 +123,7 @@ public class DatasetController {
         // Save the station
         try {
             S125DataSet s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class));
-            return ResponseEntity.created(new URI(String.format("/api/dataset/%d", s125DataSet.getId())))
+            return ResponseEntity.created(new URI(String.format("/api/dataset/%s", s125DataSet.getUuid())))
                     .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -133,18 +133,18 @@ public class DatasetController {
     }
 
     /**
-     * PUT /api/dataset/{id} : Updates an existing "ID" dataset.
+     * PUT /api/dataset/{uuid} : Updates an existing "UUID" dataset.
      *
-     * @param id the ID of the dataset to be updated
+     * @param uuid the UUID of the dataset to be updated
      * @param dataSetDto the dataset to update
      * @return the ResponseEntity with status 200 (OK) and with body the updated instance
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<S125DataSetDto> updateDataset(@PathVariable BigInteger id, @Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
+    @PutMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<S125DataSetDto> updateDataset(@PathVariable UUID uuid, @Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
         log.debug("REST request to update Dataset : {}", dataSetDto);
-        // Make sure we gor the ID
-        dataSetDto.setId(id);
+        // Make sure we got the UUID
+        dataSetDto.setUuid(uuid);
         // Save the station
         try {
             S125DataSet s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class));
@@ -158,17 +158,17 @@ public class DatasetController {
     }
 
     /**
-     * DELETE /api/dataset/{id} : Delete the "ID" Dataset.
+     * DELETE /api/dataset/{uuid} : Delete the "UUID" Dataset.
      *
-     * @param id the ID of the Dataset to be deleted
+     * @param uuid the UUID of the Dataset to be deleted
      * @return the ResponseEntity with status 200 (OK)
      */
-    @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> deleteDataset(@PathVariable BigInteger id) {
-        this.log.debug("REST request to delete Dataset : {}", id);
-        this.datasetService.delete(id);
+    @DeleteMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> deleteDataset(@PathVariable UUID uuid) {
+        this.log.debug("REST request to delete Dataset with UUID : {}", uuid);
+        this.datasetService.delete(uuid);
         return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityDeletionAlert("dataset", id.toString()))
+                .headers(HeaderUtil.createEntityDeletionAlert("dataset", uuid.toString()))
                 .build();
     }
 

@@ -16,21 +16,21 @@
 
 package org.grad.eNav.atonService.components;
 
-import org.grad.secom.models.enums.DataTypeEnum;
+import org.grad.secom.models.enums.ContainerTypeEnum;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 /**
- * The SECOM Data Type Enum Converter.
+ * The SECOM Container Type Enum Converter.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Component
-public class DataTypeEnumConverter implements Converter<String, DataTypeEnum> {
+public class ContainerTypeEnumConverter implements Converter<String, ContainerTypeEnum> {
 
     @Override
-    public DataTypeEnum convert(String value) {
-        return DataTypeEnum.fromValue(Integer.parseInt(value));
+    public ContainerTypeEnum convert(String value) {
+        return ContainerTypeEnum.fromValue(Integer.parseInt(value));
     }
 
 }

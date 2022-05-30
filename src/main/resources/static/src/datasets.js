@@ -12,10 +12,10 @@ var drawnItems = undefined;
  */
 var datasetColumnDefs = [
 {
-    data: "id",
-    title: "ID",
-    hoverMsg: "The Dataset ID",
-    placeholder: "The Dataset ID",
+    data: "uuid",
+    title: "UUID",
+    hoverMsg: "The Dataset UUID",
+    placeholder: "The Dataset UUID",
     type: "hidden",
     visible: false,
     searchable: false
@@ -177,7 +177,7 @@ $(function () {
                 crossDomain: true,
                 dataType: 'json',
                 data: JSON.stringify({
-                    id: rowdata["id"],
+                    uuid: rowdata["uuid"],
                     datasetIdentificationInformation: {
                         datasetTitle: rowdata["datasetIdentificationInformation.datasetTitle"],
                         encodingSpecification: rowdata["datasetIdentificationInformation.encodingSpecification"],
@@ -202,13 +202,13 @@ $(function () {
             var data = datasetTable.rows(idx.row).data();
             var geometry = data[0].geometry;
             $.ajax({
-                url: `./api/dataset/${rowdata["id"]}`,
+                url: `./api/dataset/${rowdata["uuid"]}`,
                 type: 'PUT',
                 contentType: 'application/json; charset=utf-8',
                 crossDomain: true,
                 dataType: 'json',
                 data: JSON.stringify({
-                    id: rowdata["id"],
+                    uuid: rowdata["uuid"],
                     datasetIdentificationInformation: {
                         datasetTitle: rowdata["datasetIdentificationInformation.datasetTitle"],
                         encodingSpecification: rowdata["datasetIdentificationInformation.encodingSpecification"],
@@ -335,7 +335,7 @@ function loadDatasetGeometry(event, table, button, config) {
 function loadDatasetContent(event, table, button, config) {
     var idx = table.cell('.selected', 0).index();
     var data = table.rows(idx.row).data();
-    var datasetId = data[0].id;
+    var datasetId = data[0].uuid;
 
     // First clear any previous output
     $('#datasetContentTextArea').val("Loading...");
@@ -347,8 +347,8 @@ function loadDatasetContent(event, table, button, config) {
         contentType: 'application/json; charset=utf-8',
         success: (response) => {
             // Show the content
-            if(response.data) {
-                $('#datasetContentTextArea').val(formatXml(response.data.payload));
+            if(response.dataResponseObject) {
+                $('#datasetContentTextArea').val(formatXml(atob(response.dataResponseObject.data)));
             } else {
                 $('#datasetContentTextArea').val("No data found");
             }
@@ -390,7 +390,7 @@ function saveGeometry() {
         });
 
         $.ajax({
-            url: `./api/dataset/${dataset.id}`,
+            url: `./api/dataset/${dataset.uuid}`,
             type: 'PUT',
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',

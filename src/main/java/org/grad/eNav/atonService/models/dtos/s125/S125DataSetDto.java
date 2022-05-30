@@ -22,8 +22,8 @@ import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
 import org.grad.eNav.atonService.utils.GeometryJSONSerializer;
 import org.locationtech.jts.geom.Geometry;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * The S-125 Dataset DTO Class
@@ -38,7 +38,7 @@ import java.time.LocalDateTime;
 public class S125DataSetDto {
 
     // Class Variables
-    private BigInteger id;
+    private UUID uuid;
 
     private S125DataSetIdentificationDto datasetIdentificationInformation;
 
@@ -51,21 +51,21 @@ public class S125DataSetDto {
     private LocalDateTime lastUpdatedAt;
 
     /**
-     * Gets id.
+     * Gets uuid.
      *
-     * @return the id
+     * @return the uuid
      */
-    public BigInteger getId() {
-        return id;
+    public UUID getUuid() {
+        return uuid;
     }
 
     /**
-     * Sets id.
+     * Sets uuid.
      *
-     * @param id the id
+     * @param uuid the uuid
      */
-    public void setId(BigInteger id) {
-        this.id = id;
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
     }
 
     /**
