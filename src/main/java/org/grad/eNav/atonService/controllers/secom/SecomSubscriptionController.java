@@ -18,14 +18,13 @@ package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.grad.eNav.atonService.services.AidsToNavigationService;
-import org.grad.eNav.atonService.services.DatasetService;
+import org.grad.eNav.atonService.components.DomainDtoMapper;
+import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.services.SecomService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.interfaces.SubscriptionInterface;
 import org.grad.secom.models.SubscriptionRequestObject;
 import org.grad.secom.models.SubscriptionResponseObject;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +36,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/secom")
@@ -46,22 +44,10 @@ import java.util.UUID;
 public class SecomSubscriptionController implements SubscriptionInterface {
 
     /**
-     * The Model Mapper.
+     * Object Mapper from SECOM Subscription Request DTO to Domain.
      */
     @Autowired
-    ModelMapper modelMapper;
-
-    /**
-     * The Dataset Service.
-     */
-    @Autowired
-    DatasetService datasetService;
-
-    /**
-     * The Aids to Navigation Service.
-     */
-    @Autowired
-    AidsToNavigationService aidsToNavigationService;
+    DomainDtoMapper<SubscriptionRequestObject, SubscriptionRequest> subscriptionRequestDomainMapper;
 
     /**
      * The UN/LOCODE Service.
@@ -76,26 +62,30 @@ public class SecomSubscriptionController implements SubscriptionInterface {
     SecomService secomService;
 
     /**
-     * POST /v1/subscription : Request subscription on information, either
-     * specific information according to parameters, or the information
+     * POST /api/secom/v1/subscription : Request subscription on information,
+     * either specific information according to parameters, or the information
      * accessible upon decision by the information provider.
      *
-     * @param subscriptionRequest the subscription object
+     * @param subscriptionRequestObject the subscription request object
      * @return the subscription response object
      */
     @Override
     @Tag(name = "SECOM")
     @PostMapping(value = SUBSCRIPTION_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SubscriptionResponseObject> subscription(@Valid @RequestBody SubscriptionRequestObject subscriptionRequest) {
-        final UUID subscriptionIdentifier = Optional.ofNullable(subscriptionRequest)
+    public ResponseEntity<SubscriptionResponseObject> subscription(@Valid @RequestBody SubscriptionRequestObject subscriptionRequestObject) {
+        final SubscriptionRequest subscriptionRequest = Optional.ofNullable(subscriptionRequestObject)
+                .map(dto -> this.subscriptionRequestDomainMapper.convertTo(dto, SubscriptionRequest.class))
                 .map(this.secomService::createSubscription)
                 .orElse(null);
 
         // Create the response
         SubscriptionResponseObject subscriptionResponse = new SubscriptionResponseObject();
-        subscriptionResponse.setSubscriptionIdentifier(subscriptionIdentifier);
-        subscriptionResponse.setResponseText(Optional.ofNullable(subscriptionResponse)
-                .map(id -> "Subscription successfully created")
+        subscriptionResponse.setSubscriptionIdentifier(Optional.ofNullable(subscriptionRequest)
+                .map(SubscriptionRequest::getUuid)
+                .orElse(null));
+        subscriptionResponse.setResponseText(Optional.ofNullable(subscriptionRequest)
+                .map(SubscriptionRequest::getUuid)
+                .map(uuid -> "Subscription successfully created")
                 .orElse("Information not found"));
 
         // Return the response

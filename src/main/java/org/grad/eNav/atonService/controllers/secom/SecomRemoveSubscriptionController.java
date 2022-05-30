@@ -18,14 +18,12 @@ package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.grad.eNav.atonService.services.AidsToNavigationService;
-import org.grad.eNav.atonService.services.DatasetService;
+import org.grad.eNav.atonService.components.DomainDtoMapper;
+import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.services.SecomService;
-import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.interfaces.RemoveSubscriptionInterface;
 import org.grad.secom.models.RemoveSubscriptionObject;
 import org.grad.secom.models.RemoveSubscriptionResponseObject;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,49 +44,32 @@ import java.util.UUID;
 public class SecomRemoveSubscriptionController implements RemoveSubscriptionInterface {
 
     /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
-
-    /**
-     * The Dataset Service.
-     */
-    @Autowired
-    DatasetService datasetService;
-
-    /**
-     * The Aids to Navigation Service.
-     */
-    @Autowired
-    AidsToNavigationService aidsToNavigationService;
-
-    /**
-     * The UN/LOCODE Service.
-     */
-    @Autowired
-    UnLoCodeService unLoCodeService;
-
-    /**
      * The SECOM Service.
      */
     @Autowired
     SecomService secomService;
 
     /**
-     * DELETE /v1/subscription : Subscription(s) can be removed either
+     * Object Mapper from SECOM Remove Subscription DTO to Domain.
+     */
+    @Autowired
+    DomainDtoMapper<RemoveSubscriptionObject, RemoveSubscription> removeSubscriptionDomainMapper;
+
+    /**
+     * DELETE /api/secom/v1/subscription : Subscription(s) can be removed either
      * internally by information owner, or externally by the consumer. This
      * interface shall be used by the consumer to request removal of
      * subscription.
      *
-     * @param removeSubscriptionRequest the remove subscription object
+     * @param removeSubscriptionObject the remove subscription object
      * @return the remove subscription response object
      */
     @Override
     @Tag(name = "SECOM")
     @DeleteMapping(value = REMOVE_SUBSCRIPTION_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RemoveSubscriptionResponseObject> removeSubscription(@Valid @RequestBody RemoveSubscriptionObject removeSubscriptionRequest) {
-        final UUID subscriptionIdentifier = Optional.ofNullable(removeSubscriptionRequest)
+    public ResponseEntity<RemoveSubscriptionResponseObject> removeSubscription(@Valid @RequestBody RemoveSubscriptionObject removeSubscriptionObject) {
+        final UUID subscriptionIdentifier = Optional.ofNullable(removeSubscriptionObject)
+                .map(dto -> this.removeSubscriptionDomainMapper.convertTo(dto, RemoveSubscription.class))
                 .map(this.secomService::deleteSubscription)
                 .orElse(null);
 

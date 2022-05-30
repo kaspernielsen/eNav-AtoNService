@@ -27,12 +27,17 @@ import org.apache.commons.text.CaseUtils;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
+import org.grad.eNav.atonService.utils.WKTUtil;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.config.SecomConfig;
+import org.grad.secom.models.SubscriptionRequestObject;
+import org.locationtech.jts.io.ParseException;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.spi.MappingContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -43,6 +48,7 @@ import javax.xml.bind.JAXBException;
 import java.beans.PropertyDescriptor;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -138,6 +144,17 @@ public class GlobalConfig {
                     .includeBase(AidsToNavigation.class, AidsToNavigationDto.class);
         }
 
+        // Now map the SECOM Subscription Requests
+        modelMapper.createTypeMap(SubscriptionRequestObject.class, SubscriptionRequest.class)
+                .implicitMappings()
+                .addMappings(mapper -> {
+                    mapper.using(ctx -> Optional.of(ctx)
+                            .map(MappingContext::getSource)
+                            .map(String.class::cast)
+                            .map(g -> {try {return WKTUtil.convertWKTtoGeometry(g);} catch (ParseException ex) {return null;}})
+                            .orElse(null))
+                            .map(SubscriptionRequestObject::getGeometry, SubscriptionRequest::setGeometry);
+                });
         // ================================================================== //
 
         return modelMapper;
