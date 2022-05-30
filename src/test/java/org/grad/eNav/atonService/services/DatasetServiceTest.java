@@ -39,11 +39,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import javax.persistence.EntityManager;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -104,7 +100,7 @@ class DatasetServiceTest {
 
         // Create a Dataset with an ID
         this.existingDataset = new S125DataSet("ExistingDataset");
-        this.existingDataset.setId(BigInteger.ONE);
+        this.existingDataset.setUuid(UUID.randomUUID());
         this.existingDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));
     }
 
@@ -113,14 +109,14 @@ class DatasetServiceTest {
      */
     @Test
     void testFindOne() {
-        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(this.existingDataset.getId());
+        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(this.existingDataset.getUuid());
 
         // Perform the service call
-        S125DataSet result = this.datasetService.findOne(this.existingDataset.getId());
+        S125DataSet result = this.datasetService.findOne(this.existingDataset.getUuid());
 
         // Test the result
         assertNotNull(result);
-        assertEquals(this.existingDataset.getId(), result.getId());
+        assertEquals(this.existingDataset.getUuid(), result.getUuid());
         assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
         assertNotNull(result.getDatasetIdentificationInformation());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
@@ -139,11 +135,11 @@ class DatasetServiceTest {
      */
     @Test
     void testFindOneNotFound() {
-        doReturn(Optional.empty()).when(this.datasetRepo).findById(this.existingDataset.getId());
+        doReturn(Optional.empty()).when(this.datasetRepo).findById(this.existingDataset.getUuid());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
-                this.datasetService.delete(this.existingDataset.getId())
+                this.datasetService.delete(this.existingDataset.getUuid())
         );
     }
 
@@ -173,7 +169,7 @@ class DatasetServiceTest {
         // Test each of the result entries
         for(int i=0; i < result.getSize(); i++){
             assertNotNull(result.getContent().get(i));
-            assertEquals(this.datasetList.get(i).getId(), result.getContent().get(i).getId());
+            assertEquals(this.datasetList.get(i).getUuid(), result.getContent().get(i).getUuid());
             assertEquals(this.datasetList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
             assertNotNull(result.getContent().get(i).getDatasetIdentificationInformation());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getDatasetTitle(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle());
@@ -236,7 +232,7 @@ class DatasetServiceTest {
         // Test each of the result entries
         for(int i=0; i < result.getSize(); i++){
             assertNotNull(result.getContent().get(i));
-            assertEquals(this.datasetList.get(i).getId(), result.getContent().get(i).getId());
+            assertEquals(this.datasetList.get(i).getUuid(), result.getContent().get(i).getUuid());
             assertEquals(this.datasetList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
             assertNotNull(result.getContent().get(i).getDatasetIdentificationInformation());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getDatasetTitle(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetTitle());
@@ -263,7 +259,7 @@ class DatasetServiceTest {
 
         // Test the result
         assertNotNull(result);
-        assertEquals(this.newDataset.getId(), result.getId());
+        assertEquals(this.newDataset.getUuid(), result.getUuid());
         assertEquals(this.newDataset.getGeometry(), result.getGeometry());
         assertNotNull(result.getDatasetIdentificationInformation());
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
@@ -281,11 +277,11 @@ class DatasetServiceTest {
      */
     @Test
     void testDelete() throws DataNotFoundException {
-        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(this.existingDataset.getId());
+        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(this.existingDataset.getUuid());
         doNothing().when(this.datasetRepo).delete(this.existingDataset);
 
         // Perform the service call
-        this.datasetService.delete(this.existingDataset.getId());
+        this.datasetService.delete(this.existingDataset.getUuid());
 
         // Verify that a deletion call took place in the repository
         verify(this.datasetRepo, times(1)).delete(this.existingDataset);
@@ -297,11 +293,11 @@ class DatasetServiceTest {
      */
     @Test
     void testDeleteNotFound() {
-        doReturn(Optional.empty()).when(this.datasetRepo).findById(this.existingDataset.getId());
+        doReturn(Optional.empty()).when(this.datasetRepo).findById(this.existingDataset.getUuid());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
-                this.datasetService.delete(this.existingDataset.getId())
+                this.datasetService.delete(this.existingDataset.getUuid())
         );
     }
 

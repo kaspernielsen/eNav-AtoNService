@@ -19,13 +19,13 @@ package org.grad.eNav.atonService.repos;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.math.BigInteger;
+import java.util.UUID;
 
 /**
  * Spring Data JPA repository for the S-125 Dataset entities.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface DatasetRepo extends JpaRepository<S125DataSet, BigInteger> {
+public interface DatasetRepo extends JpaRepository<S125DataSet, UUID> {
 
 }

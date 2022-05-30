@@ -30,6 +30,11 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Optional;
 
+/**
+ * The UN/LoCode Service Class.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
 @Service
 @Slf4j
 public class UnLoCodeService {

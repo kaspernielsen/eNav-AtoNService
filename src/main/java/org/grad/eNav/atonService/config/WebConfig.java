@@ -16,8 +16,7 @@
 
 package org.grad.eNav.atonService.config;
 
-import org.grad.eNav.atonService.components.CommaSeparatedAreaListConverter;
-import org.grad.eNav.atonService.components.DataTypeEnumConverter;
+import org.grad.eNav.atonService.components.ContainerTypeEnumConverter;
 import org.grad.eNav.atonService.components.GeoJsonStringToGeometryConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -43,16 +42,10 @@ public class WebConfig implements WebMvcConfigurer {
     GeoJsonStringToGeometryConverter geoJsonStringToGeometryConverter;
 
     /**
-     * The SECOM Data Type Enum Converter.
+     * The SECOM Container Type Enum Converter.
      */
     @Autowired
-    DataTypeEnumConverter dataTypeEnumConverter;
-
-    /**
-     * The Comma Separated List Converter.
-     */
-    @Autowired
-    CommaSeparatedAreaListConverter commaSeparatedAreaListConverter;
+    ContainerTypeEnumConverter containerTypeEnumConverter;
 
     /**
      * Add the static resources and webjars to the web resources.
@@ -101,8 +94,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addConverter(geoJsonStringToGeometryConverter);
-        registry.addConverter(dataTypeEnumConverter);
-        registry.addConverter(commaSeparatedAreaListConverter);
+        registry.addConverter(containerTypeEnumConverter);
     }
 
 }

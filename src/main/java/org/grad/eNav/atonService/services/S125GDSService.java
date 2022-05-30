@@ -37,7 +37,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 /**
- * The AtoN Geomesa Data Store Service Class
+ * The AtoN Geomesa Data Store Service Class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
