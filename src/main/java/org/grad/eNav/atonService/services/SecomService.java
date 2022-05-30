@@ -17,12 +17,17 @@
 package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.grad.secom.models.RemoveSubscriptionObject;
+import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
+import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
+import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
+import org.grad.secom.exceptions.SecomNotFoundException;
 import org.grad.secom.models.SECOM_ExchangeMetadata;
-import org.grad.secom.models.SubscriptionRequestObject;
 import org.locationtech.jts.geom.Geometry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.validation.ValidationException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,25 +44,53 @@ import java.util.UUID;
 public class SecomService {
 
     /**
+     * The SECOM Subscription Repo.
+     */
+    @Autowired
+    SecomSubscriptionRepo secomSubscriptionRepo;
+
+    /**
      * Creates a new SECOM subscription and persists its information in the
      * database.
      *
-     * @param subscriptionRequestObject the subscription request object
-     * @return the subscription identifier UUID generated
+     * @param subscriptionRequest the subscription request
+     * @return the subscription request generated
      */
-    public UUID createSubscription(SubscriptionRequestObject subscriptionRequestObject) {
-        return null;
+    public SubscriptionRequest createSubscription(SubscriptionRequest subscriptionRequest) {
+        log.debug("Request to save SECOM subscription : {}", subscriptionRequest);
+
+        // Make sure we don't have a UUID to begin with
+        if(Objects.nonNull(subscriptionRequest.getUuid())) {
+            throw new ValidationException("Cannot create a SECOM subscription if the UUID is already provided!");
+        }
+
+        // Now save for each type
+        return this.secomSubscriptionRepo.save(subscriptionRequest);
     }
 
     /**
      * Removes and existing SECOM subscription from the persisted entries in
      * the database if found and return an output message.
      *
-     * @param removeSubscriptionObject the remove subscription object
+     * @param removeSubscription the remove subscription
      * @return the subscription identifier UUID removed
      */
-    public UUID deleteSubscription(RemoveSubscriptionObject removeSubscriptionObject) {
-        return null;
+    public UUID deleteSubscription(RemoveSubscription removeSubscription) {
+        log.debug("Request to delete SECOM subscription : {}", removeSubscription);
+
+        // Look for the subscription and delete it if found
+        Optional.of(removeSubscription)
+                .map(RemoveSubscription::getSubscriptionIdentifier)
+                .flatMap(this.secomSubscriptionRepo::findById)
+                .ifPresentOrElse(
+                        this.secomSubscriptionRepo::delete,
+                        () -> {
+                            throw new SecomNotFoundException(removeSubscription.getSubscriptionIdentifier().toString());
+                        }
+        );
+
+        // If all OK, then return the subscription UUID
+        return removeSubscription.getSubscriptionIdentifier();
     }
 
     /**
