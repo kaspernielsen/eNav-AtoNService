@@ -17,16 +17,26 @@
 package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
 import org.grad.secom.exceptions.SecomNotFoundException;
+import org.grad.secom.exceptions.SecomValidationException;
 import org.grad.secom.models.SECOM_ExchangeMetadata;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.integration.channel.PublishSubscribeChannel;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHandler;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.validation.ValidationException;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,13 +51,89 @@ import java.util.UUID;
  */
 @Service
 @Slf4j
-public class SecomService {
+public class SecomService implements MessageHandler  {
 
     /**
      * The SECOM Subscription Repo.
      */
     @Autowired
     SecomSubscriptionRepo secomSubscriptionRepo;
+
+    /**
+     * The S-125 Publish Channel to listen for the publications to.
+     */
+    @Autowired
+    @Qualifier("s125PublicationChannel")
+    PublishSubscribeChannel s125PublicationChannel;
+
+    /**
+     * The S-125 Publish Channel to listen for the deletion to.
+     */
+    @Autowired
+    @Qualifier("s125DeletionChannel")
+    PublishSubscribeChannel s125DeletionChannel;
+
+    /**
+     * The service post-construct operations where the handler auto-registers
+     * it-self to the S-125 publication channel.
+     */
+    @PostConstruct
+    public void init() {
+        log.info("SECOM Service is booting up...");
+        this.s125PublicationChannel.subscribe(this);
+        this.s125DeletionChannel.subscribe(this);
+    }
+
+    /**
+     * When shutting down the application we need to make sure that all
+     * threads have been gracefully shutdown as well.
+     */
+    @PreDestroy
+    public void destroy() {
+        log.info("SECOM Service is shutting down...");
+        if (this.s125PublicationChannel != null) {
+            this.s125PublicationChannel.destroy();
+        }
+        if (this.s125DeletionChannel != null) {
+            this.s125DeletionChannel.destroy();
+        }
+    }
+
+    /**
+     * This is a simple handler for the incoming messages. This is a generic
+     * handler for any type of Spring Integration messages, but it should really
+     * only be used for the ones containing S-125 message payloads.
+     *
+     * @param message               The message to be handled
+     * @throws MessagingException   The Messaging exceptions that might occur
+     */
+    @Transactional
+    @Override
+    public void handleMessage(Message<?> message) throws MessagingException {
+        // Get the headers of the incoming message
+        String contentType = Objects.toString(message.getHeaders().get(MessageHeaders.CONTENT_TYPE));
+        Boolean deletion = Objects.equals(message.getHeaders().get("deletion"), "true");
+
+        // Handle only messages that seem valid
+        if(message.getPayload() instanceof AidsToNavigation) {
+            // Get the payload of the incoming message
+            AidsToNavigation aidsToNavigation = (AidsToNavigation) message.getPayload();
+
+            // A simple debug message;
+            log.debug(String.format("Received Aids to Navigation publication with AtoN number: %s.", aidsToNavigation.getAtonNumber()));
+        }
+        // String input usually come from the S-125 deletions
+        else if(deletion && message.getPayload() instanceof String) {
+            // Get the header and payload of the incoming message
+            String payload = (String) message.getPayload();
+
+            // A simple debug message;
+            log.debug(String.format("Received Aids to Navigation deletion for AtoN Number: %s.", payload));
+        }
+        else {
+            log.warn("Aids to Navigation Service received a publish-subscribe message with erroneous format.");
+        }
+    }
 
     /**
      * Creates a new SECOM subscription and persists its information in the
@@ -61,7 +147,7 @@ public class SecomService {
 
         // Make sure we don't have a UUID to begin with
         if(Objects.nonNull(subscriptionRequest.getUuid())) {
-            throw new ValidationException("Cannot create a SECOM subscription if the UUID is already provided!");
+            throw new SecomValidationException("Cannot create a SECOM subscription if the UUID is already provided!");
         }
 
         // Now save for each type
@@ -111,18 +197,21 @@ public class SecomService {
      * A helper function to simplify the joining of geometries without troubling
      * ourselves for the null checking... which is a pain.
      *
-     * @param a the first geometry to be joined
-     * @param b the second geometry to be joined
-     * @return the joined geometry
+     * @param geometries the geometries variable argument
+     * @return the resulting joined geometry
      */
-    public Geometry joinGeometries(Geometry a, Geometry b) {
-        if(a == null && b == null) {
-            return null;
-        } else if(a == null || b == null) {
-            return Optional.ofNullable(a).orElse(b);
-        } else {
-            return a.intersection(b);
+    public Geometry joinGeometries(Geometry... geometries) {
+        Geometry result = null;
+        for(Geometry geometry : geometries) {
+            if(result == null && geometry == null) {
+                result = null;
+            } else if(result == null || geometry == null) {
+                result = Optional.ofNullable(result).orElse(geometry);
+            } else {
+                return result.intersection(geometry);
+            }
         }
+        return result;
     }
 
 }

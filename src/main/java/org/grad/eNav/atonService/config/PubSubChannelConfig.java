@@ -36,13 +36,26 @@ import org.springframework.integration.config.EnableIntegration;
 public class PubSubChannelConfig {
 
     /**
-     * Defining a publish subscribe Spring Integration channel to exchange
-     * the incoming AtoN and other data between the application components.
+     * Defining a publication publish-subscribe Spring Integration channel to
+     * exchange the incoming S-125 and data between the application components.
      *
-     * @return The publish subscribe message channel
+     * @return The publish subscribe channel for the incoming S-125 data
      */
     @Bean
-    public PublishSubscribeChannel publishSubscribeChannel() {
+    public PublishSubscribeChannel s125PublicationChannel() {
+        PublishSubscribeChannel pubsubChannel = new PublishSubscribeChannel();
+        pubsubChannel.setErrorHandler(new PubSubErrorHandler());
+        return pubsubChannel;
+    }
+
+    /**
+     * Defining a deletion publish-subscribe Spring Integration channel to
+     * exchange the deleted S-125 and data between the application components.
+     *
+     * @return The publish subscribe channel for the delered S-125 data
+     */
+    @Bean
+    public PublishSubscribeChannel s125DeletionChannel() {
         PublishSubscribeChannel pubsubChannel = new PublishSubscribeChannel();
         pubsubChannel.setErrorHandler(new PubSubErrorHandler());
         return pubsubChannel;

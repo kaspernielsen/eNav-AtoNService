@@ -74,11 +74,13 @@ function showMessage(msg) {
     }
 
     // And add the entry to the table
-    $("#incoming").append("<tr class=\"d-flex\"><td class=\"col-4\">" + msg.atonUID
-        + "</td><td class=\"col-4\">" + new Date() + "</td>"
-        + "</td><td id=\"" + msg.atonUID + noOfMessages + "Content\" class=\"col-4 overflow-auto\" style=\"max-height: 150px\"></td>");
-    // Add the content XML as text
-    $("#" + msg.atonUID + noOfMessages + "Content").text(msg.content);
+    $("#incoming").append("<tr class=\"d-flex\">"
+        + "<td class=\"col-3\">" + msg.atonNumber + "</td>"
+        + "<td class=\"col-2\">" + msg.idCode + "</td>"
+        + "<td class=\"col-2\">" + msg.dateStart + "</td>"
+        + "<td class=\"col-2\">" + msg.dateEnd + "</td>"
+        + "<td class=\"col-3\">" + msg.textualDescription + "</td>"
+        + "</tr>");
 
     // Increase the number of shown messages
     noOfMessages++;

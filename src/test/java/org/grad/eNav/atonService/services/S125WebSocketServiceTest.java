@@ -16,20 +16,20 @@
 
 package org.grad.eNav.atonService.services;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.commons.io.IOUtils;
 import org.grad.eNav.atonService.models.domain.AtonMessageType;
-import org.grad.eNav.atonService.models.dtos.S125Node;
-import org.grad.eNav.atonService.utils.GeoJSONUtils;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -37,11 +37,11 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.math.BigInteger;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -59,7 +59,7 @@ class S125WebSocketServiceTest {
      * The AtoN Publish Subscribe Channel mock.
      */
     @Mock
-    PublishSubscribeChannel publishSubscribeChannel;
+    PublishSubscribeChannel s125PublicationChannel;
 
     /**
      * The Web Socket mock.
@@ -68,23 +68,24 @@ class S125WebSocketServiceTest {
     SimpMessagingTemplate webSocket;
 
     // Test Variables
-    private S125Node s125Node;
+    private AidsToNavigation aidsToNavigation;
 
     /**
      * Common setup for all the tests.
      */
     @BeforeEach
     void setup() throws IOException {
-        // First read a valid S125 content to generate the publish-subscribe
-        // message for.
-        InputStream in = new ClassPathResource("s125-msg.xml").getInputStream();
-        String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+        // Create a temp geometry factory to get a test geometries
+        GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
-        // Also create a GeoJSON point geometry for our S125 message
-        JsonNode point = GeoJSONUtils.createGeoJSONPoint(53.61, 1.594);
-
-        // Now create the S125 node object
-        this.s125Node = new S125Node("test_aton", point, xml);
+        // Create a new AtoN message
+        this.aidsToNavigation = new BeaconCardinal();
+        this.aidsToNavigation.setId(BigInteger.valueOf(1));
+        this.aidsToNavigation.setAtonNumber("AtonNumber001");
+        this.aidsToNavigation.setIdCode("ID001");
+        this.aidsToNavigation.setTextualDescription("Description of AtoN No 1");
+        this.aidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No 1" );
+        this.aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(53.61, 1.594)));
 
         // Also set the web-socket service topic prefix
         this.s125WebSocketService.prefix = "topic";
@@ -99,29 +100,29 @@ class S125WebSocketServiceTest {
         // Perform the service call
         this.s125WebSocketService.init();
 
-        verify(this.publishSubscribeChannel, times(1)).subscribe(this.s125WebSocketService);
+        verify(this.s125PublicationChannel, times(1)).subscribe(this.s125WebSocketService);
     }
 
     /**
      * Test that the S125 web-socket service gets destroyed correctly,
-     * and it un-subscribes from the AtoN publish subscribe channel.
+     * and it un-subscribes from the S-125 publish subscribe channel.
      */
     @Test
     void testDestroy() {
         // Perform the service call
         this.s125WebSocketService.destroy();
 
-        verify(this.publishSubscribeChannel, times(1)).destroy();
+        verify(this.s125PublicationChannel, times(1)).destroy();
     }
 
     /**
      * Test that the Web-Socket controlling service can process correctly the
-     * AtoN messages published in the AtoN publish-subscribe channel.
+     * Aids to Navigation messages published in the S-125 publish-subscribe channel.
      */
     @Test
-    void testHandleS125Message() throws IOException {
+    void testHandleAidsToNavigationMessage() throws IOException {
         // Create a message to be handled
-        Message message = Optional.of(this.s125Node).map(MessageBuilder::withPayload)
+        Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, AtonMessageType.S125))
                 .map(MessageBuilder::build)
                 .orElse(null);
@@ -131,12 +132,17 @@ class S125WebSocketServiceTest {
 
         // Verify that we send a packet to the VDES port and get that packet
         ArgumentCaptor<String> topicArgument = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<S125Node> payLoadArgument = ArgumentCaptor.forClass(S125Node.class);
+        ArgumentCaptor<AidsToNavigation> payLoadArgument = ArgumentCaptor.forClass(AidsToNavigation.class);
         verify(this.webSocket, times(1)).convertAndSend(topicArgument.capture(), payLoadArgument.capture());
 
         // Verify the packet
         assertEquals("/topic/S125", topicArgument.getValue());
-        assertEquals(this.s125Node, payLoadArgument.getValue());
+        assertNotNull(payLoadArgument.getValue());
+        assertEquals(this.aidsToNavigation.getId(), payLoadArgument.getValue().getId());
+        assertEquals(this.aidsToNavigation.getAtonNumber(), payLoadArgument.getValue().getAtonNumber());
+        assertEquals(this.aidsToNavigation.getIdCode(), payLoadArgument.getValue().getIdCode());
+        assertEquals(this.aidsToNavigation.getTextualDescription(), payLoadArgument.getValue().getTextualDescription());
+        assertEquals(this.aidsToNavigation.getTextualDescriptionInNationalLanguage(), payLoadArgument.getValue().getTextualDescriptionInNationalLanguage());
     }
 
     /**

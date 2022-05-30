@@ -26,9 +26,7 @@ import org.geotools.filter.FidFilterImpl;
 import org.geotools.filter.text.cql2.CQLException;
 import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.GeomesaS125;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.dtos.S125Node;
-import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.utils.GeoJSONUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,16 +74,16 @@ class S125GDSListenerTest {
     ModelMapper modelMapper;
 
     /**
-     * The AtoN Data Channel mock.
+     * The S-125 Data Channel to publish the published data to.
      */
     @Mock
-    PublishSubscribeChannel publishSubscribeChannel;
+    PublishSubscribeChannel s125PublicationChannel;
 
     /**
-     * The Aids to Navigation Service mock.
+     * The S-125 Data Channel to publish the deleted data to.
      */
     @Mock
-    AidsToNavigationService aidsToNavigationService;
+    PublishSubscribeChannel s125DeletionChannel;
 
     // Test Variables
     private Geometry geometry;
@@ -147,7 +145,7 @@ class S125GDSListenerTest {
     @Test
     void testInit() throws IOException {
         // Init the component
-        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry, false);
+        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry);
 
         // Make sure the initialisation was successful
         assertEquals(this.s125GDSListener.consumer, this.consumer);
@@ -170,7 +168,7 @@ class S125GDSListenerTest {
         }).when(this.featureSource).removeFeatureListener(any(FeatureListener.class));
 
         // Init and perform the component call
-        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry, false);
+        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry);
         this.s125GDSListener.destroy();
 
         // Assert that the feature listeners list is empty
@@ -197,12 +195,11 @@ class S125GDSListenerTest {
         this.s125GDSListener.modelMapper = new GlobalConfig().modelMapper();
 
         // Init and perform the component call
-        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry, false);
+        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry);
         this.s125GDSListener.changed(featureEvent);
 
         // Verify that our message was saved and sent
-        verify(this.aidsToNavigationService, times(1)).save(any(AidsToNavigation.class));
-        verify(publishSubscribeChannel, times(1)).send(any(Message.class));
+        verify(this.s125PublicationChannel, times(1)).send(any(Message.class));
     }
 
     /**
@@ -232,12 +229,11 @@ class S125GDSListenerTest {
         this.s125GDSListener.modelMapper = new GlobalConfig().modelMapper();
 
         // Init and perform the component call
-        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry, false);
+        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry);
         this.s125GDSListener.changed(featureEvent);
 
         // Verify that our message was not saved or sent
-        verify(this.aidsToNavigationService, never()).save(any(AidsToNavigation.class));
-        verify(this.publishSubscribeChannel, never()).send(any(Message.class));
+        verify(this.s125PublicationChannel, never()).send(any(Message.class));
 
     }
 
@@ -257,11 +253,11 @@ class S125GDSListenerTest {
         doReturn(filter).when(featureEvent).getFilter();
 
         // Init and perform the component call
-        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry, true);
+        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry);
         this.s125GDSListener.changed(featureEvent);
 
         // Make sure the evaluation works
-        verify(this.aidsToNavigationService, times(1)).deleteByAtonNumber(this.s125Node.getAtonUID());
+        verify(this.s125DeletionChannel, times(1)).send(any(Message.class));
     }
 
 }
