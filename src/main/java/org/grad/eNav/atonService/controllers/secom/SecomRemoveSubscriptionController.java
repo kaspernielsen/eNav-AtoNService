@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -86,7 +87,7 @@ public class SecomRemoveSubscriptionController implements RemoveSubscriptionInte
     @Override
     @Tag(name = "SECOM")
     @DeleteMapping(value = REMOVE_SUBSCRIPTION_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RemoveSubscriptionResponseObject> removeSubscription(@RequestBody RemoveSubscriptionObject removeSubscriptionRequest) {
+    public ResponseEntity<RemoveSubscriptionResponseObject> removeSubscription(@Valid @RequestBody RemoveSubscriptionObject removeSubscriptionRequest) {
         final UUID subscriptionIdentifier = Optional.ofNullable(removeSubscriptionRequest)
                 .map(this.secomService::deleteSubscription)
                 .orElse(null);

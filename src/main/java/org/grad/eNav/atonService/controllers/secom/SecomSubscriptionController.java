@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -85,7 +86,7 @@ public class SecomSubscriptionController implements SubscriptionInterface {
     @Override
     @Tag(name = "SECOM")
     @PostMapping(value = SUBSCRIPTION_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SubscriptionResponseObject> subscription(@RequestBody SubscriptionRequestObject subscriptionRequest) {
+    public ResponseEntity<SubscriptionResponseObject> subscription(@Valid @RequestBody SubscriptionRequestObject subscriptionRequest) {
         final UUID subscriptionIdentifier = Optional.ofNullable(subscriptionRequest)
                 .map(this.secomService::createSubscription)
                 .orElse(null);

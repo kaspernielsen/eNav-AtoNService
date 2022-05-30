@@ -123,6 +123,7 @@ public class SecomCapabilityController implements CapabilityInterface {
         ImplementedInterfaces implementedInterfaces = new ImplementedInterfaces();
         implementedInterfaces.setGet(true);
         implementedInterfaces.setGetSummary(true);
+        implementedInterfaces.setSubscription(true);
 
         // Start building the capability entry
         CapabilityObject capabilityObject = new CapabilityObject();
