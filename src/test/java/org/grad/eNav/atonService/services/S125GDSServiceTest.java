@@ -26,7 +26,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 
@@ -52,10 +51,16 @@ class S125GDSServiceTest {
     ApplicationContext applicationContext;
 
     /**
-     * The AtoN Publish Channel mock.
+     * The S-125 Data Channel to publish the published data to.
      */
     @Mock
-    PublishSubscribeChannel publishSubscribeChannel;
+    PublishSubscribeChannel s125PublicationChannel;
+
+    /**
+     * The S-125 Data Channel to publish the deleted data to.
+     */
+    @Mock
+    PublishSubscribeChannel s125DeletionChannel;
 
     /**
      * The Geomesa Data Store mock.
@@ -89,7 +94,6 @@ class S125GDSServiceTest {
 
         // Assert that only the one listener is set as a deletion handler
         assertNotNull(this.s125GDSService.gdsListener);
-        assertTrue(this.s125GDSService.gdsListener.isDeletionHandler());
     }
 
     /**
@@ -170,7 +174,6 @@ class S125GDSServiceTest {
 
         // Assert that only the one listener is set as a deletion handler
         assertNotNull(this.s125GDSService.gdsListener);
-        assertTrue(this.s125GDSService.gdsListener.isDeletionHandler());
     }
 
 }

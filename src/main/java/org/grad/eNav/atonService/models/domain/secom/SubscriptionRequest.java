@@ -65,9 +65,9 @@ public class SubscriptionRequest {
 
     private SECOM_DataProductType dataProductType;
 
-    private UUID dataReference;
-
     private String productVersion;
+
+    private UUID dataReference;
 
     @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     private Geometry geometry;

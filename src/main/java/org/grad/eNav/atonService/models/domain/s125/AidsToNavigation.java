@@ -16,7 +16,11 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.grad.eNav.atonService.utils.GeometryBinder;
+import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
+import org.grad.eNav.atonService.utils.GeometryJSONSerializer;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
@@ -91,6 +95,8 @@ public abstract class AidsToNavigation {
 
     private String pictorialRepresentation;
 
+    @JsonSerialize(using = GeometryJSONSerializer.class)
+    @JsonDeserialize(using = GeometryJSONDeserializer.class)
     @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     private Geometry geometry;
 

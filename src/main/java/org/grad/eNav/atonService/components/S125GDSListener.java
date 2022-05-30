@@ -16,7 +16,9 @@
 
 package org.grad.eNav.atonService.components;
 
-import _int.iala_aism.s125.gml._0_0.*;
+import _int.iala_aism.s125.gml._0_0.DataSet;
+import _int.iala_aism.s125.gml._0_0.MemberType;
+import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
 import _net.opengis.gml.profiles.AbstractFeatureMemberType;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.data.DataStore;
@@ -26,12 +28,11 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FidFilterImpl;
 import org.grad.eNav.atonService.models.GeomesaData;
 import org.grad.eNav.atonService.models.GeomesaS125;
-import org.grad.eNav.atonService.models.domain.s125.*;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.dtos.S100AbstractNode;
 import org.grad.eNav.atonService.models.dtos.S125Node;
-import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
-import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.locationtech.geomesa.kafka.utils.KafkaFeatureEvent;
 import org.locationtech.jts.geom.Geometry;
@@ -49,8 +50,12 @@ import javax.annotation.PreDestroy;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * The AtoN Geomesa Data Store Listener Class
@@ -72,24 +77,24 @@ public class S125GDSListener implements FeatureListener {
     ModelMapper modelMapper;
 
     /**
-     * The AtoN Data Channel to publish the incoming data to.
+     * The S-125 Data Channel to publish the published data to.
      */
     @Autowired
-    @Qualifier("publishSubscribeChannel")
-    PublishSubscribeChannel publishSubscribeChannel;
+    @Qualifier("s125PublicationChannel")
+    PublishSubscribeChannel s125PublicationChannel;
 
     /**
-     * The Aids to Navigation Service.
+     * The S-125 Data Channel to publish the deleted data to.
      */
     @Autowired
-    AidsToNavigationService aidsToNavigationService;
+    @Qualifier("s125DeletionChannel")
+    PublishSubscribeChannel s125DeletionChannel;
 
     // Component Variables
     protected DataStore consumer;
     protected GeomesaData<S125Node> geomesaData;
     protected Geometry geometry;
     protected SimpleFeatureSource featureSource;
-    protected boolean deletionHandler;
 
     /**
      * Once the listener has been initialised, it will create a consumer of
@@ -100,20 +105,18 @@ public class S125GDSListener implements FeatureListener {
      */
     public void init(DataStore consumer,
                      GeomesaData<S125Node> geomesaData,
-                     Geometry geometry,
-                     boolean handleDeletions) throws IOException {
+                     Geometry geometry) throws IOException {
         // Remember the input data
         this.consumer = consumer;
         this.geomesaData = geomesaData;
         this.geometry = geometry;
-        this.deletionHandler = handleDeletions;
 
         // And add the feature listener to start reading
         this.featureSource = this.consumer.getFeatureSource(this.geomesaData.getTypeName());
         Optional.ofNullable(this.featureSource).ifPresent(fs -> fs.addFeatureListener(this));
 
         // Log an information message
-        log.info(String.format("Initialised AtoN message listener for area: %s",
+        log.info(String.format("Initialised Geomesa Datastore Listener for area: %s",
                  GeometryJSONConverter.convertFromGeometry(geometry)));
     }
 
@@ -128,23 +131,13 @@ public class S125GDSListener implements FeatureListener {
     }
 
     /**
-     * Returns whether the listener is setup as to handle S-125 station node
-     * deletions.
-     *
-     * @return Whether the listener handles S-125 deletion events
-     */
-    public boolean isDeletionHandler() {
-        return this.deletionHandler;
-    }
-
-    /**
      * The main data store listener operation where events are being handled.
      *
      * @param featureEvent      The feature event that took place
      */
     public void changed(FeatureEvent featureEvent) {
         // We are only interested in Kafka Feature Messages, otherwise don't bother
-        if(!(featureEvent instanceof  KafkaFeatureEvent)) {
+        if(!(featureEvent instanceof KafkaFeatureEvent)) {
             return;
         }
 
@@ -160,16 +153,14 @@ public class S125GDSListener implements FeatureListener {
                     .map(sl -> new GeomesaS125().retrieveData(sl))
                     .orElseGet(Collections::emptyList)
                     .stream()
+                    .flatMap(this::parseS125Dataset)
                     .map(MessageBuilder::withPayload)
                     .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, this.geomesaData.getTypeName()))
                     .map(MessageBuilder::build)
-                    .forEach(msg -> {
-                        this.saveAtonMessage(msg.getPayload());
-                        this.publishSubscribeChannel.send(msg);
-                    });
+                    .forEach(this.s125PublicationChannel::send);
         }
         // For feature deletions,
-        else if (featureEvent.getType() == FeatureEvent.Type.REMOVED && this.deletionHandler) {
+        else if (featureEvent.getType() == FeatureEvent.Type.REMOVED) {
             // Extract the S-125 message UID and use it to delete all referencing nodes
             Optional.of(featureEvent)
                     .filter(KafkaFeatureEvent.KafkaFeatureRemoved.class::isInstance)
@@ -180,19 +171,23 @@ public class S125GDSListener implements FeatureListener {
                     .map(FidFilterImpl::getFidsSet)
                     .orElse(Collections.emptySet())
                     .stream()
-                    .forEach(this.aidsToNavigationService::deleteByAtonNumber);
+                    .map(MessageBuilder::withPayload)
+                    .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, this.geomesaData.getTypeName()))
+                    .map(builder -> builder.setHeader("deletion", true))
+                    .map(MessageBuilder::build)
+                    .forEach(this.s125DeletionChannel::send);
         }
     }
 
     /**
-     * A helper that processes the S125Node entry provided and stored it in the
-     * database for future reference.
+     * A helper that processes the S125Node entry provided and parses the
+     * contained S-125 Aids to Navigation entries
      *
-     * @param s125Node  the S125Node to be saved
+     * @param s125Node  the S-125 dataset node to be processed
+     * @return the contained list of Aids to Navigation entries
      */
-    protected void saveAtonMessage(S125Node s125Node){
-        // Create or update the AtoN message entry
-        Optional.of(s125Node)
+    protected Stream<? extends AidsToNavigation> parseS125Dataset(S125Node s125Node){
+        return Optional.of(s125Node)
                 .map(S100AbstractNode::getContent)
                 .map(xml -> {
                     try {
@@ -212,8 +207,7 @@ public class S125GDSListener implements FeatureListener {
                 .filter(S125AidsToNavigationType.class::isInstance)
                 .map(S125AidsToNavigationType.class::cast)
                 .map(s125Aton -> this.modelMapper.map(s125Aton, S125AtonTypes.fromS125Class(s125Aton.getClass()).getLocalClass()))
-                .filter(Objects::nonNull)
-                .forEach(this.aidsToNavigationService::save);
+                .filter(Objects::nonNull);
     }
 
 }

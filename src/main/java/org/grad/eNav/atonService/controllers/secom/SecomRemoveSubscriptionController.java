@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.services.SecomService;
+import org.grad.secom.exceptions.SecomNotFoundException;
 import org.grad.secom.interfaces.RemoveSubscriptionInterface;
 import org.grad.secom.models.RemoveSubscriptionObject;
 import org.grad.secom.models.RemoveSubscriptionResponseObject;
@@ -71,13 +72,11 @@ public class SecomRemoveSubscriptionController implements RemoveSubscriptionInte
         final UUID subscriptionIdentifier = Optional.ofNullable(removeSubscriptionObject)
                 .map(dto -> this.removeSubscriptionDomainMapper.convertTo(dto, RemoveSubscription.class))
                 .map(this.secomService::deleteSubscription)
-                .orElse(null);
+                .orElseThrow(() -> new SecomNotFoundException(removeSubscriptionObject.getSubscriptionIdentifier().toString()));
 
         // Create the response
-        RemoveSubscriptionResponseObject removeSubscriptionResponse = new RemoveSubscriptionResponseObject();
-        removeSubscriptionResponse.setResponseText(Optional.ofNullable(subscriptionIdentifier)
-                .map(id -> String.format("Subscription %s removed", subscriptionIdentifier))
-                .orElse("Subscriber identifier not found"));
+        final RemoveSubscriptionResponseObject removeSubscriptionResponse = new RemoveSubscriptionResponseObject();
+        removeSubscriptionResponse.setResponseText(String.format("Subscription %s removed", subscriptionIdentifier));
 
         // Return the response
         return ResponseEntity.ok()

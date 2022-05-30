@@ -17,8 +17,7 @@
 package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.grad.eNav.atonService.models.PubSubMsgHeaders;
-import org.grad.eNav.atonService.models.dtos.S125Node;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,11 +53,11 @@ public class S125WebSocketService implements MessageHandler {
     String prefix;
 
     /**
-     * The AtoN Publish Channel to listen the AtoN messages to.
+     * The S-125 Publish Channel to listen for the publications to.
      */
     @Autowired
-    @Qualifier("publishSubscribeChannel")
-    PublishSubscribeChannel publishSubscribeChannel;
+    @Qualifier("s125PublicationChannel")
+    PublishSubscribeChannel s125PublicationChannel;
 
     /**
      * Attach the web-socket as a simple messaging template
@@ -73,8 +72,8 @@ public class S125WebSocketService implements MessageHandler {
      */
     @PostConstruct
     public void init() {
-        log.info("AtoN Message Web Socket Service is booting up...");
-        this.publishSubscribeChannel.subscribe(this);
+        log.info("S-125 Web Socket Service is booting up...");
+        this.s125PublicationChannel.subscribe(this);
     }
 
     /**
@@ -83,9 +82,9 @@ public class S125WebSocketService implements MessageHandler {
      */
     @PreDestroy
     public void destroy() {
-        log.info("AtoN Message Web Socket Service is shutting down...");
-        if (this.publishSubscribeChannel != null) {
-            this.publishSubscribeChannel.destroy();
+        log.info("S-125 Web Socket Service is shutting down...");
+        if (this.s125PublicationChannel != null) {
+            this.s125PublicationChannel.destroy();
         }
     }
 
@@ -103,15 +102,15 @@ public class S125WebSocketService implements MessageHandler {
         String contentType = Objects.toString(message.getHeaders().get(MessageHeaders.CONTENT_TYPE));
 
         // Handle only messages that seem valid
-        if(message.getPayload() instanceof S125Node) {
+        if(message.getPayload() instanceof AidsToNavigation) {
             // Get the payload of the incoming message
-            S125Node s125Node = (S125Node) message.getPayload();
+            AidsToNavigation aidsToNavigation = (AidsToNavigation) message.getPayload();
 
             // A simple debug message;
-            log.debug(String.format("Received AtoN Message with UID: %s.", s125Node.getAtonUID()));
+            log.debug(String.format("Received AtoN Message with UID: %s.", aidsToNavigation.getAtonNumber()));
 
             // Now push the aton node down the web-socket stream
-            this.publishMessage(this.webSocket, String.format("/%s/%s", prefix, contentType), s125Node);
+            this.publishMessage(this.webSocket, String.format("/%s/%s", prefix, contentType), aidsToNavigation);
         }
         else if(message.getPayload() instanceof String) {
             // Get the header and payload of the incoming message

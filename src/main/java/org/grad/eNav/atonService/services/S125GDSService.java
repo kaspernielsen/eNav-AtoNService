@@ -95,8 +95,7 @@ public class S125GDSService {
         try {
             gdsListener.init(this.consumer,
                     new GeomesaS125(WKTUtil.convertWKTtoGeometry(this.geometryWKT)),
-                    WKTUtil.convertWKTtoGeometry(this.geometryWKT),
-                    true);
+                    WKTUtil.convertWKTtoGeometry(this.geometryWKT));
         } catch (IOException | ParseException e) {
             log.error(e.getMessage());
         }

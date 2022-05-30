@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.services.SecomService;
-import org.grad.eNav.atonService.services.UnLoCodeService;
+import org.grad.secom.exceptions.SecomNotFoundException;
 import org.grad.secom.interfaces.SubscriptionInterface;
 import org.grad.secom.models.SubscriptionRequestObject;
 import org.grad.secom.models.SubscriptionResponseObject;
@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -48,12 +49,6 @@ public class SecomSubscriptionController implements SubscriptionInterface {
      */
     @Autowired
     DomainDtoMapper<SubscriptionRequestObject, SubscriptionRequest> subscriptionRequestDomainMapper;
-
-    /**
-     * The UN/LOCODE Service.
-     */
-    @Autowired
-    UnLoCodeService unLoCodeService;
 
     /**
      * The SECOM Service.
@@ -76,17 +71,13 @@ public class SecomSubscriptionController implements SubscriptionInterface {
         final SubscriptionRequest subscriptionRequest = Optional.ofNullable(subscriptionRequestObject)
                 .map(dto -> this.subscriptionRequestDomainMapper.convertTo(dto, SubscriptionRequest.class))
                 .map(this.secomService::createSubscription)
-                .orElse(null);
+                .filter(req -> Objects.nonNull(req.getUuid()))
+                .orElseThrow(() -> new SecomNotFoundException("UUID"));
 
         // Create the response
-        SubscriptionResponseObject subscriptionResponse = new SubscriptionResponseObject();
-        subscriptionResponse.setSubscriptionIdentifier(Optional.ofNullable(subscriptionRequest)
-                .map(SubscriptionRequest::getUuid)
-                .orElse(null));
-        subscriptionResponse.setResponseText(Optional.ofNullable(subscriptionRequest)
-                .map(SubscriptionRequest::getUuid)
-                .map(uuid -> "Subscription successfully created")
-                .orElse("Information not found"));
+        final SubscriptionResponseObject subscriptionResponse = new SubscriptionResponseObject();
+        subscriptionResponse.setSubscriptionIdentifier(subscriptionRequest.getUuid());
+        subscriptionResponse.setResponseText("Subscription successfully created");
 
         // Return the response
         return ResponseEntity.ok()
