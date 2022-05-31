@@ -17,7 +17,6 @@
 package org.grad.eNav.atonService.repos;
 
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.VirtualAISAidToNavigation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.math.BigInteger;
@@ -31,13 +30,13 @@ import java.util.Optional;
 public interface AidsToNavigationRepo extends JpaRepository<AidsToNavigation, BigInteger>  {
 
     /**
-     * Retrieves a database entry based on the Aids to Navigation UID if that
-     * exists.
+     * Retrieves a database entry based on the Aids to Navigation AtoN number if
+     * that exists.
      *
-     * @param idCode the Aids to Navigation UID.
+     * @param atonNumber the Aids to Navigation number.
      * @return The Aids to Navigation if that exists
      */
-    Optional<AidsToNavigation> findByAtonNumber(String idCode);
+    Optional<AidsToNavigation> findByAtonNumber(String atonNumber);
 
     /**
      * Retrieves a database entry based on the Aids to Navigation ID Code if

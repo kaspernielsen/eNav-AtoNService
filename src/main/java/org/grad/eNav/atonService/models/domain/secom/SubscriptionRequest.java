@@ -16,14 +16,21 @@
 
 package org.grad.eNav.atonService.models.domain.secom;
 
+import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryBinder;
+import org.grad.eNav.atonService.utils.GeometryUtils;
 import org.grad.secom.models.enums.ContainerTypeEnum;
 import org.grad.secom.models.enums.SECOM_DataProductType;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
+import org.hibernate.search.mapper.pojo.common.annotation.Param;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.NonStandardField;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.annotation.CreatedDate;
@@ -31,6 +38,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -42,6 +50,7 @@ import java.util.UUID;
 @EntityListeners(AuditingEntityListener.class)
 @Cacheable
 @Indexed
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class SubscriptionRequest {
 
     // Class Variables
@@ -61,28 +70,41 @@ public class SubscriptionRequest {
     @Column(columnDefinition="uuid", unique = true, updatable = false, nullable = false)
     private UUID uuid;
 
+    @KeywordField(sortable = Sortable.YES)
     private ContainerTypeEnum containerType;
 
+    @KeywordField(sortable = Sortable.YES)
     private SECOM_DataProductType dataProductType;
 
+    @KeywordField(sortable = Sortable.YES)
     private String productVersion;
 
+    @GenericField(sortable = Sortable.YES)
+    @Column(columnDefinition="uuid")
     private UUID dataReference;
 
-    @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     private Geometry geometry;
 
     private String unlocode;
 
-    @GenericField()
+    @GenericField(indexNullAs = "1970-01-01T00:00:00")
     private LocalDateTime subscriptionPeriodStart;
 
-    @GenericField()
+    @GenericField(indexNullAs = "9999-01-01T00:00:00")
     private LocalDateTime subscriptionPeriodEnd;
 
-    @GenericField()
     @CreatedDate
     private LocalDateTime createdAt;
+
+    @NonStandardField(name="subscriptionGeometry", valueBinder = @ValueBinderRef(
+            type = GeometryBinder.class,
+            params = @Param(name="fieldName", value = "subscriptionGeometry")
+    ))
+    private Geometry subscriptionGeometry;
+
+    @ManyToOne
+    @JoinColumn(name="dataset_uuid", nullable = true)
+    private S125DataSet s125DataSet;
 
     /**
      * Gets uuid.
@@ -139,24 +161,6 @@ public class SubscriptionRequest {
     }
 
     /**
-     * Gets data reference.
-     *
-     * @return the data reference
-     */
-    public UUID getDataReference() {
-        return dataReference;
-    }
-
-    /**
-     * Sets data reference.
-     *
-     * @param dataReference the data reference
-     */
-    public void setDataReference(UUID dataReference) {
-        this.dataReference = dataReference;
-    }
-
-    /**
      * Gets product version.
      *
      * @return the product version
@@ -172,6 +176,24 @@ public class SubscriptionRequest {
      */
     public void setProductVersion(String productVersion) {
         this.productVersion = productVersion;
+    }
+
+    /**
+     * Gets data reference.
+     *
+     * @return the data reference
+     */
+    public UUID getDataReference() {
+        return dataReference;
+    }
+
+    /**
+     * Sets data reference.
+     *
+     * @param dataReference the data reference
+     */
+    public void setDataReference(UUID dataReference) {
+        this.dataReference = dataReference;
     }
 
     /**
@@ -262,5 +284,62 @@ public class SubscriptionRequest {
      */
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    /**
+     * Gets subscription geometry.
+     *
+     * @return the subscription geometry
+     */
+    public Geometry getSubscriptionGeometry() {
+        return subscriptionGeometry;
+    }
+
+    /**
+     * Sets subscription geometry.
+     *
+     * @param subscriptionGeometry the subscription geometry
+     */
+    public void setSubscriptionGeometry(Geometry subscriptionGeometry) {
+        this.subscriptionGeometry = subscriptionGeometry;
+    }
+
+    /**
+     * Gets S-125 data set.
+     *
+     * @return the S-125 dataset
+     */
+    public S125DataSet getS125DataSet() {
+        return s125DataSet;
+    }
+
+    /**
+     * Sets S-125 dataset.
+     *
+     * @param s125DataSet the S-125 dataset
+     */
+    public void setS125DataSet(S125DataSet s125DataSet) {
+        this.s125DataSet = s125DataSet;
+    }
+
+    /**
+     * This utility function will update the general subscription geometry based
+     * on all various geometry fields. Note that for the UN/LoCode we will need
+     * access to the UnLoCode Service.
+     *
+     * @param unLoCodeService the UnLoCode Service to access the UN/LoCode data from
+     */
+    public void updateSubscriptionGeometry(UnLoCodeService unLoCodeService) {
+        Optional.ofNullable(GeometryUtils.joinGeometries(
+                        Optional.ofNullable(this.getS125DataSet())
+                                .map(S125DataSet::getGeometry)
+                                .orElse(null),
+                        this.getGeometry(),
+                        Optional.ofNullable(this.getUnlocode())
+                                .map(unLoCodeService::getUnLoCodeMapEntry)
+                                .map(UnLoCodeMapEntry::getGeometry)
+                                .orElse(null)
+                ))
+                .ifPresent(this::setSubscriptionGeometry);
     }
 }

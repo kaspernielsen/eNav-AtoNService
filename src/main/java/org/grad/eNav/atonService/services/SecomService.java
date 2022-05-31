@@ -17,14 +17,31 @@
 package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortedSetSortField;
+import org.apache.lucene.spatial.prefix.RecursivePrefixTreeStrategy;
+import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
+import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
+import org.apache.lucene.spatial.query.SpatialArgs;
+import org.apache.lucene.spatial.query.SpatialOperation;
+import org.grad.eNav.atonService.models.domain.Pair;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
 import org.grad.secom.exceptions.SecomNotFoundException;
-import org.grad.secom.exceptions.SecomValidationException;
 import org.grad.secom.models.SECOM_ExchangeMetadata;
+import org.grad.secom.models.enums.SECOM_DataProductType;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
+import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -37,7 +54,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.Objects;
+import javax.persistence.EntityManagerFactory;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -51,7 +72,25 @@ import java.util.UUID;
  */
 @Service
 @Slf4j
-public class SecomService implements MessageHandler  {
+public class SecomService implements MessageHandler {
+
+    /**
+     * The Entity Manager Factory.
+     */
+    @Autowired
+    EntityManagerFactory entityManagerFactory;
+
+    /**
+     * The S-125 Dataset Service.
+     */
+    @Autowired
+    DatasetService datasetService;
+
+    /**
+     * The UN/LoCode Service.
+     */
+    @Autowired
+    UnLoCodeService unLoCodeService;
 
     /**
      * The SECOM Subscription Repo.
@@ -111,28 +150,63 @@ public class SecomService implements MessageHandler  {
     @Override
     public void handleMessage(Message<?> message) throws MessagingException {
         // Get the headers of the incoming message
-        String contentType = Objects.toString(message.getHeaders().get(MessageHeaders.CONTENT_TYPE));
-        Boolean deletion = Objects.equals(message.getHeaders().get("deletion"), "true");
+        SECOM_DataProductType contentType = message.getHeaders().get(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.class);
+        Boolean deletion = message.getHeaders().get("deletion", Boolean.class);
+
+        // Only listen to S-125 data product messages
+        if(contentType != SECOM_DataProductType.S125) {
+            return;
+        }
 
         // Handle only messages that seem valid
         if(message.getPayload() instanceof AidsToNavigation) {
             // Get the payload of the incoming message
             AidsToNavigation aidsToNavigation = (AidsToNavigation) message.getPayload();
 
-            // A simple debug message;
-            log.debug(String.format("Received Aids to Navigation publication with AtoN number: %s.", aidsToNavigation.getAtonNumber()));
-        }
-        // String input usually come from the S-125 deletions
-        else if(deletion && message.getPayload() instanceof String) {
-            // Get the header and payload of the incoming message
-            String payload = (String) message.getPayload();
+            // A simple debug message
+            log.debug(String.format("S-125 Web Socket Service received AtoN %s with AtoN number: %s.",
+                    deletion ? "deletion" : "publication",
+                    aidsToNavigation.getAtonNumber()));
 
-            // A simple debug message;
-            log.debug(String.format("Received Aids to Navigation deletion for AtoN Number: %s.", payload));
+            // Handle based on whether this is a deletion or not
+            if(!deletion) {
+                // Get the matching subscriptions
+                List<SubscriptionRequest> subscriptions = this.findAll(
+                        aidsToNavigation.getGeometry(),
+                        Optional.of(aidsToNavigation).map(AidsToNavigation::getDateStart).map(ld -> ld.atStartOfDay()).orElse(null),
+                        Optional.of(aidsToNavigation).map(AidsToNavigation::getDateEnd).map(ld -> ld.atTime(LocalTime.MAX)).orElse(null));
+
+                this.log.info(String.format("%d", subscriptions.size()));
+            }
         }
         else {
             log.warn("Aids to Navigation Service received a publish-subscribe message with erroneous format.");
         }
+    }
+
+    /**
+     * Get all the Subscription Requests in a search list.
+     *
+     * @param geometry the query geometry
+     * @param fromTime the query from time
+     * @param toTime the query to time
+     * @return the list of Subscription Requests
+     */
+    @Transactional(readOnly = true)
+    public List<SubscriptionRequest> findAll(Geometry geometry,
+                                             LocalDateTime fromTime,
+                                             LocalDateTime toTime) {
+        log.debug("Request to get Subscription Requests in a search");
+        // Create the search query - always sort by name
+        SearchQuery<SubscriptionRequest> searchQuery = this.geSubscriptionRequestSearchQuery(
+                geometry,
+                fromTime,
+                toTime,
+                new Sort(new SortedSetSortField("uuid", false))
+        );
+
+        // Map the results to a paged response
+        return searchQuery.fetchAll().hits();
     }
 
     /**
@@ -142,13 +216,15 @@ public class SecomService implements MessageHandler  {
      * @param subscriptionRequest the subscription request
      * @return the subscription request generated
      */
-    public SubscriptionRequest createSubscription(SubscriptionRequest subscriptionRequest) {
+    public SubscriptionRequest saveSubscription(SubscriptionRequest subscriptionRequest) {
         log.debug("Request to save SECOM subscription : {}", subscriptionRequest);
 
-        // Make sure we don't have a UUID to begin with
-        if(Objects.nonNull(subscriptionRequest.getUuid())) {
-            throw new SecomValidationException("Cannot create a SECOM subscription if the UUID is already provided!");
-        }
+        // Populate the subscription dataset and geometry
+        subscriptionRequest.setS125DataSet(Optional.of(subscriptionRequest)
+                .map(SubscriptionRequest::getDataReference)
+                .map(this.datasetService::findOne)
+                .orElse(null));
+        subscriptionRequest.updateSubscriptionGeometry(this.unLoCodeService);
 
         // Now save for each type
         return this.secomSubscriptionRepo.save(subscriptionRequest);
@@ -187,31 +263,76 @@ public class SecomService implements MessageHandler  {
      * @param payload the payload to be signed
      * @return the service exchange metadata with the signature information
      */
-    public SECOM_ExchangeMetadata signPayload(String payload) {
+    public Pair<String, SECOM_ExchangeMetadata> signPayload(String payload) {
+        // Sign the payload
+        final String signedPayload = Base64.getEncoder().encodeToString(payload.getBytes());
+
+        // Generate the SECOM metadata
         final SECOM_ExchangeMetadata serviceExchangeMetadata = new SECOM_ExchangeMetadata();
         serviceExchangeMetadata.setDataProtection(false);
-        return serviceExchangeMetadata;
+
+        // And return the information tuple
+        return new Pair<>(signedPayload, serviceExchangeMetadata);
     }
 
     /**
-     * A helper function to simplify the joining of geometries without troubling
-     * ourselves for the null checking... which is a pain.
+     * Constructs a hibernate search query using Lucene based on the provided
+     * AtoN UID and geometry. This query will be based solely on the aton
+     * messages table and will include the following fields:
+     * -
+     * For any more elaborate search, the getSearchMessageQueryByText function
+     * can be used.
      *
-     * @param geometries the geometries variable argument
-     * @return the resulting joined geometry
+     * @param geometry the geometry that the results should intersect with
+     * @param fromTime the date-time the results should match from
+     * @param toTime the date-time the results should match to
+     * @param sort the sorting selection for the search query
+     * @return the full text query
      */
-    public Geometry joinGeometries(Geometry... geometries) {
-        Geometry result = null;
-        for(Geometry geometry : geometries) {
-            if(result == null && geometry == null) {
-                result = null;
-            } else if(result == null || geometry == null) {
-                result = Optional.ofNullable(result).orElse(geometry);
-            } else {
-                return result.intersection(geometry);
-            }
-        }
-        return result;
+    protected SearchQuery<SubscriptionRequest> geSubscriptionRequestSearchQuery(Geometry geometry,
+                                                                                LocalDateTime fromTime,
+                                                                                LocalDateTime toTime,
+                                                                                Sort sort) {
+        // Then build and return the hibernate-search query
+        SearchSession searchSession = Search.session( entityManagerFactory.createEntityManager() );
+        SearchScope<SubscriptionRequest> scope = searchSession.scope( SubscriptionRequest.class );
+        return searchSession.search( scope )
+                .where( f -> f.bool(b -> {
+                            b.must(f.matchAll());
+                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
+                                    .field("subscriptionPeriodStart")
+                                    .atMost(toTime)));
+                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
+                                    .field("subscriptionPeriodEnd")
+                                    .atLeast(fromTime)));
+                            Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
+                                    .fromLuceneQuery(createGeoSpatialQuery(g))));
+                        })
+                )
+                .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
+                .toQuery();
+    }
+
+    /**
+     * Creates a Lucene geo-spatial query based on the provided geometry. The
+     * query isa recursive one based on the maxLevels defined (in this case 12,
+     * which result in a sub-meter precision).
+     *
+     * @param geometry      The geometry to generate the spatial query for
+     * @return The Lucene geo-spatial query constructed
+     */
+    protected Query createGeoSpatialQuery(Geometry geometry) {
+        // Initialise the spatial strategy
+        JtsSpatialContext ctx = JtsSpatialContext.GEO;
+        int maxLevels = 12; //results in sub-meter precision for geo-hash
+        SpatialPrefixTree grid = new GeohashPrefixTree(ctx, maxLevels);
+        RecursivePrefixTreeStrategy strategy = new RecursivePrefixTreeStrategy(grid,"subscriptionGeometry");
+
+        // Create the Lucene GeoSpatial Query
+        return Optional.ofNullable(geometry)
+                .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false , true)))
+                .map(strategy::makeQuery)
+                .orElse(null);
     }
 
 }

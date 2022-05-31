@@ -37,7 +37,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.integration.channel.PublishSubscribeChannel;
 
 import javax.persistence.EntityManager;
 import java.math.BigInteger;
@@ -72,18 +71,6 @@ class AidsToNavigationServiceTest {
      */
     @Mock
     AidsToNavigationRepo aidsToNavigationRepo;
-
-    /**
-     * The S-125 Publish Channel to listen for the publications to.
-     */
-    @Mock
-    PublishSubscribeChannel s125PublicationChannel;
-
-    /**
-     * The S-125 Publish Channel to listen for the deletion to.
-     */
-    @Mock
-    PublishSubscribeChannel s125DeletionChannel;
 
     // Test Variables
     private List<AidsToNavigation> aidsToNavigationList;
@@ -131,32 +118,6 @@ class AidsToNavigationServiceTest {
         this.existingAidsToNavigation.setTextualDescription("Description of AtoN No 10");
         this.existingAidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No 10" );
         this.existingAidsToNavigation.setGeometry(factory.createPoint(new Coordinate(10, 10)));
-    }
-
-    /**
-     * Test that the Aids to Navigation Service gets initialised correctly,
-     * and it subscribes to the AtoN publish subscribe channel.
-     */
-    @Test
-    void testInit() {
-        // Perform the service call
-        this.aidsToNavigationService.init();
-
-        verify(this.s125PublicationChannel, times(1)).subscribe(this.aidsToNavigationService);
-        verify(this.s125DeletionChannel, times(1)).subscribe(this.aidsToNavigationService);
-    }
-
-    /**
-     * Test that the Aids to Navigation Service gets destroyed correctly,
-     * and it un-subscribes from the S-125 publish subscribe channel.
-     */
-    @Test
-    void testDestroy() {
-        // Perform the service call
-        this.aidsToNavigationService.destroy();
-
-        verify(this.s125PublicationChannel, times(1)).destroy();
-        verify(this.s125DeletionChannel, times(1)).destroy();
     }
 
     /**

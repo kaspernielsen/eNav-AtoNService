@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.secom.models.enums.SECOM_DataProductType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +32,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.Objects;
 
 /**
  * The S125 Web-Socket Service Class
@@ -99,29 +99,30 @@ public class S125WebSocketService implements MessageHandler {
     @Override
     public void handleMessage(Message<?> message) throws MessagingException {
         // Get the headers of the incoming message
-        String contentType = Objects.toString(message.getHeaders().get(MessageHeaders.CONTENT_TYPE));
+        SECOM_DataProductType contentType = message.getHeaders().get(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.class);
+        Boolean deletion = message.getHeaders().get("deletion", Boolean.class);
+
+        // Only listen to S-125 data product messages
+        if(contentType != SECOM_DataProductType.S125) {
+            return;
+        }
 
         // Handle only messages that seem valid
         if(message.getPayload() instanceof AidsToNavigation) {
             // Get the payload of the incoming message
             AidsToNavigation aidsToNavigation = (AidsToNavigation) message.getPayload();
 
-            // A simple debug message;
-            log.debug(String.format("Received AtoN Message with UID: %s.", aidsToNavigation.getAtonNumber()));
+            // A simple debug message
+            log.debug(String.format("S-125 Web Socket Service received AtoN %s with AtoN number: %s.",
+                    deletion ? "deletion" : "publication",
+                    aidsToNavigation.getAtonNumber()));
 
-            // Now push the aton node down the web-socket stream
-            this.publishMessage(this.webSocket, String.format("/%s/%s", prefix, contentType), aidsToNavigation);
-        }
-        else if(message.getPayload() instanceof String) {
-            // Get the header and payload of the incoming message
-            String payload = (String) message.getPayload();
-
-            // A simple debug message;
-            log.debug(String.format("Received a simple pub/sub message: %s.", payload));
-
-            // Now push the message down the web-socket stream
-            this.publishMessage(this.webSocket, String.format("/%s/%s", prefix, "messages"), payload);
-
+            // Handle based on whether this is a deletion or not
+            if(deletion) {
+                this.publishMessage(this.webSocket, String.format("/%s/%s", prefix + "/deletions", contentType), aidsToNavigation);
+            } else {
+                this.publishMessage(this.webSocket, String.format("/%s/%s", prefix, contentType), aidsToNavigation);
+            }
         }
         else {
             log.warn("Radar message handler received a message with erroneous format.");

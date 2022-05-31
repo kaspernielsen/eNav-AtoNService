@@ -79,7 +79,10 @@ public class GeometryBinder implements ValueBinder {
                                     JtsSpatialContext spatialContext = JtsSpatialContext.GEO;
                                     SpatialPrefixTree grid = new GeohashPrefixTree(spatialContext, 22);
                                     // Preparing the tree strategy field
-                                    SpatialStrategy treeStrategy = new RecursivePrefixTreeStrategy(grid, "geometry");
+                                    SpatialStrategy treeStrategy = new RecursivePrefixTreeStrategy(grid, context.paramOptional("fieldName")
+                                            .filter(String.class::isInstance)
+                                            .map(String.class::cast)
+                                            .orElse("geometry"));
                                     Optional.of(value)
                                             .map(v -> new JtsGeometry(v, spatialContext, false, true))
                                             .map(treeStrategy::createIndexableFields)

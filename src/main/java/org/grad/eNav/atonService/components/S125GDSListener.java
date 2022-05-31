@@ -32,8 +32,10 @@ import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.dtos.S100AbstractNode;
 import org.grad.eNav.atonService.models.dtos.S125Node;
+import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
 import org.grad.eNav.s125.utils.S125Utils;
+import org.grad.secom.models.enums.SECOM_DataProductType;
 import org.locationtech.geomesa.kafka.utils.KafkaFeatureEvent;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
@@ -75,6 +77,12 @@ public class S125GDSListener implements FeatureListener {
      */
     @Autowired
     ModelMapper modelMapper;
+
+    /**
+     * The Aids to Navigation Service.
+     */
+    @Autowired
+    AidsToNavigationService aidsToNavigationService;
 
     /**
      * The S-125 Data Channel to publish the published data to.
@@ -155,9 +163,13 @@ public class S125GDSListener implements FeatureListener {
                     .stream()
                     .flatMap(this::parseS125Dataset)
                     .map(MessageBuilder::withPayload)
-                    .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, this.geomesaData.getTypeName()))
+                    .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
+                    .map(builder -> builder.setHeader("deletion", false))
                     .map(MessageBuilder::build)
-                    .forEach(this.s125PublicationChannel::send);
+                    .forEach(msg -> {
+                        this.aidsToNavigationService.save(msg.getPayload());
+                        this.s125PublicationChannel.send(msg);
+                    });
         }
         // For feature deletions,
         else if (featureEvent.getType() == FeatureEvent.Type.REMOVED) {
@@ -171,11 +183,17 @@ public class S125GDSListener implements FeatureListener {
                     .map(FidFilterImpl::getFidsSet)
                     .orElse(Collections.emptySet())
                     .stream()
+                    .map(this.aidsToNavigationService::findByAtonNumber)
+                    .map(aton -> aton.orElse(null))
+                    .filter(Objects::nonNull)
                     .map(MessageBuilder::withPayload)
-                    .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, this.geomesaData.getTypeName()))
+                    .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                     .map(builder -> builder.setHeader("deletion", true))
                     .map(MessageBuilder::build)
-                    .forEach(this.s125DeletionChannel::send);
+                    .forEach(msg -> {
+                        this.aidsToNavigationService.delete(msg.getPayload().getId());
+                        this.s125DeletionChannel.send(msg);
+                    });
         }
     }
 

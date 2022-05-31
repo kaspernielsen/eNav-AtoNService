@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
@@ -33,6 +34,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -84,6 +86,9 @@ public class S125DataSet {
     @GenericField()
     @LastModifiedDate
     private LocalDateTime lastUpdatedAt;
+
+    @OneToMany(mappedBy="s125DataSet", cascade = CascadeType.ALL)
+    private Set<SubscriptionRequest> subscriptions;
 
     /**
      * Instantiates a new Dataset.
@@ -191,5 +196,23 @@ public class S125DataSet {
      */
     public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    /**
+     * Gets subscriptions.
+     *
+     * @return the subscriptions
+     */
+    public Set<SubscriptionRequest> getSubscriptions() {
+        return subscriptions;
+    }
+
+    /**
+     * Sets subscriptions.
+     *
+     * @param subscriptions the subscriptions
+     */
+    public void setSubscriptions(Set<SubscriptionRequest> subscriptions) {
+        this.subscriptions = subscriptions;
     }
 }
