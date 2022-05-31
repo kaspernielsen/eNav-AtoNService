@@ -70,7 +70,7 @@ public class SecomSubscriptionController implements SubscriptionInterface {
     public ResponseEntity<SubscriptionResponseObject> subscription(@Valid @RequestBody SubscriptionRequestObject subscriptionRequestObject) {
         final SubscriptionRequest subscriptionRequest = Optional.ofNullable(subscriptionRequestObject)
                 .map(dto -> this.subscriptionRequestDomainMapper.convertTo(dto, SubscriptionRequest.class))
-                .map(this.secomService::createSubscription)
+                .map(this.secomService::saveSubscription)
                 .filter(req -> Objects.nonNull(req.getUuid()))
                 .orElseThrow(() -> new SecomNotFoundException("UUID"));
 

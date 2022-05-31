@@ -16,9 +16,9 @@
 
 package org.grad.eNav.atonService.services;
 
-import org.grad.eNav.atonService.models.domain.AtonMessageType;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
+import org.grad.secom.models.enums.SECOM_DataProductType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -123,7 +123,8 @@ class S125WebSocketServiceTest {
     void testHandleAidsToNavigationMessage() throws IOException {
         // Create a message to be handled
         Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
-                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, AtonMessageType.S125))
+                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
+                .map(builder -> builder.setHeader("deletion", false))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -151,9 +152,10 @@ class S125WebSocketServiceTest {
      */
     @Test
     void testHandleStringMessage() throws IOException {
-        // Create a message to be handled
-        Message message = Optional.of("This is a simple message").map(MessageBuilder::withPayload)
-                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, AtonMessageType.S125))
+        /// Create a message to be handled
+        Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
+                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
+                .map(builder -> builder.setHeader("deletion", true))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -162,12 +164,17 @@ class S125WebSocketServiceTest {
 
         // Verify that we send a packet to the VDES port and get that packet
         ArgumentCaptor<String> topicArgument = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> payLoadArgument = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<AidsToNavigation> payLoadArgument = ArgumentCaptor.forClass(AidsToNavigation.class);
         verify(this.webSocket, times(1)).convertAndSend(topicArgument.capture(), payLoadArgument.capture());
 
         // Verify the packet
-        assertEquals("/topic/messages", topicArgument.getValue());
-        assertEquals("This is a simple message", payLoadArgument.getValue());
+        assertEquals("/topic/deletions/S125", topicArgument.getValue());
+        assertNotNull(payLoadArgument.getValue());
+        assertEquals(this.aidsToNavigation.getId(), payLoadArgument.getValue().getId());
+        assertEquals(this.aidsToNavigation.getAtonNumber(), payLoadArgument.getValue().getAtonNumber());
+        assertEquals(this.aidsToNavigation.getIdCode(), payLoadArgument.getValue().getIdCode());
+        assertEquals(this.aidsToNavigation.getTextualDescription(), payLoadArgument.getValue().getTextualDescription());
+        assertEquals(this.aidsToNavigation.getTextualDescriptionInNationalLanguage(), payLoadArgument.getValue().getTextualDescriptionInNationalLanguage());
     }
 
     /**
@@ -177,7 +184,7 @@ class S125WebSocketServiceTest {
     void testHandleMessageWrongPayload() throws IOException {
         // Change the message content type to something else
         Message message = Optional.of(Integer.MAX_VALUE).map(MessageBuilder::withPayload)
-                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, AtonMessageType.S125))
+                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                 .map(MessageBuilder::build)
                 .orElse(null);
 

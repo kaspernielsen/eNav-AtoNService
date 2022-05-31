@@ -47,6 +47,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -70,6 +71,11 @@ public class DatasetService {
     @Autowired
     EntityManager entityManager;
 
+    /**
+     * The UN/LoCode Service.
+     */
+    @Autowired
+    UnLoCodeService unLoCodeService;
 
     /**
      * The Dataset Repo.
@@ -165,10 +171,26 @@ public class DatasetService {
      * @return the saved Dataset entity
      */
     @Transactional
-    public S125DataSet save(S125DataSet dataSet) {
+    public S125DataSet save(@NotNull S125DataSet dataSet) {
         log.debug("Request to save Dataset : {}", dataSet);
 
-        // Now save for each type
+        // First load any pre-existing subscriptions
+        Optional.of(dataSet)
+                .map(S125DataSet::getUuid)
+                .flatMap(this.datasetRepo::findById)
+                .map(S125DataSet::getSubscriptions)
+                .ifPresent(dataSet::setSubscriptions);
+
+        // Now update all subscriptions with the new geometry
+        Optional.of(dataSet)
+                .map(S125DataSet::getSubscriptions)
+                .orElse(Collections.emptySet())
+                .forEach(sub -> {
+                    sub.setS125DataSet(dataSet);
+                    sub.updateSubscriptionGeometry(this.unLoCodeService);
+                });
+
+        // Save and return the dataset
         return this.datasetRepo.save(dataSet);
     }
 

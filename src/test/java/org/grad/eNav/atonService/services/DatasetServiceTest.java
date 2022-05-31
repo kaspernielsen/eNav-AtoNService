@@ -63,6 +63,12 @@ class DatasetServiceTest {
     EntityManager entityManager;
 
     /**
+     * The SECOM Service mock.
+     */
+    @Mock
+    UnLoCodeService unLoCodeService;
+
+    /**
      * The Dataset Repo mock.
      */
     @Mock

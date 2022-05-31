@@ -24,6 +24,7 @@ import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.SecomService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
+import org.grad.eNav.atonService.utils.GeometryUtils;
 import org.grad.eNav.atonService.utils.WKTUtil;
 import org.grad.secom.interfaces.GetSummaryInterface;
 import org.grad.secom.models.GetSummaryResponseObject;
@@ -147,7 +148,7 @@ public class SecomGetSummaryController implements GetSummaryInterface {
             }
         }
         if(Objects.nonNull(unlocode)) {
-            reqGeometry = this.secomService.joinGeometries(reqGeometry, Optional.ofNullable(unlocode)
+            reqGeometry = GeometryUtils.joinGeometries(reqGeometry, Optional.ofNullable(unlocode)
                     .map(this.unLoCodeService::getUnLoCodeMapEntry)
                     .map(UnLoCodeMapEntry::getGeometry)
                     .orElseGet(() -> this.geometryFactory.createEmpty(0)));
@@ -185,7 +186,7 @@ public class SecomGetSummaryController implements GetSummaryInterface {
                     // Calculate the summary size
                     summaryObject.setInfo_size(this.aidsToNavigationService.findAllTotalCount(
                             null,
-                            this.secomService.joinGeometries(s125Dataset.getGeometry(), finalReqGeometry),
+                            GeometryUtils.joinGeometries(s125Dataset.getGeometry(), finalReqGeometry),
                             validFrom,
                             validTo)
                     );

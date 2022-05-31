@@ -26,7 +26,10 @@ import org.geotools.filter.FidFilterImpl;
 import org.geotools.filter.text.cql2.CQLException;
 import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.GeomesaS125;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.grad.eNav.atonService.models.dtos.S125Node;
+import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.utils.GeoJSONUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,10 +52,7 @@ import org.springframework.messaging.Message;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -72,6 +72,12 @@ class S125GDSListenerTest {
      */
     @Spy
     ModelMapper modelMapper;
+
+    /**
+     * The Aids to Navigation Service.
+     */
+    @Mock
+    AidsToNavigationService aidsToNavigationService;
 
     /**
      * The S-125 Data Channel to publish the published data to.
@@ -245,6 +251,9 @@ class S125GDSListenerTest {
      */
     @Test
     void testListenToEventsRemoved() throws IOException {
+        AidsToNavigation aidsToNavigation = new BeaconCardinal();
+        doReturn(Optional.of(aidsToNavigation)).when(this.aidsToNavigationService).findByAtonNumber(any());
+
         // Mock a new event
         FidFilterImpl filter = mock(FidFilterImpl.class);
         doReturn(Collections.singleton(this.s125Node.getAtonUID())).when(filter).getFidsSet();

@@ -21,19 +21,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
+import org.grad.eNav.atonService.models.domain.Pair;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.SecomService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
+import org.grad.eNav.atonService.utils.GeometryUtils;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.WKTUtil;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.exceptions.SecomNotFoundException;
 import org.grad.secom.interfaces.GetInterface;
+import org.grad.secom.models.DataResponseObject;
 import org.grad.secom.models.GetResponseObject;
 import org.grad.secom.models.PaginationObject;
+import org.grad.secom.models.SECOM_ExchangeMetadata;
 import org.grad.secom.models.enums.ContainerTypeEnum;
 import org.grad.secom.models.enums.SECOM_DataProductType;
 import org.locationtech.jts.geom.Geometry;
@@ -54,7 +58,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import javax.validation.ValidationException;
 import javax.validation.constraints.Pattern;
 import javax.xml.bind.JAXBException;
@@ -159,13 +162,13 @@ public class SecomGetController implements GetInterface {
         }
         if(Objects.nonNull(geometry)) {
             try {
-                jtsGeometry = this.secomService.joinGeometries(jtsGeometry, WKTUtil.convertWKTtoGeometry(geometry));
+                jtsGeometry = GeometryUtils.joinGeometries(jtsGeometry, WKTUtil.convertWKTtoGeometry(geometry));
             } catch (ParseException ex) {
                 throw new ValidationException(ex.getMessage());
             }
         }
         if(Objects.nonNull(unlocode)) {
-            jtsGeometry = this.secomService.joinGeometries(jtsGeometry, Optional.ofNullable(unlocode)
+            jtsGeometry = GeometryUtils.joinGeometries(jtsGeometry, Optional.ofNullable(unlocode)
                     .map(this.unLoCodeService::getUnLoCodeMapEntry)
                     .map(UnLoCodeMapEntry::getGeometry)
                     .orElseGet(() -> this.geometryFactory.createEmpty(0)));
@@ -195,9 +198,13 @@ public class SecomGetController implements GetInterface {
             }
         }
 
-        // Populate the Get Response Object
+        // Generate the Get Response Object
         final GetResponseObject getResponseObject = new GetResponseObject();
-        getResponseObject.encodeData(data, this.secomService.signPayload(data));
+        final DataResponseObject dataResponseObject = new DataResponseObject();
+        final Pair<String, SECOM_ExchangeMetadata> signedTuple = this.secomService.signPayload(data);
+        dataResponseObject.setData(signedTuple.getKey());
+        dataResponseObject.setExchangeMetadata(signedTuple.getValue());
+        getResponseObject.setDataResponseObject(dataResponseObject);
         getResponseObject.setPagination(new PaginationObject((int)atonPage.getTotalElements(), atonPage.getSize()));
 
         // And final return the Get Response Object
