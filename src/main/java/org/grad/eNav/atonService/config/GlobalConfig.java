@@ -112,7 +112,7 @@ public class GlobalConfig {
                     .implicitMappings()
                     .addMappings(mapper -> {
                         mapper.map(AidsToNavigation::getId, S125AidsToNavigationType::setId);
-                        mapper.using(ctx -> this.convertToS125Geometry((AidsToNavigation) ctx.getSource()))
+                        mapper.using(ctx -> convertToS125Geometry((AidsToNavigation) ctx.getSource()))
                                 .map(src -> src, (dest, val) -> {
                                     try {
                                         new PropertyDescriptor("geometry", atonType.getS125Class()).getWriteMethod().invoke(dest, val);
@@ -129,7 +129,7 @@ public class GlobalConfig {
                 .addMappings(mapper -> {
                     mapper.using(ctx -> S125AtonTypes.fromLocalClass(((AidsToNavigation) ctx.getSource()).getClass()).getDescription())
                             .map(src -> src, AidsToNavigationDto::setAtonType);
-                    mapper.using(ctx -> this.convertTos125DataSet(modelMapper, Collections.singletonList((AidsToNavigation) ctx.getSource())))
+                    mapper.using(ctx -> convertTos125DataSet(modelMapper, Collections.singletonList((AidsToNavigation) ctx.getSource())))
                             .map(src -> src, AidsToNavigationDto::setContent);
                 });
 
@@ -167,7 +167,7 @@ public class GlobalConfig {
      * @param atons the list of the Aids to Navigation objects
      * @return the respective S-125 data string representation
      */
-    protected String convertTos125DataSet(ModelMapper modelMapper, List<AidsToNavigation> atons) {
+    public static String convertTos125DataSet(ModelMapper modelMapper, List<AidsToNavigation> atons) {
         final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(modelMapper);
         final String datasetTitle = CaseUtils.toCamelCase("AtoN Dataset for " + atons.stream()
                 .map(AidsToNavigation::getAtonNumber)
@@ -177,9 +177,8 @@ public class GlobalConfig {
         try {
             return S125Utils.marshalS125(dataset);
         } catch (JAXBException ex) {
-            this.log.error(ex.getMessage());
+            return "";
         }
-        return "";
     }
 
     /**
@@ -190,7 +189,7 @@ public class GlobalConfig {
      * @param aidsToNavigation the Aids to Navigation to get the geometry from
      * @return the S-125 compliant geometry description
      */
-    protected Object convertToS125Geometry(AidsToNavigation aidsToNavigation) {
+    public static Object convertToS125Geometry(AidsToNavigation aidsToNavigation) {
         PointCurveSurfaceProperty pointCurveSurfaceProperty = new GeometryS125Converter().convertFromGeometry(aidsToNavigation);
         if(pointCurveSurfaceProperty.getSurfaceProperty() != null) {
             SurfaceProperty surfaceProperty = new SurfaceProperty();

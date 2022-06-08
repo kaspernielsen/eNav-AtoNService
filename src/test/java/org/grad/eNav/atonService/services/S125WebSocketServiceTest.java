@@ -131,12 +131,12 @@ class S125WebSocketServiceTest {
         // Perform the service call
         this.s125WebSocketService.handleMessage(message);
 
-        // Verify that we send a packet to the VDES port and get that packet
+        // Verify that we publish a web-socket message, but only one
         ArgumentCaptor<String> topicArgument = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<AidsToNavigation> payLoadArgument = ArgumentCaptor.forClass(AidsToNavigation.class);
         verify(this.webSocket, times(1)).convertAndSend(topicArgument.capture(), payLoadArgument.capture());
 
-        // Verify the packet
+        // Verify the message
         assertEquals("/topic/S125", topicArgument.getValue());
         assertNotNull(payLoadArgument.getValue());
         assertEquals(this.aidsToNavigation.getId(), payLoadArgument.getValue().getId());

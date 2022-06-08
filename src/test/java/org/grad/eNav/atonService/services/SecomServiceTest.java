@@ -40,12 +40,15 @@ import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -62,6 +65,18 @@ class SecomServiceTest {
     @InjectMocks
     @Spy
     SecomService secomService;
+
+    /**
+     * The Request Context mock.
+     */
+    @Mock
+    Optional<HttpServletRequest> httpServletRequest;
+
+    /**
+     * The Service Registry mock.
+     */
+    @Mock
+    Optional<WebClient> serviceRegistry;
 
     /**
      * The S-125 Dataset Service mock.
@@ -171,8 +186,9 @@ class SecomServiceTest {
      * publications received through the S-125 publish-subscribe channel.
      */
     @Test
-    void testHandleAidsToNavigationPublication() {
-        doReturn(Collections.singletonList(existingSubscriptionRequest)).when(this.secomService).findAll(any(), any(), any());
+    void testHandleMessage() {
+        doReturn(Collections.singletonList(this.existingSubscriptionRequest)).when(this.secomService).findAll(any(), any(), any());
+        doReturn(Boolean.TRUE).when(this.serviceRegistry).isEmpty();
 
         // Create a message to be handled
         Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
@@ -184,16 +200,30 @@ class SecomServiceTest {
         // Perform the service call
         this.secomService.handleMessage(message);
 
-        // Verify that we send a packet to the VDES port and get that packet
+        // Verify that we look up the subscriptions in the proper way
         ArgumentCaptor<Geometry> geometryArgument = ArgumentCaptor.forClass(Geometry.class);
         ArgumentCaptor<LocalDateTime> fromTimeArgument = ArgumentCaptor.forClass(LocalDateTime.class);
         ArgumentCaptor<LocalDateTime> toTimeArgument = ArgumentCaptor.forClass(LocalDateTime.class);
         verify(this.secomService, times(1)).findAll(geometryArgument.capture(), fromTimeArgument.capture(), toTimeArgument.capture());
 
         // Verify the arguments
+        assertNotNull(geometryArgument.getValue());
+        assertNotNull(fromTimeArgument.getValue());
+        assertNotNull(toTimeArgument.getValue());
         assertEquals(this.aidsToNavigation.getGeometry(), geometryArgument.getValue());
         assertEquals(this.aidsToNavigation.getDateStart().atStartOfDay(), fromTimeArgument.getValue());
         assertEquals(this.aidsToNavigation.getDateEnd().atTime(LocalTime.MAX), toTimeArgument.getValue());
+
+        // Verify that we try to update the registered clients
+        ArgumentCaptor<SubscriptionRequest> subscriptionRequestArgument = ArgumentCaptor.forClass(SubscriptionRequest.class);
+        ArgumentCaptor<List<AidsToNavigation>> atonListArgument = ArgumentCaptor.forClass(List.class);
+        verify(this.secomService, times(1)).sendToSubscription(subscriptionRequestArgument.capture(), atonListArgument.capture());
+
+        // Verify the arguments
+        assertNotNull(subscriptionRequestArgument.getValue());
+        assertNotNull(atonListArgument.getValue());
+        assertEquals(this.existingSubscriptionRequest.getUuid(), subscriptionRequestArgument.getValue().getUuid());
+        assertEquals(1, atonListArgument.getValue().size());
     }
 
     /**
@@ -212,11 +242,9 @@ class SecomServiceTest {
         // Perform the service call
         this.secomService.handleMessage(message);
 
-        // Verify that we send a packet to the VDES port and get that packet
-        ArgumentCaptor<Geometry> geometryArgument = ArgumentCaptor.forClass(Geometry.class);
-        ArgumentCaptor<LocalDateTime> fromTimeArgument = ArgumentCaptor.forClass(LocalDateTime.class);
-        ArgumentCaptor<LocalDateTime> toTimeArgument = ArgumentCaptor.forClass(LocalDateTime.class);
-        verify(this.secomService, never()).findAll(geometryArgument.capture(), fromTimeArgument.capture(), toTimeArgument.capture());
+        // Verify that do not attempt to serve any Subscription Requests
+        verify(this.secomService, never()).findAll(any(), any(), any());
+        verify(this.secomService, never()).sendToSubscription(any(), any());
     }
 
     /**

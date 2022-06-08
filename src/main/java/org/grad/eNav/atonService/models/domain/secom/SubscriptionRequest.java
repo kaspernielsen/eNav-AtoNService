@@ -32,7 +32,10 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericFie
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.NonStandardField;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -105,6 +108,8 @@ public class SubscriptionRequest {
     @ManyToOne
     @JoinColumn(name="dataset_uuid", nullable = true)
     private S125DataSet s125DataSet;
+
+    private String clientMrn;
 
     /**
      * Gets uuid.
@@ -323,6 +328,24 @@ public class SubscriptionRequest {
     }
 
     /**
+     * Gets client mrn.
+     *
+     * @return the client mrn
+     */
+    public String getClientMrn() {
+        return clientMrn;
+    }
+
+    /**
+     * Sets client mrn.
+     *
+     * @param clientMrn the client mrn
+     */
+    public void setClientMrn(String clientMrn) {
+        this.clientMrn = clientMrn;
+    }
+
+    /**
      * This utility function will update the general subscription geometry based
      * on all various geometry fields. Note that for the UN/LoCode we will need
      * access to the UnLoCode Service.
@@ -338,7 +361,14 @@ public class SubscriptionRequest {
                         Optional.ofNullable(this.getUnlocode())
                                 .map(unLoCodeService::getUnLoCodeMapEntry)
                                 .map(UnLoCodeMapEntry::getGeometry)
-                                .orElse(null)
+                                .orElse(null),
+                        new GeometryFactory(new PrecisionModel(), 4326).createPolygon(new Coordinate[]{
+                                new Coordinate(-180, -90),
+                                new Coordinate(-180, 90),
+                                new Coordinate(180, 90),
+                                new Coordinate(180, -90),
+                                new Coordinate(-180, -90),
+                        }) // Add the whole world if nothing else is there
                 ))
                 .ifPresent(this::setSubscriptionGeometry);
     }
