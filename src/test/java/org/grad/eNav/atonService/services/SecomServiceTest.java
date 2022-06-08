@@ -187,7 +187,7 @@ class SecomServiceTest {
      */
     @Test
     void testHandleMessage() {
-        doReturn(Collections.singletonList(this.existingSubscriptionRequest)).when(this.secomService).findAll(any(), any(), any());
+        doReturn(Collections.singletonList(this.existingSubscriptionRequest)).when(this.secomService).findAllSubscriptions(any(), any(), any());
         doReturn(Boolean.TRUE).when(this.serviceRegistry).isEmpty();
 
         // Create a message to be handled
@@ -204,7 +204,7 @@ class SecomServiceTest {
         ArgumentCaptor<Geometry> geometryArgument = ArgumentCaptor.forClass(Geometry.class);
         ArgumentCaptor<LocalDateTime> fromTimeArgument = ArgumentCaptor.forClass(LocalDateTime.class);
         ArgumentCaptor<LocalDateTime> toTimeArgument = ArgumentCaptor.forClass(LocalDateTime.class);
-        verify(this.secomService, times(1)).findAll(geometryArgument.capture(), fromTimeArgument.capture(), toTimeArgument.capture());
+        verify(this.secomService, times(1)).findAllSubscriptions(geometryArgument.capture(), fromTimeArgument.capture(), toTimeArgument.capture());
 
         // Verify the arguments
         assertNotNull(geometryArgument.getValue());
@@ -243,7 +243,7 @@ class SecomServiceTest {
         this.secomService.handleMessage(message);
 
         // Verify that do not attempt to serve any Subscription Requests
-        verify(this.secomService, never()).findAll(any(), any(), any());
+        verify(this.secomService, never()).findAllSubscriptions(any(), any(), any());
         verify(this.secomService, never()).sendToSubscription(any(), any());
     }
 

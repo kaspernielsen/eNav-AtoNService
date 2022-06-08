@@ -114,7 +114,7 @@ public class SecomGetSummaryController implements GetSummaryInterface {
      */
     @Override
     @Tag(name = "SECOM")
-    @GetMapping(value = "/v1/dataset/summary", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = GET_SUMMARY_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetSummaryResponseObject> getSummary(@RequestParam(value = "containerType", required = false) ContainerTypeEnum containerType,
                                                                @RequestParam(value = "dataProductType", required = false) SECOM_DataProductType dataProductType,
                                                                @RequestParam(value = "productVersion", required = false) String productVersion,

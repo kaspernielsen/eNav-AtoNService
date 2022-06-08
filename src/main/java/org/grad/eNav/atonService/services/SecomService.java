@@ -68,6 +68,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
+import static org.grad.secom.interfaces.UploadInterface.UPLOAD_INTERFACE_PATH;
+
 /**
  * The SECOM Service Class.
  *
@@ -197,7 +199,7 @@ public class SecomService implements MessageHandler {
             // Handle based on whether this is a deletion or not
             if(!deletion) {
                 // Get the matching subscriptions and inform them
-                this.findAll(aidsToNavigation.getGeometry(),
+                this.findAllSubscriptions(aidsToNavigation.getGeometry(),
                         Optional.of(aidsToNavigation).map(AidsToNavigation::getDateStart).map(ld -> ld.atStartOfDay()).orElse(null),
                         Optional.of(aidsToNavigation).map(AidsToNavigation::getDateEnd).map(ld -> ld.atTime(LocalTime.MAX)).orElse(null))
                         .stream()
@@ -219,9 +221,9 @@ public class SecomService implements MessageHandler {
      * @return the list of Subscription Requests
      */
     @Transactional(readOnly = true)
-    public List<SubscriptionRequest> findAll(Geometry geometry,
-                                             LocalDateTime fromTime,
-                                             LocalDateTime toTime) {
+    public List<SubscriptionRequest> findAllSubscriptions(Geometry geometry,
+                                                          LocalDateTime fromTime,
+                                                          LocalDateTime toTime) {
         log.debug("Request to get Subscription Requests in a search");
         // Create the search query - always sort by name
         SearchQuery<SubscriptionRequest> searchQuery = this.geSubscriptionRequestSearchQuery(
@@ -368,7 +370,7 @@ public class SecomService implements MessageHandler {
                 .baseUrl(instance.getEndpointUri())
                 .build()
                 .post()
-                .uri("/v1/upload")
+                .uri(UPLOAD_INTERFACE_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(uploadObject))
