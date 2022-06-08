@@ -123,7 +123,7 @@ public class SecomGetController implements GetInterface {
      */
     @Override
     @Tag(name = "SECOM")
-    @GetMapping(value = "/v1/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = GET_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetResponseObject> get(@RequestParam(value = "dataReference", required = false) UUID dataReference,
                                                  @RequestParam(value = "containerType", required = false) ContainerTypeEnum containerType,
                                                  @RequestParam(value = "dataProductType", required = false) SECOM_DataProductType dataProductType,

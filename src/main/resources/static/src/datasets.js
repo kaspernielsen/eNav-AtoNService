@@ -390,7 +390,7 @@ function saveGeometry() {
         });
 
         $.ajax({
-            url: `./api/dataset/${dataset.uuid}`,
+            url: `./api/object/${dataset.uuid}`,
             type: 'PUT',
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
