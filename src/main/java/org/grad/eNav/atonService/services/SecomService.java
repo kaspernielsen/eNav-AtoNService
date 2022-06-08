@@ -25,13 +25,16 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
+import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.domain.Pair;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
 import org.grad.secom.exceptions.SecomNotFoundException;
-import org.grad.secom.models.SECOM_ExchangeMetadata;
+import org.grad.secom.models.*;
+import org.grad.secom.models.enums.AckRequestEnum;
+import org.grad.secom.models.enums.ContainerTypeEnum;
 import org.grad.secom.models.enums.SECOM_DataProductType;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
@@ -42,8 +45,11 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.http.MediaType;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
@@ -51,16 +57,16 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The SECOM Service Class.
@@ -75,10 +81,30 @@ import java.util.UUID;
 public class SecomService implements MessageHandler {
 
     /**
+     * The Model Mapper.
+     */
+    @Autowired
+    ModelMapper modelMapper;
+
+    /**
      * The Entity Manager Factory.
      */
     @Autowired
     EntityManagerFactory entityManagerFactory;
+
+    /**
+     * The Request Context.
+     */
+    @Autowired
+    @Lazy
+    Optional<HttpServletRequest> httpServletRequest;
+
+    /**
+     * The Service Registry.
+     */
+    @Autowired
+    @Lazy
+    Optional<WebClient> serviceRegistry;
 
     /**
      * The S-125 Dataset Service.
@@ -170,13 +196,13 @@ public class SecomService implements MessageHandler {
 
             // Handle based on whether this is a deletion or not
             if(!deletion) {
-                // Get the matching subscriptions
-                List<SubscriptionRequest> subscriptions = this.findAll(
-                        aidsToNavigation.getGeometry(),
+                // Get the matching subscriptions and inform them
+                this.findAll(aidsToNavigation.getGeometry(),
                         Optional.of(aidsToNavigation).map(AidsToNavigation::getDateStart).map(ld -> ld.atStartOfDay()).orElse(null),
-                        Optional.of(aidsToNavigation).map(AidsToNavigation::getDateEnd).map(ld -> ld.atTime(LocalTime.MAX)).orElse(null));
+                        Optional.of(aidsToNavigation).map(AidsToNavigation::getDateEnd).map(ld -> ld.atTime(LocalTime.MAX)).orElse(null))
+                        .stream()
+                        .forEach(subscription -> this.sendToSubscription(subscription, Collections.singletonList(aidsToNavigation)));
 
-                this.log.info(String.format("%d", subscriptions.size()));
             }
         }
         else {
@@ -224,6 +250,7 @@ public class SecomService implements MessageHandler {
                 .map(SubscriptionRequest::getDataReference)
                 .map(this.datasetService::findOne)
                 .orElse(null));
+        subscriptionRequest.setClientMrn(this.httpServletRequest.map(req -> req.getHeader("MRN")).orElse(null));
         subscriptionRequest.updateSubscriptionGeometry(this.unLoCodeService);
 
         // Now save for each type
@@ -270,9 +297,84 @@ public class SecomService implements MessageHandler {
         // Generate the SECOM metadata
         final SECOM_ExchangeMetadata serviceExchangeMetadata = new SECOM_ExchangeMetadata();
         serviceExchangeMetadata.setDataProtection(false);
+        serviceExchangeMetadata.setCompressionFlag(false);
 
         // And return the information tuple
         return new Pair<>(signedPayload, serviceExchangeMetadata);
+    }
+
+    /**
+     * This function handles the operation of sending the updated list of
+     * the received S-125 Aids to Navigation entries to the provided
+     * subscription. This involved contacting the SECOM service registry in
+     * order to find our the correct endpoint and then the SECOM upload
+     * interface of the discovered client (if a valid registration is returned)
+     * will be utilised.
+     *
+     * @param subscriptionRequest the subscription request
+     * @param aidsToNavigationList the list of Aids to Navigation to be pushed
+     */
+    protected void sendToSubscription(SubscriptionRequest subscriptionRequest, List<AidsToNavigation> aidsToNavigationList) {
+        // First make sure the service registry is available
+        if(this.serviceRegistry.isEmpty()) {
+            log.warn("Subscription request found for S-125 dataset updates but no connection to service registry");
+            return;
+        }
+
+        // Make sure we also have an MRN for the subscribed client
+        if(Objects.isNull(subscriptionRequest.getClientMrn())) {
+            log.warn("Subscription request found for S-125 dataset updates but no client MRN");
+            return;
+        }
+
+        // Populate the subscription client contact information
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        searchFilterObject.setQuery("instanceId:\"" + subscriptionRequest.getClientMrn() + "\"");
+
+        // Lookup the endpoints of the clients from the SECOM service registry
+        Optional<SearchObjectResult[]> instances = this.serviceRegistry.get()
+                .post()
+                .uri("/v1/searchService")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(searchFilterObject))
+                .retrieve()
+                .bodyToMono(SearchObjectResult[].class)
+                .blockOptional();
+
+        // Extract the latest matching instance
+        SearchObjectResult instance = instances.map(Arrays::asList)
+                .orElse(Collections.emptyList())
+                .stream()
+                .max(Comparator.comparing(SearchObjectResult::getVersion))
+                .orElse(null);
+
+        // Build the upload object
+        UploadObject uploadObject = new UploadObject();
+        EnvelopeUploadObject envelopeUploadObject = new EnvelopeUploadObject();
+        Pair<String, SECOM_ExchangeMetadata> signedData = signPayload(GlobalConfig.convertTos125DataSet(this.modelMapper, aidsToNavigationList));
+        envelopeUploadObject.setData(signedData.getKey());
+        envelopeUploadObject.setExchangeMetadata(signedData.getValue());
+        envelopeUploadObject.setContainerType(ContainerTypeEnum.S100_DataSet);
+        envelopeUploadObject.setDataProductType(SECOM_DataProductType.S125);
+        envelopeUploadObject.setFromSubscription(true);
+        envelopeUploadObject.setAckRequest(AckRequestEnum.NO_ACK_REQUESTED);
+        envelopeUploadObject.setTransactionIdentifier(UUID.randomUUID());
+        uploadObject.setEnvelope(envelopeUploadObject);
+        uploadObject.setEnvelopeSignature("To be implemented");
+
+        // Now upload the message to the subscription client
+        WebClient.builder()
+                .baseUrl(instance.getEndpointUri())
+                .build()
+                .post()
+                .uri("/v1/upload")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(uploadObject))
+                .retrieve()
+                .bodyToMono(SearchObjectResult[].class)
+                .blockOptional();
     }
 
     /**

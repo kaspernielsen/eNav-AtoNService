@@ -141,7 +141,7 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                     "/lib/**",          //js files
                     "/images/**",       //the images
                     "/src/**",          //the javascript sources
-                    "/api/secom/"       //the SECOM interfaces
+                    "/api/secom/**"     //the SECOM interfaces
                 );
     }
 
@@ -166,7 +166,7 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                         "/lib/**",          //js files
                         "/images/**",       //the images
                         "/src/**",          //the javascript sources
-                        "/api/secom/",      //the SECOM interfaces
+                        "/api/secom/**",    //the SECOM interfaces
                         "/", "/index"       // The main index page
                 ).permitAll()
                 .requestMatchers(EndpointRequest.to(

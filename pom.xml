@@ -13,7 +13,7 @@
 	<groupId>org.grad</groupId>
 	<artifactId>aton-service</artifactId>
 	<version>0.0.2-SNAPSHOT</version>
-	<name>S125Service</name>
+	<name>AtoN Service</name>
 	<description>GRAD e-Navigation AtoN Microservice</description>
 
 	<properties>
@@ -114,6 +114,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 
 		<dependency>
@@ -281,7 +286,7 @@
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>SECOMLib</artifactId>
-			<version>0.0.4-SNAPSHOT</version>
+			<version>0.0.4</version>
 		</dependency>
 
 		<!-- Bouncy Castle -->
