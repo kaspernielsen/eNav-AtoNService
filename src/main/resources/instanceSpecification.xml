@@ -22,8 +22,8 @@
         </coversArea>
     </coversAreas>
     <implementsServiceDesign>
-        <id>urn:mrn:mcp:service:iala:org:aton:100</id>
-        <version>2</version>
+        <id>urn:mrn:mcp:service:iala:org:aton:000</id>
+        <version>0.0.0</version>
     </implementsServiceDesign>
     <producedBy>
         <ns2:id>urn:mrn:mcp:org:mcc:grad</ns2:id>
