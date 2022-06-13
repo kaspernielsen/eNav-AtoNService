@@ -32,7 +32,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -41,7 +40,6 @@ import java.util.Optional;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Singleton
 @Service
 @Slf4j
 @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)

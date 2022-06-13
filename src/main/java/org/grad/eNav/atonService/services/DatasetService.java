@@ -46,7 +46,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -66,10 +66,10 @@ import java.util.UUID;
 public class DatasetService {
 
     /**
-     * The Entity Manager.
+     * The Entity Manager Factory.
      */
     @Autowired
-    EntityManager entityManager;
+    EntityManagerFactory entityManagerFactory;
 
     /**
      * The UN/LoCode Service.
@@ -222,7 +222,7 @@ public class DatasetService {
      * @return the full text query
      */
     protected SearchQuery<S125DataSet> getDatasetSearchQueryByText(String searchText, Sort sort) {
-        SearchSession searchSession = Search.session( entityManager );
+        SearchSession searchSession = Search.session( entityManagerFactory.createEntityManager() );
         SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
@@ -254,7 +254,7 @@ public class DatasetService {
                                                             LocalDateTime toTime,
                                                             Sort sort) {
         // Then build and return the hibernate-search query
-        SearchSession searchSession = Search.session( entityManager );
+        SearchSession searchSession = Search.session( entityManagerFactory.createEntityManager() );
         SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {

@@ -1,0 +1,22 @@
+{
+  "openAPI": {
+    "info": {
+      "version": 1.0,
+      "title": "AtoN Service - SECOM Interfaces",
+      "description": "The SECOM interfaces of the AtoN Service",
+      "termsOfService": "https://gla-rad.org/",
+      "contact": {
+        "email": "Nikolaos.Vastardis@gla-rad.org"
+      },
+      "license": {
+        "name": "Apache 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+      }
+    }
+  },
+  "resourcePackages": [
+    "org.grad.eNav.atonService.controllers.secom"
+  ],
+  "prettyPrint": true,
+  "cacheTTL": 0
+}

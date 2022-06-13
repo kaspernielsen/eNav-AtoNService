@@ -22,24 +22,28 @@ import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.services.SecomService;
 import org.grad.secom.exceptions.SecomNotFoundException;
-import org.grad.secom.interfaces.SubscriptionInterface;
+import org.grad.secom.interfaces.jaxrs.SubscriptionSecomInterface;
 import org.grad.secom.models.SubscriptionRequestObject;
 import org.grad.secom.models.SubscriptionResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.ws.rs.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/secom")
+/**
+ * The SECOM Subscription Interface Controller.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
+@Component
+@Path("")
 @Validated
 @Slf4j
-public class SecomSubscriptionController implements SubscriptionInterface {
+public class SubscriptionSecomController implements SubscriptionSecomInterface {
 
     /**
      * Object Mapper from SECOM Subscription Request DTO to Domain.
@@ -61,11 +65,8 @@ public class SecomSubscriptionController implements SubscriptionInterface {
      * @param subscriptionRequestObject the subscription request object
      * @return the subscription response object
      */
-    @Override
     @Tag(name = "SECOM")
-    @CrossOrigin(origins = "*")
-    @PostMapping(value = SUBSCRIPTION_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<SubscriptionResponseObject> subscription(@Valid @RequestBody SubscriptionRequestObject subscriptionRequestObject) {
+    public SubscriptionResponseObject subscription(@Valid SubscriptionRequestObject subscriptionRequestObject) {
         final SubscriptionRequest subscriptionRequest = Optional.ofNullable(subscriptionRequestObject)
                 .map(dto -> this.subscriptionRequestDomainMapper.convertTo(dto, SubscriptionRequest.class))
                 .map(this.secomService::saveSubscription)
@@ -78,8 +79,7 @@ public class SecomSubscriptionController implements SubscriptionInterface {
         subscriptionResponse.setResponseText("Subscription successfully created");
 
         // Return the response
-        return ResponseEntity.ok()
-                .body(subscriptionResponse);
+        return subscriptionResponse;
     }
 
 }

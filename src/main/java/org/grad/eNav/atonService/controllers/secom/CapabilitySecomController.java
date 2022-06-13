@@ -22,7 +22,7 @@ import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.SecomService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
-import org.grad.secom.interfaces.CapabilityInterface;
+import org.grad.secom.interfaces.jaxrs.CapabilitySecomInterface;
 import org.grad.secom.models.CapabilityObject;
 import org.grad.secom.models.CapabilityResponseObject;
 import org.grad.secom.models.ImplementedInterfaces;
@@ -31,24 +31,26 @@ import org.grad.secom.models.enums.SECOM_DataProductType;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.ws.rs.Path;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/secom")
+/**
+ * The SECOM Capability Interface Controller.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
+@Component
+@Path("/")
 @Validated
 @Slf4j
-public class SecomCapabilityController implements CapabilityInterface {
+public class CapabilitySecomController implements CapabilitySecomInterface {
 
     /**
      * The Application Version Information.
@@ -109,10 +111,8 @@ public class SecomCapabilityController implements CapabilityInterface {
      *
      * @return the SECOM-compliant service capabilities
      */
-    @Override
     @Tag(name = "SECOM")
-    @GetMapping(value = CAPABILITY_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CapabilityResponseObject> capability() {
+    public CapabilityResponseObject capability() {
         final String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         final URL productSchemaUrl = Optional.of(this.dataProductSchemaLocation)
                 .map(l -> l.startsWith("http") ? l :(baseUrl + l) )
@@ -138,8 +138,7 @@ public class SecomCapabilityController implements CapabilityInterface {
         capabilityObject.setServiceVersion(this.appVersion);
 
         // And return the Capability Response Object
-        return ResponseEntity.ok()
-                .body(capabilityResponseObject);
+        return capabilityResponseObject;
     }
 
 }

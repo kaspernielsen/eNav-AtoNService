@@ -22,27 +22,28 @@ import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.services.SecomService;
 import org.grad.secom.exceptions.SecomNotFoundException;
-import org.grad.secom.interfaces.RemoveSubscriptionInterface;
+import org.grad.secom.interfaces.jaxrs.RemoveSubscriptionSecomInterface;
 import org.grad.secom.models.RemoveSubscriptionObject;
 import org.grad.secom.models.RemoveSubscriptionResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import javax.ws.rs.Path;
 import java.util.Optional;
 import java.util.UUID;
 
-@RestController
-@RequestMapping("/api/secom")
+/**
+ * The SECOM Remove Subscription Interface Controller.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
+@Component
+@Path("/")
 @Validated
 @Slf4j
-public class SecomRemoveSubscriptionController implements RemoveSubscriptionInterface {
+public class RemoveSubscriptionSecomController implements RemoveSubscriptionSecomInterface {
 
     /**
      * The SECOM Service.
@@ -65,10 +66,8 @@ public class SecomRemoveSubscriptionController implements RemoveSubscriptionInte
      * @param removeSubscriptionObject the remove subscription object
      * @return the remove subscription response object
      */
-    @Override
     @Tag(name = "SECOM")
-    @DeleteMapping(value = REMOVE_SUBSCRIPTION_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<RemoveSubscriptionResponseObject> removeSubscription(@Valid @RequestBody RemoveSubscriptionObject removeSubscriptionObject) {
+    public RemoveSubscriptionResponseObject removeSubscription(@Valid RemoveSubscriptionObject removeSubscriptionObject) {
         final UUID subscriptionIdentifier = Optional.ofNullable(removeSubscriptionObject)
                 .map(dto -> this.removeSubscriptionDomainMapper.convertTo(dto, RemoveSubscription.class))
                 .map(this.secomService::deleteSubscription)
@@ -79,8 +78,7 @@ public class SecomRemoveSubscriptionController implements RemoveSubscriptionInte
         removeSubscriptionResponse.setResponseText(String.format("Subscription %s removed", subscriptionIdentifier));
 
         // Return the response
-        return ResponseEntity.ok()
-                .body(removeSubscriptionResponse);
+        return removeSubscriptionResponse;
     }
 
 }
