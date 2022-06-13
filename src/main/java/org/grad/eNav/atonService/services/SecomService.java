@@ -68,7 +68,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
-import static org.grad.secom.interfaces.UploadInterface.UPLOAD_INTERFACE_PATH;
+import static org.grad.secom.interfaces.jaxrs.UploadSecomInterface.UPLOAD_INTERFACE_PATH;
 
 /**
  * The SECOM Service Class.

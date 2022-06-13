@@ -26,7 +26,7 @@ import org.grad.eNav.atonService.services.SecomService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
 import org.grad.eNav.atonService.utils.WKTUtil;
-import org.grad.secom.interfaces.GetSummaryInterface;
+import org.grad.secom.interfaces.jaxrs.GetSummarySecomInterface;
 import org.grad.secom.models.GetSummaryResponseObject;
 import org.grad.secom.models.PaginationObject;
 import org.grad.secom.models.SummaryObject;
@@ -37,39 +37,33 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.ValidationException;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/api/secom")
+/**
+ * The SECOM Get Summary Interface Controller.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
+@Component
+@Path("/")
 @Validated
 @Slf4j
-public class SecomGetSummaryController implements GetSummaryInterface {
-
-    /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
+public class GetSummarySecomController implements GetSummarySecomInterface {
 
     /**
      * The Dataset Service.
@@ -109,20 +103,20 @@ public class SecomGetSummaryController implements GetSummaryInterface {
      * @param unlocode the object UNLOCODE
      * @param validFrom the object valid from time
      * @param validTo the object valid to time
-     * @param pageable the pageable information
+     * @param page the page number to be retrieved
+     * @param pageSize the maximum page size
      * @return the S-125 dataset summary information
      */
-    @Override
     @Tag(name = "SECOM")
-    @GetMapping(value = GET_SUMMARY_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetSummaryResponseObject> getSummary(@RequestParam(value = "containerType", required = false) ContainerTypeEnum containerType,
-                                                               @RequestParam(value = "dataProductType", required = false) SECOM_DataProductType dataProductType,
-                                                               @RequestParam(value = "productVersion", required = false) String productVersion,
-                                                               @RequestParam(value = "geometry", required = false) String geometry,
-                                                               @RequestParam(value = "unlocode", required = false) @Pattern(regexp = "[A-Z]{5}") String unlocode,
-                                                               @RequestParam(value = "validFrom", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime validFrom,
-                                                               @RequestParam(value = "validTo", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime validTo,
-                                                               @PageableDefault(size = Integer.MAX_VALUE) Pageable pageable) {
+    public GetSummaryResponseObject getSummary(@QueryParam("containerType") ContainerTypeEnum containerType,
+                                               @QueryParam("dataProductType") SECOM_DataProductType dataProductType,
+                                               @QueryParam("productVersion") String productVersion,
+                                               @QueryParam("geometry") String geometry,
+                                               @QueryParam("unlocode") @Pattern(regexp = "[A-Z]{5}") String unlocode,
+                                               @QueryParam("validFrom") LocalDateTime validFrom,
+                                               @QueryParam("validTo") LocalDateTime validTo,
+                                               @QueryParam("page") @Min(0) Integer page,
+                                               @QueryParam("pageSize") @Min(0) Integer pageSize) {
         this.log.debug("SECOM request to get page of Dataset Summary");
         Optional.ofNullable(containerType).ifPresent(v -> this.log.debug("Container Type specified as: {}", containerType));
         Optional.ofNullable(dataProductType).ifPresent(v -> this.log.debug("Data Product Type specified as: {}", dataProductType));
@@ -161,7 +155,7 @@ public class SecomGetSummaryController implements GetSummaryInterface {
                 reqGeometry,
                 null,
                 null,
-                pageable
+                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
         );
 
         // We only support S-100 Datasets here
@@ -204,8 +198,7 @@ public class SecomGetSummaryController implements GetSummaryInterface {
         getSummaryResponseObject.setPagination(new PaginationObject((int) s125DataSetPage.getTotalElements(), s125DataSetPage.getSize()));
 
         // And return the Get Summary Response Object
-        return ResponseEntity.ok()
-                .body(getSummaryResponseObject);
+        return getSummaryResponseObject;
     }
 
 }

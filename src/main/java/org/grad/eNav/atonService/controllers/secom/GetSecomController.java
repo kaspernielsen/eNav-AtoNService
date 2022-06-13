@@ -33,7 +33,7 @@ import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.WKTUtil;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.exceptions.SecomNotFoundException;
-import org.grad.secom.interfaces.GetInterface;
+import org.grad.secom.interfaces.jaxrs.GetSecomInterface;
 import org.grad.secom.models.DataResponseObject;
 import org.grad.secom.models.GetResponseObject;
 import org.grad.secom.models.PaginationObject;
@@ -47,30 +47,31 @@ import org.locationtech.jts.io.ParseException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.ValidationException;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.xml.bind.JAXBException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-@RestController
-@RequestMapping("/api/secom")
+/**
+ * The SECOM Get Interface Controller.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
+@Component
+@Path("/")
 @Validated
 @Slf4j
-public class SecomGetController implements GetInterface {
+public class GetSecomController implements GetSecomInterface {
 
 
     /**
@@ -118,21 +119,21 @@ public class SecomGetController implements GetInterface {
      * @param unlocode the object UNLOCODE
      * @param validFrom the object valid from time
      * @param validTo the object valid to time
-     * @param pageable the pageable information
+     * @param page the page number to be retrieved
+     * @param pageSize the maximum page size
      * @return the S-125 dataset information
      */
-    @Override
     @Tag(name = "SECOM")
-    @GetMapping(value = GET_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetResponseObject> get(@RequestParam(value = "dataReference", required = false) UUID dataReference,
-                                                 @RequestParam(value = "containerType", required = false) ContainerTypeEnum containerType,
-                                                 @RequestParam(value = "dataProductType", required = false) SECOM_DataProductType dataProductType,
-                                                 @RequestParam(value = "productVersion", required = false) String productVersion,
-                                                 @RequestParam(value = "geometry", required = false) String geometry,
-                                                 @RequestParam(value = "unlocode", required = false) @Pattern(regexp = "[A-Z]{5}") String unlocode,
-                                                 @RequestParam(value = "validFrom", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime validFrom,
-                                                 @RequestParam(value = "validTo", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime validTo,
-                                                 @PageableDefault(size = Integer.MAX_VALUE) Pageable pageable) {
+    public GetResponseObject get(@QueryParam("dataReference") UUID dataReference,
+                                 @QueryParam("containerType") ContainerTypeEnum containerType,
+                                 @QueryParam("dataProductType") SECOM_DataProductType dataProductType,
+                                 @QueryParam("productVersion") String productVersion,
+                                 @QueryParam("geometry") String geometry,
+                                 @QueryParam("unlocode") @Pattern(regexp = "[A-Z]{5}") String unlocode,
+                                 @QueryParam("validFrom") LocalDateTime validFrom,
+                                 @QueryParam("validTo") LocalDateTime validTo,
+                                 @QueryParam("page") @Min(0) Integer page,
+                                 @QueryParam("pageSize") @Min(0) Integer pageSize) {
         this.log.debug("SECOM request to get page of Dataset");
         Optional.ofNullable(dataReference).ifPresent(v -> this.log.debug("Data Reference specified as: {}", dataReference));
         Optional.ofNullable(containerType).ifPresent(v -> this.log.debug("Coontainer Type specified as: {}", containerType));
@@ -181,7 +182,7 @@ public class SecomGetController implements GetInterface {
                 finalReqGeometry,
                 validFrom,
                 validTo,
-                pageable
+                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
         );
 
         // We only support S-100 Datasets here
@@ -189,7 +190,7 @@ public class SecomGetController implements GetInterface {
             // We only support specifically S-125 Datasets
             if(reqDataProductType == SECOM_DataProductType.S125) {
                 try {
-                    final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(modelMapper);
+                    final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
                     final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
                     data = S125Utils.marshalS125(dataset, Boolean.FALSE);
                 } catch (JAXBException ex) {
@@ -208,8 +209,7 @@ public class SecomGetController implements GetInterface {
         getResponseObject.setPagination(new PaginationObject((int)atonPage.getTotalElements(), atonPage.getSize()));
 
         // And final return the Get Response Object
-        return ResponseEntity.ok()
-                .body(getResponseObject);
+        return getResponseObject;
 
     }
 
