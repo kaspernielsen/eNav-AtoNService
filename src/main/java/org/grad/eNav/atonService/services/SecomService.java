@@ -61,6 +61,7 @@ import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -68,6 +69,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.net.ssl.SSLException;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -100,10 +102,10 @@ public class SecomService implements MessageHandler {
     ModelMapper modelMapper;
 
     /**
-     * The Entity Manager.
+     * The Entity Manager Factory.
      */
     @Autowired
-    EntityManager entityManager;
+    EntityManagerFactory entityManagerFactory;
 
     /**
      * The Asynchronous Task Executor.
@@ -158,6 +160,7 @@ public class SecomService implements MessageHandler {
     PublishSubscribeChannel s125DeletionChannel;
 
     // Class Variables
+    EntityManager entityManager;
     SecomClient discoveryService;
 
     /**
@@ -186,6 +189,7 @@ public class SecomService implements MessageHandler {
                     }
                 })
                 .orElse(null);
+        this.entityManager = this.entityManagerFactory.createEntityManager();
         this.s125PublicationChannel.subscribe(this);
         this.s125DeletionChannel.subscribe(this);
     }
@@ -198,6 +202,9 @@ public class SecomService implements MessageHandler {
     public void destroy() {
         log.info("SECOM Service is shutting down...");
         this.discoveryService = null;
+        if(this.entityManager != null) {
+            this.entityManager.close();
+        }
         if (this.s125PublicationChannel != null) {
             this.s125PublicationChannel.destroy();
         }
@@ -214,7 +221,7 @@ public class SecomService implements MessageHandler {
      * @param message               The message to be handled
      * @throws MessagingException   The Messaging exceptions that might occur
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public void handleMessage(Message<?> message) throws MessagingException {
         // Get the headers of the incoming message
