@@ -44,7 +44,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -76,10 +76,10 @@ class SecomServiceTest {
     ModelMapper modelMapper;
 
     /**
-     * The Entity Manager mock.
+     * The Entity Manager Factory mock.
      */
     @Mock
-    EntityManager entityManager;
+    EntityManagerFactory entityManagerFactory;
 
     /**
      * The Asynchronous Task Executor mock.
