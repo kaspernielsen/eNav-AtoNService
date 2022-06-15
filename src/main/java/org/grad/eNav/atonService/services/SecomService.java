@@ -31,11 +31,11 @@ import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
-import org.grad.secom.exceptions.SecomNotFoundException;
-import org.grad.secom.models.*;
-import org.grad.secom.models.enums.AckRequestEnum;
-import org.grad.secom.models.enums.ContainerTypeEnum;
-import org.grad.secom.models.enums.SECOM_DataProductType;
+import org.grad.secom.core.exceptions.SecomNotFoundException;
+import org.grad.secom.core.models.*;
+import org.grad.secom.core.models.enums.AckRequestEnum;
+import org.grad.secom.core.models.enums.ContainerTypeEnum;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -68,7 +68,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
-import static org.grad.secom.interfaces.jaxrs.UploadSecomInterface.UPLOAD_INTERFACE_PATH;
+import static org.grad.secom.core.interfaces.UploadSecomInterface.UPLOAD_INTERFACE_PATH;
 
 /**
  * The SECOM Service Class.

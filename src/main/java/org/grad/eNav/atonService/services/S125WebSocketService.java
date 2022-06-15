@@ -18,7 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.secom.models.enums.SECOM_DataProductType;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
