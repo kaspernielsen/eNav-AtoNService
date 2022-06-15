@@ -292,19 +292,14 @@
 
 		<!-- SECOM -->
 		<dependency>
-			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-spring-boot-starter</artifactId>
-			<version>5.0.0.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-jaxrs2</artifactId>
-			<version>${swagger.version}</version>
+			<groupId>org.grad.secom</groupId>
+			<artifactId>secom-core</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.grad.secom</groupId>
-			<artifactId>SECOMLib</artifactId>
-			<version>0.1.1</version>
+			<artifactId>secom-springboot</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<!-- Bouncy Castle -->

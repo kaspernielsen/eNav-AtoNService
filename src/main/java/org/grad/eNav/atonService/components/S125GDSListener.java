@@ -35,7 +35,7 @@ import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
 import org.grad.eNav.s125.utils.S125Utils;
-import org.grad.secom.models.enums.SECOM_DataProductType;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.locationtech.geomesa.kafka.utils.KafkaFeatureEvent;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
