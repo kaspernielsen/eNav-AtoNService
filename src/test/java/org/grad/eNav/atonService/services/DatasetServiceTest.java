@@ -38,7 +38,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -57,10 +57,10 @@ class DatasetServiceTest {
     DatasetService datasetService;
 
     /**
-     * The Entity Manager Factory mock.
+     * The Entity Manager mock.
      */
     @Mock
-    EntityManagerFactory entityManagerFactory;
+    EntityManager entityManager;
 
     /**
      * The SECOM Service mock.

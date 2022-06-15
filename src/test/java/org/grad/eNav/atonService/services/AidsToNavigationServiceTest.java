@@ -38,7 +38,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,10 +61,10 @@ class AidsToNavigationServiceTest {
     AidsToNavigationService aidsToNavigationService;
 
     /**
-     * The Entity Manager Factory mock.
+     * The Entity Manager mock.
      */
     @Mock
-    EntityManagerFactory entityManagerFactory;
+    EntityManager entityManager;
 
     /**
      * The Aids to Navigation Repo mock.

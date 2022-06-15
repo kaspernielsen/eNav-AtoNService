@@ -27,9 +27,9 @@ import org.grad.secom.models.SubscriptionRequestObject;
 import org.grad.secom.models.SubscriptionResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.Path;
 import java.util.Objects;
