@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.Path;
 import java.util.Optional;
@@ -67,6 +68,7 @@ public class RemoveSubscriptionSecomController implements RemoveSubscriptionSeco
      * @return the remove subscription response object
      */
     @Tag(name = "SECOM")
+    @Transactional
     public RemoveSubscriptionResponseObject removeSubscription(@Valid RemoveSubscriptionObject removeSubscriptionObject) {
         final UUID subscriptionIdentifier = Optional.ofNullable(removeSubscriptionObject)
                 .map(dto -> this.removeSubscriptionDomainMapper.convertTo(dto, RemoveSubscription.class))
