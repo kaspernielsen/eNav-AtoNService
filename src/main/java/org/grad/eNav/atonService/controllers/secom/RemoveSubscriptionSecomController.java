@@ -27,9 +27,9 @@ import org.grad.secom.models.RemoveSubscriptionObject;
 import org.grad.secom.models.RemoveSubscriptionResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.Path;
 import java.util.Optional;

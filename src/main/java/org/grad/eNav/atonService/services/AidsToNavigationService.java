@@ -47,7 +47,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -66,10 +66,10 @@ import java.util.Optional;
 public class AidsToNavigationService {
 
     /**
-     * The Entity Manager Factory.
+     * The Entity Manager.
      */
     @Autowired
-    EntityManagerFactory entityManagerFactory;
+    EntityManager entityManager;
 
     /**
      * The Generic Aids to Navigation Repo.
@@ -258,7 +258,7 @@ public class AidsToNavigationService {
      * @return the full text query
      */
     protected SearchQuery<AidsToNavigation> getSearchAidsToNavigationQueryByText(String searchText, Sort sort) {
-        SearchSession searchSession = Search.session( entityManagerFactory.createEntityManager() );
+        SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<AidsToNavigation> scope = searchSession.scope( AidsToNavigation.class );
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
@@ -291,7 +291,7 @@ public class AidsToNavigationService {
                                                                            LocalDateTime toTime,
                                                                            Sort sort) {
         // Then build and return the hibernate-search query
-        SearchSession searchSession = Search.session( entityManagerFactory.createEntityManager() );
+        SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<AidsToNavigation> scope = searchSession.scope( AidsToNavigation.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {

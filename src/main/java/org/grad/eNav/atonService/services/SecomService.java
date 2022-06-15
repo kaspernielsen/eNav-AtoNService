@@ -62,7 +62,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -89,10 +89,10 @@ public class SecomService implements MessageHandler {
     ModelMapper modelMapper;
 
     /**
-     * The Entity Manager Factory.
+     * The Entity Manager.
      */
     @Autowired
-    EntityManagerFactory entityManagerFactory;
+    EntityManager entityManager;
 
     /**
      * The Request Context.
@@ -398,7 +398,7 @@ public class SecomService implements MessageHandler {
                                                                                 LocalDateTime toTime,
                                                                                 Sort sort) {
         // Then build and return the hibernate-search query
-        SearchSession searchSession = Search.session( entityManagerFactory.createEntityManager() );
+        SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<SubscriptionRequest> scope = searchSession.scope( SubscriptionRequest.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {

@@ -32,10 +32,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.transaction.Transactional;
 import javax.ws.rs.Path;
 import java.net.MalformedURLException;
 import java.net.URL;
