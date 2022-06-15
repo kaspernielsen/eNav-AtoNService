@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.ws.rs.Path;
 import java.util.Objects;
@@ -66,6 +67,7 @@ public class SubscriptionSecomController implements SubscriptionSecomInterface {
      * @return the subscription response object
      */
     @Tag(name = "SECOM")
+    @Transactional
     public SubscriptionResponseObject subscription(@Valid SubscriptionRequestObject subscriptionRequestObject) {
         final SubscriptionRequest subscriptionRequest = Optional.ofNullable(subscriptionRequestObject)
                 .map(dto -> this.subscriptionRequestDomainMapper.convertTo(dto, SubscriptionRequest.class))

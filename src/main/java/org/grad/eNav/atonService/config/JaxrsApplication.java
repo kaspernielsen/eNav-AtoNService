@@ -91,7 +91,7 @@ public class JaxrsApplication extends Application {
      */
     @Override
     public Set<Class<?>> getClasses() {
-        return Stream.of(OpenApiResource.class, AcceptHeaderOpenApiResource.class, ObjectMapper.class).collect(Collectors.toSet());
+        return Stream.of(OpenApiResource.class, AcceptHeaderOpenApiResource.class).collect(Collectors.toSet());
     }
 
 }

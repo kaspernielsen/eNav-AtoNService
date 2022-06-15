@@ -51,6 +51,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import javax.transaction.Transactional;
 import javax.validation.ValidationException;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
@@ -124,6 +125,7 @@ public class GetSecomController implements GetSecomInterface {
      * @return the S-125 dataset information
      */
     @Tag(name = "SECOM")
+    @Transactional
     public GetResponseObject get(@QueryParam("dataReference") UUID dataReference,
                                  @QueryParam("containerType") ContainerTypeEnum containerType,
                                  @QueryParam("dataProductType") SECOM_DataProductType dataProductType,

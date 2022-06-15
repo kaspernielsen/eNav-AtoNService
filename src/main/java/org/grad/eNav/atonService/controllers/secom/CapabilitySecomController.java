@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.transaction.Transactional;
 import javax.ws.rs.Path;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -112,6 +113,7 @@ public class CapabilitySecomController implements CapabilitySecomInterface {
      * @return the SECOM-compliant service capabilities
      */
     @Tag(name = "SECOM")
+    @Transactional
     public CapabilityResponseObject capability() {
         final String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         final URL productSchemaUrl = Optional.of(this.dataProductSchemaLocation)
