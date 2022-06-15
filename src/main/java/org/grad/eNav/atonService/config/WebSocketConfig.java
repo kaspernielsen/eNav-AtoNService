@@ -47,7 +47,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private String prefix;
 
     /**
-     * The VDES Controller Data Endpoint of the WebSocket
+     * The AtoN Service Data Endpoint of the WebSocket
      */
     @Value("${gla.rad.aton-service.web-socket.aton-data-endpoint:atons}")
     private String atonDataEndpoint;
