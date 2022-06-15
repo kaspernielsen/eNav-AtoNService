@@ -36,12 +36,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -65,6 +68,24 @@ class SecomServiceTest {
     @InjectMocks
     @Spy
     SecomService secomService;
+
+    /**
+     * The Model Mapper mock.
+     */
+    @Mock
+    ModelMapper modelMapper;
+
+    /**
+     * The Entity Manager mock.
+     */
+    @Mock
+    EntityManager entityManager;
+
+    /**
+     * The Asynchronous Task Executor mock.
+     */
+    @Mock
+    TaskExecutor taskExecutor;
 
     /**
      * The Request Context mock.
@@ -153,6 +174,9 @@ class SecomServiceTest {
         this.aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(52.98, 28)));
         this.aidsToNavigation.setDateStart(LocalDate.now());
         this.aidsToNavigation.setDateEnd(LocalDate.now());
+
+        // Finally alreay set the discovery service variables
+        this.secomService.discoveryServiceUrl = "http://localhost:8444/v1/searchService";
     }
 
     /**
@@ -160,10 +184,11 @@ class SecomServiceTest {
      * to the AtoN publish subscribe channels.
      */
     @Test
-    void testInit() {
+    void testInit()  {
         // Perform the service call
         this.secomService.init();
 
+        assertNotNull(this.secomService.discoveryService);
         verify(this.s125PublicationChannel, times(1)).subscribe(this.secomService);
         verify(this.s125DeletionChannel, times(1)).subscribe(this.secomService);
     }
@@ -177,6 +202,7 @@ class SecomServiceTest {
         // Perform the service call
         this.secomService.destroy();
 
+        assertNull(this.secomService.discoveryService);
         verify(this.s125PublicationChannel, times(1)).destroy();
         verify(this.s125DeletionChannel, times(1)).destroy();
     }
@@ -231,7 +257,7 @@ class SecomServiceTest {
      * deletions received through the S-125 publish-subscribe channel.
      */
     @Test
-    void testHandleAidsToNavigationDeletion() {
+    void handleMessageDeletion() {
         // Create a message to be handled
         Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))

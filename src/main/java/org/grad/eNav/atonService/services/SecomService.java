@@ -17,6 +17,7 @@
 package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortedSetSortField;
@@ -32,10 +33,13 @@ import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
+import org.grad.secom.core.exceptions.SecomValidationException;
 import org.grad.secom.core.models.*;
 import org.grad.secom.core.models.enums.AckRequestEnum;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
+import org.grad.secom.core.models.enums.SubscriptionEventEnum;
+import org.grad.secom.springboot.components.SecomClient;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -48,8 +52,9 @@ import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.MediaType;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
@@ -57,18 +62,18 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.net.ssl.SSLException;
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
-
-import static org.grad.secom.core.interfaces.UploadSecomInterface.UPLOAD_INTERFACE_PATH;
 
 /**
  * The SECOM Service Class.
@@ -83,6 +88,12 @@ import static org.grad.secom.core.interfaces.UploadSecomInterface.UPLOAD_INTERFA
 public class SecomService implements MessageHandler {
 
     /**
+     * The Service Registry URL.
+     */
+    @Value("${gla.rad.aton-service.service-registry.url:}" )
+    String discoveryServiceUrl;
+
+    /**
      * The Model Mapper.
      */
     @Autowired
@@ -93,6 +104,12 @@ public class SecomService implements MessageHandler {
      */
     @Autowired
     EntityManager entityManager;
+
+    /**
+     * The Asynchronous Task Executor.
+     */
+    @Autowired
+    TaskExecutor taskExecutor;
 
     /**
      * The Request Context.
@@ -140,6 +157,9 @@ public class SecomService implements MessageHandler {
     @Qualifier("s125DeletionChannel")
     PublishSubscribeChannel s125DeletionChannel;
 
+    // Class Variables
+    SecomClient discoveryService;
+
     /**
      * The service post-construct operations where the handler auto-registers
      * it-self to the S-125 publication channel.
@@ -147,6 +167,25 @@ public class SecomService implements MessageHandler {
     @PostConstruct
     public void init() {
         log.info("SECOM Service is booting up...");
+        this.discoveryService = Optional.ofNullable(this.discoveryServiceUrl)
+                .filter(StringUtils::isNotBlank)
+                .map(url -> {
+                    try {
+                        return new URL(url);
+                    } catch (MalformedURLException ex) {
+                        this.log.error("Invalid SECOM discovery service URL provided...", ex);
+                        return null;
+                    }
+                })
+                .map(url -> {
+                    try {
+                        return new SecomClient(url, true);
+                    } catch (SSLException ex) {
+                        this.log.error("Unable to initialise the SSL context for the SECOM discovery service...", ex);
+                        return null;
+                    }
+                })
+                .orElse(null);
         this.s125PublicationChannel.subscribe(this);
         this.s125DeletionChannel.subscribe(this);
     }
@@ -158,6 +197,7 @@ public class SecomService implements MessageHandler {
     @PreDestroy
     public void destroy() {
         log.info("SECOM Service is shutting down...");
+        this.discoveryService = null;
         if (this.s125PublicationChannel != null) {
             this.s125PublicationChannel.destroy();
         }
@@ -255,8 +295,20 @@ public class SecomService implements MessageHandler {
         subscriptionRequest.setClientMrn(this.httpServletRequest.map(req -> req.getHeader("MRN")).orElse(null));
         subscriptionRequest.updateSubscriptionGeometry(this.unLoCodeService);
 
+        // Now save the request
+        final SubscriptionRequest savedSubscriptionRequest = this.secomSubscriptionRepo.save(subscriptionRequest);
+
+        // Inform to the subscription client (identify through MRN) - asynchronous
+        this.taskExecutor.execute(() -> {
+            final SecomClient secomClient = this.getSecomClient(savedSubscriptionRequest.getClientMrn());
+            SubscriptionNotificationObject subscriptionNotificationObject = new SubscriptionNotificationObject();
+            subscriptionNotificationObject.setSubscriptionIdentifier(savedSubscriptionRequest.getUuid());
+            subscriptionNotificationObject.setEventEnum(SubscriptionEventEnum.SUBSCRIPTION_CREATED);
+            secomClient.subscriptionNotification(subscriptionNotificationObject);
+        });
+
         // Now save for each type
-        return this.secomSubscriptionRepo.save(subscriptionRequest);
+        return savedSubscriptionRequest;
     }
 
     /**
@@ -270,15 +322,22 @@ public class SecomService implements MessageHandler {
         log.debug("Request to delete SECOM subscription : {}", removeSubscription);
 
         // Look for the subscription and delete it if found
-        Optional.of(removeSubscription)
+        final SubscriptionRequest subscriptionRequest = Optional.of(removeSubscription)
                 .map(RemoveSubscription::getSubscriptionIdentifier)
                 .flatMap(this.secomSubscriptionRepo::findById)
-                .ifPresentOrElse(
-                        this.secomSubscriptionRepo::delete,
-                        () -> {
-                            throw new SecomNotFoundException(removeSubscription.getSubscriptionIdentifier().toString());
-                        }
-        );
+                .orElseThrow(() -> new SecomNotFoundException(removeSubscription.getSubscriptionIdentifier().toString()));
+
+        // Delete the subscription
+        this.secomSubscriptionRepo.delete(subscriptionRequest);
+
+        // Inform to the subscription client (identify through MRN) - asynchronous
+        this.taskExecutor.execute(() -> {
+            final SecomClient secomClient = this.getSecomClient(subscriptionRequest.getClientMrn());
+            SubscriptionNotificationObject subscriptionNotificationObject = new SubscriptionNotificationObject();
+            subscriptionNotificationObject.setSubscriptionIdentifier(removeSubscription.getSubscriptionIdentifier());
+            subscriptionNotificationObject.setEventEnum(SubscriptionEventEnum.SUBSCRIPTION_REMOVED);
+            secomClient.subscriptionNotification(subscriptionNotificationObject);
+        });
 
         // If all OK, then return the subscription UUID
         return removeSubscription.getSubscriptionIdentifier();
@@ -329,27 +388,8 @@ public class SecomService implements MessageHandler {
             return;
         }
 
-        // Populate the subscription client contact information
-        SearchFilterObject searchFilterObject = new SearchFilterObject();
-        searchFilterObject.setQuery("instanceId:\"" + subscriptionRequest.getClientMrn() + "\"");
-
-        // Lookup the endpoints of the clients from the SECOM service registry
-        Optional<SearchObjectResult[]> instances = this.serviceRegistry.get()
-                .post()
-                .uri("/v1/searchService")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(searchFilterObject))
-                .retrieve()
-                .bodyToMono(SearchObjectResult[].class)
-                .blockOptional();
-
-        // Extract the latest matching instance
-        SearchObjectResult instance = instances.map(Arrays::asList)
-                .orElse(Collections.emptyList())
-                .stream()
-                .max(Comparator.comparing(SearchObjectResult::getVersion))
-                .orElse(null);
+        // Identify the subscription client if possible through the client MRN
+        final SecomClient secomClient = this.getSecomClient(subscriptionRequest.getClientMrn());
 
         // Build the upload object
         UploadObject uploadObject = new UploadObject();
@@ -366,17 +406,47 @@ public class SecomService implements MessageHandler {
         uploadObject.setEnvelopeSignature("To be implemented");
 
         // Now upload the message to the subscription client
-        WebClient.builder()
-                .baseUrl(instance.getEndpointUri())
-                .build()
-                .post()
-                .uri(UPLOAD_INTERFACE_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(uploadObject))
-                .retrieve()
-                .bodyToMono(SearchObjectResult[].class)
-                .blockOptional();
+        secomClient.upload(uploadObject);
+    }
+
+    /**
+     * Based on an MRN provided, this function will contact the SECOM discovery
+     * service (in this case it's the MCP MSR) and request the client endpoint
+     * URI. It will then construct a SECOM client to be returned for the URI
+     * discovered.
+     *
+     * @param mrn the MRN to be lookup up
+     * @return the SECOM client for the endpoint matching the provided URI
+     */
+    protected SecomClient getSecomClient(String mrn) {
+        // Validate the MRN
+        Optional.ofNullable(mrn)
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new SecomValidationException("Cannot request a service discovery for an empty/invalid MRN"));
+
+        // Create the discovery service search filter object for the provided MRN
+        final SearchFilterObject searchFilterObject = new SearchFilterObject();
+        searchFilterObject.setQuery(String.format("instanceId:\"%s\"", mrn));
+
+        // Lookup the endpoints of the clients from the SECOM discovery service
+        final Optional<SearchObjectResult[]> instances = Optional.ofNullable(discoveryService)
+                .map(ds -> ds.search(searchFilterObject, 0, Integer.MAX_VALUE))
+                .orElse(Optional.empty());
+
+        // Extract the latest matching instance
+        final SearchObjectResult instance = instances.map(Arrays::asList)
+                .orElse(Collections.emptyList())
+                .stream()
+                .max(Comparator.comparing(SearchObjectResult::getVersion))
+                .orElseThrow(() -> new SecomNotFoundException(mrn));
+
+        // Now construct and return a SECOM client for the discovered URI
+        try {
+            return new SecomClient(new URL(instance.getEndpointUri()), false);
+        } catch (SSLException | MalformedURLException ex) {
+            this.log.error(ex.getMessage(), ex);
+            throw new SecomValidationException(ex.getMessage());
+        }
     }
 
     /**
