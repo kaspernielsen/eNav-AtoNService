@@ -47,6 +47,7 @@ import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PreDestroy;
 import javax.xml.bind.JAXBElement;
@@ -143,6 +144,7 @@ public class S125GDSListener implements FeatureListener {
      *
      * @param featureEvent      The feature event that took place
      */
+    @Transactional
     public void changed(FeatureEvent featureEvent) {
         // We are only interested in Kafka Feature Messages, otherwise don't bother
         if(!(featureEvent instanceof KafkaFeatureEvent)) {
