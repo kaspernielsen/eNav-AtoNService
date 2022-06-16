@@ -12,7 +12,16 @@
         "name": "Apache 2.0",
         "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
       }
-    }
+    },
+    "servers": [
+      {
+        "url": "http://enav.grad-rrnav.pub/aton-service"
+      }, {
+        "url": "http://zombie:8766"
+      }, {
+        "url": "http://localhost:8766"
+      }
+    ]
   },
   "resourcePackages": [
     "org.grad.eNav.atonService.controllers.secom"
