@@ -18,21 +18,14 @@ package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.grad.eNav.atonService.services.AidsToNavigationService;
-import org.grad.eNav.atonService.services.DatasetService;
-import org.grad.eNav.atonService.services.SecomService;
-import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.interfaces.CapabilitySecomInterface;
 import org.grad.secom.core.models.CapabilityObject;
 import org.grad.secom.core.models.CapabilityResponseObject;
 import org.grad.secom.core.models.ImplementedInterfaces;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -78,42 +71,11 @@ public class CapabilitySecomController implements CapabilitySecomInterface {
     private String dataProductSchemaLocation;
 
     /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
-
-    /**
-     * The Dataset Service.
-     */
-    @Autowired
-    DatasetService datasetService;
-
-    /**
-     * The Aids to Navigation Service.
-     */
-    @Autowired
-    AidsToNavigationService aidsToNavigationService;
-
-    /**
-     * The UN/LOCODE Service.
-     */
-    @Autowired
-    UnLoCodeService unLoCodeService;
-
-    /**
-     * The SECOM Service.
-     */
-    @Autowired
-    SecomService secomService;
-
-    /**
      * GET /api/secom/v1/capability : Returns the service instance capabilities.
      *
      * @return the SECOM-compliant service capabilities
      */
     @Tag(name = "SECOM")
-    @Transactional
     public CapabilityResponseObject capability() {
         final String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         final URL productSchemaUrl = Optional.of(this.dataProductSchemaLocation)

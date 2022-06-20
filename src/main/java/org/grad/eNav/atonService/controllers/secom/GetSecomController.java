@@ -125,7 +125,6 @@ public class GetSecomController implements GetSecomInterface {
      * @return the S-125 dataset information
      */
     @Tag(name = "SECOM")
-    @Transactional
     public GetResponseObject get(@QueryParam("dataReference") UUID dataReference,
                                  @QueryParam("containerType") ContainerTypeEnum containerType,
                                  @QueryParam("dataProductType") SECOM_DataProductType dataProductType,
