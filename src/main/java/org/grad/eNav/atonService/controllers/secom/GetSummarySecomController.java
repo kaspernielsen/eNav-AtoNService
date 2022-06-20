@@ -22,7 +22,6 @@ import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
-import org.grad.eNav.atonService.services.SecomService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
 import org.grad.eNav.atonService.utils.WKTUtil;
@@ -82,12 +81,6 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
      */
     @Autowired
     UnLoCodeService unLoCodeService;
-
-    /**
-     * The SECOM Service.
-     */
-    @Autowired
-    SecomService secomService;
 
     // Class Variables
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(),4326);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.grad.eNav.atonService.services;
+package org.grad.eNav.atonService.services.secom;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,9 +32,13 @@ import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
+import org.grad.eNav.atonService.services.DatasetService;
+import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
-import org.grad.secom.core.models.*;
+import org.grad.secom.core.models.EnvelopeUploadObject;
+import org.grad.secom.core.models.SECOM_ExchangeMetadata;
+import org.grad.secom.core.models.UploadObject;
 import org.grad.secom.core.models.enums.AckRequestEnum;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
@@ -52,9 +56,7 @@ import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
@@ -63,43 +65,28 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.net.ssl.SSLException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
 /**
- * The SECOM Service Class.
- *
- * A service to handle the incoming SECOM requests that need additional
- * processing, not covered by the existing services, e.g subscriptions.
+ * The SECOM Subscription Service Class.
+ * <p/>
+ * A service to handle the incoming SECOM subscription requests. Each
+ * subscription is persisted in the database and is handled appropriately
+ * as specified by the SECOM standard.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Service
 @Slf4j
-public class SecomService implements MessageHandler {
-
-    /**
-     * The Service Registry URL.
-     */
-    @Value("${gla.rad.aton-service.service-registry.url:}" )
-    String discoveryServiceUrl;
-
-    /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
+public class SecomSubscriptionService implements MessageHandler {
 
     /**
      * The Entity Manager Factory.
@@ -108,10 +95,10 @@ public class SecomService implements MessageHandler {
     EntityManagerFactory entityManagerFactory;
 
     /**
-     * The Asynchronous Task Executor.
+     * The Model Mapper.
      */
     @Autowired
-    TaskExecutor taskExecutor;
+    ModelMapper modelMapper;
 
     /**
      * The Request Context.
@@ -119,13 +106,6 @@ public class SecomService implements MessageHandler {
     @Autowired
     @Lazy
     Optional<HttpServletRequest> httpServletRequest;
-
-    /**
-     * The Service Registry.
-     */
-    @Autowired
-    @Lazy
-    Optional<WebClient> serviceRegistry;
 
     /**
      * The S-125 Dataset Service.
@@ -138,6 +118,18 @@ public class SecomService implements MessageHandler {
      */
     @Autowired
     UnLoCodeService unLoCodeService;
+
+    /**
+     * The SECOM Service.
+     */
+    @Autowired
+    SecomService secomService;
+
+    /**
+     * The SECOM Subscription Notification Service.
+     */
+    @Autowired
+    SecomSubscriptionNotificationService secomSubscriptionNotificationService;
 
     /**
      * The SECOM Subscription Repo.
@@ -161,7 +153,6 @@ public class SecomService implements MessageHandler {
 
     // Class Variables
     EntityManager entityManager;
-    SecomClient discoveryService;
 
     /**
      * The service post-construct operations where the handler auto-registers
@@ -169,26 +160,7 @@ public class SecomService implements MessageHandler {
      */
     @PostConstruct
     public void init() {
-        log.info("SECOM Service is booting up...");
-        this.discoveryService = Optional.ofNullable(this.discoveryServiceUrl)
-                .filter(StringUtils::isNotBlank)
-                .map(url -> {
-                    try {
-                        return new URL(url);
-                    } catch (MalformedURLException ex) {
-                        this.log.error("Invalid SECOM discovery service URL provided...", ex);
-                        return null;
-                    }
-                })
-                .map(url -> {
-                    try {
-                        return new SecomClient(url, true);
-                    } catch (SSLException ex) {
-                        this.log.error("Unable to initialise the SSL context for the SECOM discovery service...", ex);
-                        return null;
-                    }
-                })
-                .orElse(null);
+        log.info("SECOM Subscription Service is booting up...");
         this.entityManager = this.entityManagerFactory.createEntityManager();
         this.s125PublicationChannel.subscribe(this);
         this.s125DeletionChannel.subscribe(this);
@@ -200,8 +172,7 @@ public class SecomService implements MessageHandler {
      */
     @PreDestroy
     public void destroy() {
-        log.info("SECOM Service is shutting down...");
-        this.discoveryService = null;
+        log.info("SECOM Subscription Service is shutting down...");
         if(this.entityManager != null) {
             this.entityManager.close();
         }
@@ -239,16 +210,16 @@ public class SecomService implements MessageHandler {
             AidsToNavigation aidsToNavigation = (AidsToNavigation) message.getPayload();
 
             // A simple debug message
-            log.debug(String.format("S-125 Web Socket Service received AtoN %s with AtoN number: %s.",
+            log.debug(String.format("SECOM Service received AtoN %s with AtoN number: %s.",
                     deletion ? "deletion" : "publication",
                     aidsToNavigation.getAtonNumber()));
 
             // Handle based on whether this is a deletion or not
             if(!deletion) {
                 // Get the matching subscriptions and inform them
-                this.findAllSubscriptions(aidsToNavigation.getGeometry(),
-                        Optional.of(aidsToNavigation).map(AidsToNavigation::getDateStart).map(ld -> ld.atStartOfDay()).orElse(null),
-                        Optional.of(aidsToNavigation).map(AidsToNavigation::getDateEnd).map(ld -> ld.atTime(LocalTime.MAX)).orElse(null))
+                this.findAll(aidsToNavigation.getGeometry(),
+                                Optional.of(aidsToNavigation).map(AidsToNavigation::getDateStart).map(ld -> ld.atStartOfDay()).orElse(null),
+                                Optional.of(aidsToNavigation).map(AidsToNavigation::getDateEnd).map(ld -> ld.atTime(LocalTime.MAX)).orElse(null))
                         .stream()
                         .forEach(subscription -> this.sendToSubscription(subscription, Collections.singletonList(aidsToNavigation)));
 
@@ -268,9 +239,9 @@ public class SecomService implements MessageHandler {
      * @return the list of Subscription Requests
      */
     @Transactional(readOnly = true)
-    public List<SubscriptionRequest> findAllSubscriptions(Geometry geometry,
-                                                          LocalDateTime fromTime,
-                                                          LocalDateTime toTime) {
+    public List<SubscriptionRequest> findAll(Geometry geometry,
+                                             LocalDateTime fromTime,
+                                             LocalDateTime toTime) {
         log.debug("Request to get Subscription Requests in a search");
         // Create the search query - always sort by name
         SearchQuery<SubscriptionRequest> searchQuery = this.geSubscriptionRequestSearchQuery(
@@ -291,8 +262,19 @@ public class SecomService implements MessageHandler {
      * @param subscriptionRequest the subscription request
      * @return the subscription request generated
      */
-    public SubscriptionRequest saveSubscription(SubscriptionRequest subscriptionRequest) {
+    public SubscriptionRequest save(SubscriptionRequest subscriptionRequest) {
         log.debug("Request to save SECOM subscription : {}", subscriptionRequest);
+
+        // Get the subscription request MRN
+        final String mrn = this.httpServletRequest
+                .map(req -> req.getHeader("MRN"))
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new SecomValidationException("Cannot raise new subscription requests without a provided client MRN"));
+
+        // See if a duplicate subscription request already exists
+        this.secomSubscriptionRepo.findByClientMrn(mrn)
+                .map(this::constructRemoveSubscription)
+                .ifPresent(this::delete);
 
         // Populate the subscription dataset and geometry
         subscriptionRequest.setS125DataSet(Optional.of(subscriptionRequest)
@@ -306,13 +288,9 @@ public class SecomService implements MessageHandler {
         final SubscriptionRequest savedSubscriptionRequest = this.secomSubscriptionRepo.save(subscriptionRequest);
 
         // Inform to the subscription client (identify through MRN) - asynchronous
-        this.taskExecutor.execute(() -> {
-            final SecomClient secomClient = this.getSecomClient(savedSubscriptionRequest.getClientMrn());
-            SubscriptionNotificationObject subscriptionNotificationObject = new SubscriptionNotificationObject();
-            subscriptionNotificationObject.setSubscriptionIdentifier(savedSubscriptionRequest.getUuid());
-            subscriptionNotificationObject.setEventEnum(SubscriptionEventEnum.SUBSCRIPTION_CREATED);
-            secomClient.subscriptionNotification(subscriptionNotificationObject);
-        });
+        this.secomSubscriptionNotificationService.sendNotification(subscriptionRequest.getClientMrn(),
+                savedSubscriptionRequest.getUuid(),
+                SubscriptionEventEnum.SUBSCRIPTION_CREATED);
 
         // Now save for each type
         return savedSubscriptionRequest;
@@ -325,7 +303,7 @@ public class SecomService implements MessageHandler {
      * @param removeSubscription the remove subscription
      * @return the subscription identifier UUID removed
      */
-    public UUID deleteSubscription(RemoveSubscription removeSubscription) {
+    public UUID delete(RemoveSubscription removeSubscription) {
         log.debug("Request to delete SECOM subscription : {}", removeSubscription);
 
         // Look for the subscription and delete it if found
@@ -338,37 +316,12 @@ public class SecomService implements MessageHandler {
         this.secomSubscriptionRepo.delete(subscriptionRequest);
 
         // Inform to the subscription client (identify through MRN) - asynchronous
-        this.taskExecutor.execute(() -> {
-            final SecomClient secomClient = this.getSecomClient(subscriptionRequest.getClientMrn());
-            SubscriptionNotificationObject subscriptionNotificationObject = new SubscriptionNotificationObject();
-            subscriptionNotificationObject.setSubscriptionIdentifier(removeSubscription.getSubscriptionIdentifier());
-            subscriptionNotificationObject.setEventEnum(SubscriptionEventEnum.SUBSCRIPTION_REMOVED);
-            secomClient.subscriptionNotification(subscriptionNotificationObject);
-        });
+        this.secomSubscriptionNotificationService.sendNotification(subscriptionRequest.getClientMrn(),
+                subscriptionRequest.getUuid(),
+                SubscriptionEventEnum.SUBSCRIPTION_REMOVED);
 
         // If all OK, then return the subscription UUID
         return removeSubscription.getSubscriptionIdentifier();
-    }
-
-    /**
-     * This helper function is to be used to implement the SECOM exchange
-     * metadata population operation, by acquiring a signature for the
-     * provided payload.
-     *
-     * @param payload the payload to be signed
-     * @return the service exchange metadata with the signature information
-     */
-    public Pair<String, SECOM_ExchangeMetadata> signPayload(String payload) {
-        // Sign the payload
-        final String signedPayload = Base64.getEncoder().encodeToString(payload.getBytes());
-
-        // Generate the SECOM metadata
-        final SECOM_ExchangeMetadata serviceExchangeMetadata = new SECOM_ExchangeMetadata();
-        serviceExchangeMetadata.setDataProtection(false);
-        serviceExchangeMetadata.setCompressionFlag(false);
-
-        // And return the information tuple
-        return new Pair<>(signedPayload, serviceExchangeMetadata);
     }
 
     /**
@@ -383,12 +336,6 @@ public class SecomService implements MessageHandler {
      * @param aidsToNavigationList the list of Aids to Navigation to be pushed
      */
     protected void sendToSubscription(SubscriptionRequest subscriptionRequest, List<AidsToNavigation> aidsToNavigationList) {
-        // First make sure the service registry is available
-        if(this.serviceRegistry.isEmpty()) {
-            log.warn("Subscription request found for S-125 dataset updates but no connection to service registry");
-            return;
-        }
-
         // Make sure we also have an MRN for the subscribed client
         if(Objects.isNull(subscriptionRequest.getClientMrn())) {
             log.warn("Subscription request found for S-125 dataset updates but no client MRN");
@@ -396,12 +343,12 @@ public class SecomService implements MessageHandler {
         }
 
         // Identify the subscription client if possible through the client MRN
-        final SecomClient secomClient = this.getSecomClient(subscriptionRequest.getClientMrn());
+        final SecomClient secomClient = this.secomService.getClient(subscriptionRequest.getClientMrn());
 
         // Build the upload object
         UploadObject uploadObject = new UploadObject();
         EnvelopeUploadObject envelopeUploadObject = new EnvelopeUploadObject();
-        Pair<String, SECOM_ExchangeMetadata> signedData = signPayload(GlobalConfig.convertTos125DataSet(this.modelMapper, aidsToNavigationList));
+        Pair<String, SECOM_ExchangeMetadata> signedData = this.secomService.signPayload(GlobalConfig.convertTos125DataSet(this.modelMapper, aidsToNavigationList));
         envelopeUploadObject.setData(signedData.getKey());
         envelopeUploadObject.setExchangeMetadata(signedData.getValue());
         envelopeUploadObject.setContainerType(ContainerTypeEnum.S100_DataSet);
@@ -417,43 +364,16 @@ public class SecomService implements MessageHandler {
     }
 
     /**
-     * Based on an MRN provided, this function will contact the SECOM discovery
-     * service (in this case it's the MCP MSR) and request the client endpoint
-     * URI. It will then construct a SECOM client to be returned for the URI
-     * discovered.
+     * A helper function that quickly constructs a RemoveSubscription request
+     * based on the provided subscription Identifier.
      *
-     * @param mrn the MRN to be lookup up
-     * @return the SECOM client for the endpoint matching the provided URI
+     * @param subscriptionRequest the subscription request
+     * @return the remove subscription request
      */
-    protected SecomClient getSecomClient(String mrn) {
-        // Validate the MRN
-        Optional.ofNullable(mrn)
-                .filter(StringUtils::isNotBlank)
-                .orElseThrow(() -> new SecomValidationException("Cannot request a service discovery for an empty/invalid MRN"));
-
-        // Create the discovery service search filter object for the provided MRN
-        final SearchFilterObject searchFilterObject = new SearchFilterObject();
-        searchFilterObject.setQuery(String.format("instanceId:\"%s\"", mrn));
-
-        // Lookup the endpoints of the clients from the SECOM discovery service
-        final Optional<SearchObjectResult[]> instances = Optional.ofNullable(discoveryService)
-                .map(ds -> ds.search(searchFilterObject, 0, Integer.MAX_VALUE))
-                .orElse(Optional.empty());
-
-        // Extract the latest matching instance
-        final SearchObjectResult instance = instances.map(Arrays::asList)
-                .orElse(Collections.emptyList())
-                .stream()
-                .max(Comparator.comparing(SearchObjectResult::getVersion))
-                .orElseThrow(() -> new SecomNotFoundException(mrn));
-
-        // Now construct and return a SECOM client for the discovered URI
-        try {
-            return new SecomClient(new URL(instance.getEndpointUri()), false);
-        } catch (SSLException | MalformedURLException ex) {
-            this.log.error(ex.getMessage(), ex);
-            throw new SecomValidationException(ex.getMessage());
-        }
+    protected RemoveSubscription constructRemoveSubscription(SubscriptionRequest subscriptionRequest) {
+        RemoveSubscription removeSubscription = new RemoveSubscription();
+        removeSubscription.setSubscriptionIdentifier(subscriptionRequest.getUuid());
+        return removeSubscription;
     }
 
     /**
