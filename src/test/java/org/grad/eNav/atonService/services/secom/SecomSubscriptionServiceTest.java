@@ -187,9 +187,6 @@ class SecomSubscriptionServiceTest {
         this.aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(52.98, 28)));
         this.aidsToNavigation.setDateStart(LocalDate.now());
         this.aidsToNavigation.setDateEnd(LocalDate.now());
-
-        // We need to use the actual Spring model mapper to pick up the type-maps
-        this.secomSubscriptionService.modelMapper = new GlobalConfig().modelMapper();
     }
 
     /**
@@ -485,6 +482,9 @@ class SecomSubscriptionServiceTest {
      */
     @Test
     void testSendToSubscription() {
+        // We need to use the actual Spring model mapper to pick up the type-maps
+        this.secomSubscriptionService.modelMapper = new GlobalConfig().modelMapper();
+
         // Mock a SECOM client
         final SecomClient secomClient = mock(SecomClient.class);
         doReturn(secomClient).when(this.secomService).getClient(this.existingSubscriptionRequest.getClientMrn());
