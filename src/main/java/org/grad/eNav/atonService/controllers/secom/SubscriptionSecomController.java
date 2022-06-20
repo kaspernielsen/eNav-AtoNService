@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
-import org.grad.eNav.atonService.services.SecomService;
+import org.grad.eNav.atonService.services.secom.SecomSubscriptionService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.interfaces.SubscriptionSecomInterface;
 import org.grad.secom.core.models.SubscriptionRequestObject;
@@ -55,7 +55,7 @@ public class SubscriptionSecomController implements SubscriptionSecomInterface {
      * The SECOM Service.
      */
     @Autowired
-    SecomService secomService;
+    SecomSubscriptionService secomSubscriptionService;
 
     /**
      * POST /api/secom/v1/subscription : Request subscription on information,
@@ -69,7 +69,7 @@ public class SubscriptionSecomController implements SubscriptionSecomInterface {
     public SubscriptionResponseObject subscription(@Valid SubscriptionRequestObject subscriptionRequestObject) {
         final SubscriptionRequest subscriptionRequest = Optional.ofNullable(subscriptionRequestObject)
                 .map(dto -> this.subscriptionRequestDomainMapper.convertTo(dto, SubscriptionRequest.class))
-                .map(this.secomService::saveSubscription)
+                .map(this.secomSubscriptionService::save)
                 .filter(req -> Objects.nonNull(req.getUuid()))
                 .orElseThrow(() -> new SecomNotFoundException("UUID"));
 

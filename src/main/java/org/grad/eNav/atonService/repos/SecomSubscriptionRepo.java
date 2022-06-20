@@ -19,6 +19,7 @@ package org.grad.eNav.atonService.repos;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -27,5 +28,14 @@ import java.util.UUID;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public interface SecomSubscriptionRepo extends JpaRepository<SubscriptionRequest, UUID> {
+
+    /**
+     * Retrieves a database entry based on the subscription request MRN, if that
+     * exists.
+     *
+     * @param clientMrn the subscription request client MRN
+     * @return The subscription request if that exists
+     */
+    Optional<SubscriptionRequest> findByClientMrn(String clientMrn);
 
 }
