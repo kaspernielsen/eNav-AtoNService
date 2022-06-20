@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.ValidationException;
@@ -124,6 +125,7 @@ public class GetSecomController implements GetSecomInterface {
      * @return the S-125 dataset information
      */
     @Tag(name = "SECOM")
+    @Transactional
     public GetResponseObject get(@QueryParam("dataReference") UUID dataReference,
                                  @QueryParam("containerType") ContainerTypeEnum containerType,
                                  @QueryParam("dataProductType") SECOM_DataProductType dataProductType,
