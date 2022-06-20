@@ -41,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.ValidationException;
@@ -109,7 +108,6 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
      * @return the S-125 dataset summary information
      */
     @Tag(name = "SECOM")
-    @Transactional
     public GetSummaryResponseObject getSummary(@QueryParam("containerType") ContainerTypeEnum containerType,
                                                @QueryParam("dataProductType") SECOM_DataProductType dataProductType,
                                                @QueryParam("productVersion") String productVersion,

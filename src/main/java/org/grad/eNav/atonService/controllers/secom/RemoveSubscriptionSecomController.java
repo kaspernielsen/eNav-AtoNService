@@ -68,7 +68,6 @@ public class RemoveSubscriptionSecomController implements RemoveSubscriptionSeco
      * @return the remove subscription response object
      */
     @Tag(name = "SECOM")
-    @Transactional
     public RemoveSubscriptionResponseObject removeSubscription(@Valid RemoveSubscriptionObject removeSubscriptionObject) {
         final UUID subscriptionIdentifier = Optional.ofNullable(removeSubscriptionObject)
                 .map(dto -> this.removeSubscriptionDomainMapper.convertTo(dto, RemoveSubscription.class))

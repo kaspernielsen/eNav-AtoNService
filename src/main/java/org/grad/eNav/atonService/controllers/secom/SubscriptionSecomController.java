@@ -27,7 +27,6 @@ import org.grad.secom.core.models.SubscriptionRequestObject;
 import org.grad.secom.core.models.SubscriptionResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
@@ -67,7 +66,6 @@ public class SubscriptionSecomController implements SubscriptionSecomInterface {
      * @return the subscription response object
      */
     @Tag(name = "SECOM")
-    @Transactional
     public SubscriptionResponseObject subscription(@Valid SubscriptionRequestObject subscriptionRequestObject) {
         final SubscriptionRequest subscriptionRequest = Optional.ofNullable(subscriptionRequestObject)
                 .map(dto -> this.subscriptionRequestDomainMapper.convertTo(dto, SubscriptionRequest.class))
