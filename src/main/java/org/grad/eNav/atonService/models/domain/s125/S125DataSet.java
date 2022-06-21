@@ -94,9 +94,7 @@ public class S125DataSet {
      * Instantiates a new Dataset.
      */
     public S125DataSet() {
-        this.datasetIdentificationInformation = new S125DataSetIdentification(
-                "auto_generated_s_125_dataset" + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-        );
+        this("auto_generated_s_125_dataset" + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     }
 
     /**
@@ -105,6 +103,7 @@ public class S125DataSet {
      * @param datasetFileIdentifier the dataset file identifier
      */
     public S125DataSet(String datasetFileIdentifier) {
+        this.uuid = UUID.randomUUID();
         this.datasetIdentificationInformation = new S125DataSetIdentification(datasetFileIdentifier);
     }
 

@@ -208,7 +208,9 @@ public class GetSecomController implements GetSecomInterface {
         dataResponseObject.setData(signedTuple.getKey());
         dataResponseObject.setExchangeMetadata(signedTuple.getValue());
         getResponseObject.setDataResponseObject(dataResponseObject);
-        getResponseObject.setPagination(new PaginationObject((int)atonPage.getTotalElements(), atonPage.getSize()));
+        getResponseObject.setPagination(new PaginationObject(
+                (int) atonPage.getTotalElements(),
+                Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)));
 
         // And final return the Get Response Object
         return getResponseObject;

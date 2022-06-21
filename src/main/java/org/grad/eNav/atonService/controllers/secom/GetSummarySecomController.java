@@ -190,7 +190,9 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
         // Start building the response
         final GetSummaryResponseObject getSummaryResponseObject = new GetSummaryResponseObject();
         getSummaryResponseObject.setSummaryObject(data);
-        getSummaryResponseObject.setPagination(new PaginationObject((int) s125DataSetPage.getTotalElements(), s125DataSetPage.getSize()));
+        getSummaryResponseObject.setPagination(new PaginationObject(
+                (int) s125DataSetPage.getTotalElements(),
+                Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)));
 
         // And return the Get Summary Response Object
         return getSummaryResponseObject;
