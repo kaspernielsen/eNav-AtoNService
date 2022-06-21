@@ -125,7 +125,7 @@ class SubscriptionSecomControllerTest {
 
     /**
      * Test that the SECOM Subscription interface will return an HTTP Status
-     * BAD_REQUEST if a method other than a get is requested.
+     * METHOD_NOT_ALLOWED if a method other than a get is requested.
      */
     @Test
     void testSubscriptionMethodNotAllowed() {

@@ -19,6 +19,7 @@ package org.grad.eNav.atonService.controllers.secom;
 import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.services.secom.SecomSubscriptionService;
+import org.grad.secom.core.exceptions.SecomValidationException;
 import org.grad.secom.core.models.RemoveSubscriptionObject;
 import org.grad.secom.core.models.RemoveSubscriptionResponseObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -38,10 +40,12 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 import static org.grad.secom.core.interfaces.RemoveSubscriptionSecomInterface.REMOVE_SUBSCRIPTION_INTERFACE_PATH;
+import static org.grad.secom.core.interfaces.SubscriptionSecomInterface.SUBSCRIPTION_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
@@ -92,6 +96,36 @@ class RemoveSubscriptionSecomControllerTest {
                     assertNotNull(removeSubscriptionResponseObject);
                     assertEquals(String.format("Subscription %s removed", removeSubscriptionObject.getSubscriptionIdentifier()), removeSubscriptionResponseObject.getResponseText());
                 });
+    }
+
+    /**
+     * Test that the SECOM Remnove Subscription interface will return an HTTP
+     * Status BAD_REQUEST if a validation error occurs.
+     */
+    @Test
+    void testSubscriptionBadRequest() {
+        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any());
+
+        webTestClient.post()
+                .uri("/api/secom" + SUBSCRIPTION_INTERFACE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just(removeSubscriptionObject), RemoveSubscriptionObject.class))
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    /**
+     * Test that the SECOM Remove Subscription interface will return an HTTP
+     * Status METHOD_NOT_ALLOWED if a method other than a get is requested.
+     */
+    @Test
+    void testSubscriptionMethodNotAllowed() {
+        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any());
+
+        webTestClient.get()
+                .uri("/api/secom" + SUBSCRIPTION_INTERFACE_PATH)
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }
 
 }
