@@ -187,7 +187,7 @@ class GetSummarySecomControllerTest {
                     assertEquals(this.s125DataSet.getLastUpdatedAt(), getSummaryResponseObject.getSummaryObject().get(0).getInfo_lastModifiedDate());
                     assertNotNull(getSummaryResponseObject.getPagination());
                     assertEquals(Integer.MAX_VALUE, getSummaryResponseObject.getPagination().getMaxItemsPerPage());
-                    assertEquals(0, getSummaryResponseObject.getPagination().getTotalItems());
+                    assertEquals(1, getSummaryResponseObject.getPagination().getTotalItems());
                 });
     }
 

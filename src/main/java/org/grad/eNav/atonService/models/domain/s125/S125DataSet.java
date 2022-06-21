@@ -103,7 +103,6 @@ public class S125DataSet {
      * @param datasetFileIdentifier the dataset file identifier
      */
     public S125DataSet(String datasetFileIdentifier) {
-        this.uuid = UUID.randomUUID();
         this.datasetIdentificationInformation = new S125DataSetIdentification(datasetFileIdentifier);
     }
 
