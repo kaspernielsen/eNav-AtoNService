@@ -31,10 +31,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class S125DatasetBuilder {
@@ -68,6 +65,11 @@ public class S125DatasetBuilder {
     public DataSet packageToDataset(S125DataSet s125Dataset, List<AidsToNavigation> atons) {
         // Initialise the dataset
         DataSet dataset = this.modelMapper.map(s125Dataset, DataSet.class);
+
+        // Always use a UUID as an ID
+        if(Objects.isNull(dataset.getId())) {
+            dataset.setId(Optional.ofNullable(s125Dataset).map(S125DataSet::getUuid).orElse(UUID.randomUUID()).toString());
+        }
 
         //====================================================================//
         //                       BOUNDED BY SECTION                           //
