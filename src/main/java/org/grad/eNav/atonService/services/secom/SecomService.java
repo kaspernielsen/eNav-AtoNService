@@ -135,7 +135,7 @@ public class SecomService {
 
         // Now construct and return a SECOM client for the discovered URI
         try {
-            return new SecomClient(new URL(instance.getEndpointUri()), false);
+            return new SecomClient(new URL(instance.getEndpointUri()), instance.getEndpointUri().startsWith("https://"));
         } catch (SSLException | MalformedURLException ex) {
             this.log.error(ex.getMessage(), ex);
             throw new SecomValidationException(ex.getMessage());
