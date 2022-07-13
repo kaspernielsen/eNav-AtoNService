@@ -199,13 +199,13 @@ public class SecomSubscriptionService implements MessageHandler {
         SECOM_DataProductType contentType = message.getHeaders().get(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.class);
         Boolean deletion = message.getHeaders().get("deletion", Boolean.class);
 
-        // Only listen to S-125 data product messages
-        if(contentType != SECOM_DataProductType.S125) {
+        // Only listen to valid content types
+        if(Objects.isNull(contentType)) {
             return;
         }
 
         // Handle only messages that seem valid
-        if(message.getPayload() instanceof AidsToNavigation) {
+        if(SECOM_DataProductType.S125.equals(contentType) && message.getPayload() instanceof AidsToNavigation) {
             // Get the payload of the incoming message
             AidsToNavigation aidsToNavigation = (AidsToNavigation) message.getPayload();
 
@@ -221,6 +221,8 @@ public class SecomSubscriptionService implements MessageHandler {
                                 Optional.of(aidsToNavigation).map(AidsToNavigation::getDateStart).map(ld -> ld.atStartOfDay()).orElse(null),
                                 Optional.of(aidsToNavigation).map(AidsToNavigation::getDateEnd).map(ld -> ld.atTime(LocalTime.MAX)).orElse(null))
                         .stream()
+                        .filter(subscription -> ContainerTypeEnum.S100_DataSet.equals(subscription.getContainerType()))
+                        .filter(subscription -> SECOM_DataProductType.S125.equals(subscription.getDataProductType()))
                         .forEach(subscription -> this.sendToSubscription(subscription, Collections.singletonList(aidsToNavigation)));
 
             }
