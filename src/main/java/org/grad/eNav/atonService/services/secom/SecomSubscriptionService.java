@@ -400,14 +400,14 @@ public class SecomSubscriptionService implements MessageHandler {
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
                             b.must(f.matchAll());
-                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
-                                    .field("subscriptionPeriodStart")
-                                    .atLeast(toTime)));
-                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
-                                    .field("subscriptionPeriodEnd")
-                                    .atMost(fromTime)));
                             Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
+                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
+                                    .field("subscriptionPeriodEnd")
+                                    .atLeast(fromTime)));
+                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
+                                    .field("subscriptionPeriodStart")
+                                    .atMost(toTime)));
                         })
                 )
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
