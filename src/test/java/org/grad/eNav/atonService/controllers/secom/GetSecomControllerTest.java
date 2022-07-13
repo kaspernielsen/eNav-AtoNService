@@ -87,7 +87,6 @@ class GetSecomControllerTest {
     @MockBean
     UnLoCodeService unLoCodeService;
 
-
     // Test Variables
     private GeometryFactory geometryFactory;
     private UUID queryDataReference;

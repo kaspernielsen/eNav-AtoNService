@@ -24,6 +24,7 @@ import org.grad.secom.core.exceptions.SecomValidationException;
 import org.grad.secom.core.models.SECOM_ExchangeMetadata;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
+import org.grad.secom.core.models.SearchParameters;
 import org.grad.secom.springboot.components.SecomClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -116,7 +117,9 @@ public class SecomService {
 
         // Create the discovery service search filter object for the provided MRN
         final SearchFilterObject searchFilterObject = new SearchFilterObject();
-        searchFilterObject.setQuery(String.format("instanceId:\"%s\"", mrn));
+        final SearchParameters searchParameters = new SearchParameters();
+        searchParameters.setInstanceId(mrn);
+        searchFilterObject.setQuery(searchParameters);
 
         // Lookup the endpoints of the clients from the SECOM discovery service
         final Optional<SearchObjectResult[]> instances = Optional.ofNullable(discoveryService)

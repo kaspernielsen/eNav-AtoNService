@@ -302,7 +302,7 @@ class SecomSubscriptionServiceTest {
         SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
         doReturn(searchResult).when(mockedQuery).fetchAll();
         doReturn(Collections.singletonList(this.existingSubscriptionRequest)).when(searchResult).hits();
-        doReturn(mockedQuery).when(this.secomSubscriptionService).geSubscriptionRequestSearchQuery(any(), any(), any(), any());
+        doReturn(mockedQuery).when(this.secomSubscriptionService).getSubscriptionRequestSearchQuery(any(), any(), any(), any());
 
         // Perform the service call
         List<SubscriptionRequest> result = this.secomSubscriptionService.findAll(this.existingSubscriptionRequest.getGeometry(), null, null);
