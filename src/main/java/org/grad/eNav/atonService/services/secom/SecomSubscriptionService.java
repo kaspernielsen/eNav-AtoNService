@@ -244,7 +244,7 @@ public class SecomSubscriptionService implements MessageHandler {
                                              LocalDateTime toTime) {
         log.debug("Request to get Subscription Requests in a search");
         // Create the search query - always sort by name
-        SearchQuery<SubscriptionRequest> searchQuery = this.geSubscriptionRequestSearchQuery(
+        SearchQuery<SubscriptionRequest> searchQuery = this.getSubscriptionRequestSearchQuery(
                 geometry,
                 fromTime,
                 toTime,
@@ -390,10 +390,10 @@ public class SecomSubscriptionService implements MessageHandler {
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<SubscriptionRequest> geSubscriptionRequestSearchQuery(Geometry geometry,
-                                                                                LocalDateTime fromTime,
-                                                                                LocalDateTime toTime,
-                                                                                Sort sort) {
+    protected SearchQuery<SubscriptionRequest> getSubscriptionRequestSearchQuery(Geometry geometry,
+                                                                                 LocalDateTime fromTime,
+                                                                                 LocalDateTime toTime,
+                                                                                 Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<SubscriptionRequest> scope = searchSession.scope( SubscriptionRequest.class );
@@ -402,10 +402,10 @@ public class SecomSubscriptionService implements MessageHandler {
                             b.must(f.matchAll());
                             Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
                                     .field("subscriptionPeriodStart")
-                                    .atMost(toTime)));
+                                    .atLeast(toTime)));
                             Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
                                     .field("subscriptionPeriodEnd")
-                                    .atLeast(fromTime)));
+                                    .atMost(fromTime)));
                             Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
                         })
