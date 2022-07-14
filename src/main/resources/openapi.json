@@ -15,6 +15,8 @@
     },
     "servers": [
       {
+        "url": "https://rnavlab.gla-rad.org/aton-service"
+      },{
         "url": "http://enav.grad-rrnav.pub/aton-service"
       }, {
         "url": "http://zombie:8766"
