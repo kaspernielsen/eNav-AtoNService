@@ -26,14 +26,20 @@ import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.SearchParameters;
 import org.grad.secom.springboot.components.SecomClient;
+import org.grad.secom.springboot.components.SecomConfigProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.*;
 
 /**
@@ -53,6 +59,12 @@ public class SecomService {
      */
     @Value("${gla.rad.aton-service.service-registry.url:}" )
     String discoveryServiceUrl;
+
+    /**
+     * The SECOM Configuration Properties.
+     */
+    @Autowired
+    SecomConfigProperties secomConfigProperties;
 
     // Class Variables
     SecomClient discoveryService;
@@ -76,8 +88,8 @@ public class SecomService {
                 })
                 .map(url -> {
                     try {
-                        return new SecomClient(url, true);
-                    } catch (SSLException ex) {
+                        return new SecomClient(url, secomConfigProperties);
+                    } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException ex) {
                         this.log.error("Unable to initialise the SSL context for the SECOM discovery service...", ex);
                         return null;
                     }
@@ -135,8 +147,8 @@ public class SecomService {
 
         // Now construct and return a SECOM client for the discovered URI
         try {
-            return new SecomClient(new URL(instance.getEndpointUri()), instance.getEndpointUri().startsWith("https://"));
-        } catch (SSLException | MalformedURLException ex) {
+            return new SecomClient(new URL(instance.getEndpointUri()), secomConfigProperties);
+        } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException ex) {
             this.log.error(ex.getMessage(), ex);
             throw new SecomValidationException(ex.getMessage());
         }
