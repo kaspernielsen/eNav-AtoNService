@@ -17,9 +17,11 @@
 package org.grad.eNav.atonService.controllers.secom;
 
 import _int.iala_aism.s125.gml._0_0.DataSet;
+import feign.Response;
 import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
@@ -30,6 +32,7 @@ import org.grad.secom.core.models.enums.ContainerTypeEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
 import org.locationtech.geomesa.utils.interop.WKTUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -43,21 +46,23 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import javax.xml.bind.JAXBException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
+import static org.grad.eNav.atonService.components.SecomSignatureProviderImpl.*;
 import static org.grad.secom.core.interfaces.GetSecomInterface.GET_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 
+@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
 @Import({TestingConfiguration.class, TestFeignSecurityConfig.class})
@@ -86,6 +91,12 @@ class GetSecomControllerTest {
      */
     @MockBean
     UnLoCodeService unLoCodeService;
+
+    /**
+     * The cKeeper Client mock.
+     */
+    @MockBean
+    CKeeperClient cKeeperClient;
 
     // Test Variables
     private GeometryFactory geometryFactory;
@@ -142,7 +153,20 @@ class GetSecomControllerTest {
      * expected Get Response Object output.
      */
     @Test
-    void testGetSummary() {
+    void testGet() throws IOException {
+        // Mock a cKeeper response
+        Response signatureResponse = mock(Response.class);
+        Map<String, Collection<String>> headers = new HashMap();
+        headers.put(CKEEPER_PUBLIC_CERTIFICATE_HEADER, Collections.singletonList("certificate"));
+        headers.put(CKEEPER_SIGNATURE_ALGORITHM_HEADER, Collections.singletonList("algorithm"));
+        headers.put(CKEEPER_ROOT_CERTIFICATE_THUMBPRINT, Collections.singletonList("thumbprint"));
+        Response.Body signatureBody = mock(Response.Body.class);
+        doReturn(new ByteArrayInputStream("signature".getBytes())).when(signatureBody).asInputStream();
+        doReturn(headers).when(signatureResponse).headers();
+        doReturn(signatureBody).when(signatureResponse).body();
+        doReturn(signatureResponse).when(this.cKeeperClient).generateEntitySignature(any(), any(), any(), any());
+
+        // Mock the rest
         doReturn(this.s125DataSet).when(this.datasetService).findOne(any());
         doReturn(new PageImpl<>(Collections.emptyList(), Pageable.ofSize(1), 0))
                 .when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
@@ -171,6 +195,14 @@ class GetSecomControllerTest {
                     assertNotNull(1, getResponseObject.getDataResponseObject().getData());
                     assertNotNull(getResponseObject.getPagination());
                     assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata());
+                    assertEquals(Boolean.TRUE, getResponseObject.getDataResponseObject().getExchangeMetadata().getDataProtection());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getExchangeMetadata().getCompressionFlag());
+                    assertEquals(DATA_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getExchangeMetadata().getProtectionScheme());
+                    assertEquals("algorithm", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());
+                    assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue());
+                    assertEquals("7369676E6174757265", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
+                    assertEquals("certificate", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
+                    assertEquals("thumbprint", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
                     assertEquals(Integer.MAX_VALUE, getResponseObject.getPagination().getMaxItemsPerPage());
                     assertEquals(0, getResponseObject.getPagination().getTotalItems());
 
@@ -244,11 +276,11 @@ class GetSecomControllerTest {
 
     /**
      * Test that the SECOM Get interface will return an HTTP Status
-     * METHOD_NOT_ALLOWED if a method other than a get is requested.
+     * METHOD_NOT_ALLOWED if a method other than a GET is requested.
      */
     @Test
     void testGetMethodNotAllowed() {
-        webTestClient.post()
+        webTestClient.delete()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/secom" + GET_INTERFACE_PATH)
                         .queryParam("dataReference", this.queryDataReference)

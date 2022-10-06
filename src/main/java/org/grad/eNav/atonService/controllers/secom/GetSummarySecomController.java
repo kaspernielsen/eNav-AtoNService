@@ -112,13 +112,13 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
                                                @QueryParam("validTo") LocalDateTime validTo,
                                                @QueryParam("page") @Min(0) Integer page,
                                                @QueryParam("pageSize") @Min(0) Integer pageSize) {
-        this.log.debug("SECOM request to get page of Dataset Summary");
-        Optional.ofNullable(containerType).ifPresent(v -> this.log.debug("Container Type specified as: {}", containerType));
-        Optional.ofNullable(dataProductType).ifPresent(v -> this.log.debug("Data Product Type specified as: {}", dataProductType));
-        Optional.ofNullable(geometry).ifPresent(v -> this.log.debug("Geometry specified as: {}", geometry));
-        Optional.ofNullable(unlocode).ifPresent(v -> this.log.debug("UNLOCODE specified as: {}", unlocode));
-        Optional.ofNullable(validFrom).ifPresent(v -> this.log.debug("Valid From time specified as: {}", validFrom));
-        Optional.ofNullable(validTo).ifPresent(v -> this.log.debug("Valid To time specified as: {}", validTo));
+        log.debug("SECOM request to get page of Dataset Summary");
+        Optional.ofNullable(containerType).ifPresent(v -> log.debug("Container Type specified as: {}", containerType));
+        Optional.ofNullable(dataProductType).ifPresent(v -> log.debug("Data Product Type specified as: {}", dataProductType));
+        Optional.ofNullable(geometry).ifPresent(v -> log.debug("Geometry specified as: {}", geometry));
+        Optional.ofNullable(unlocode).ifPresent(v -> log.debug("UNLOCODE specified as: {}", unlocode));
+        Optional.ofNullable(validFrom).ifPresent(v -> log.debug("Valid From time specified as: {}", validFrom));
+        Optional.ofNullable(validTo).ifPresent(v -> log.debug("Valid To time specified as: {}", validTo));
 
         // Init local variables
         Geometry reqGeometry = null;

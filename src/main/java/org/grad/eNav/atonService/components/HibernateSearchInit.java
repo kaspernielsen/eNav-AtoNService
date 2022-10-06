@@ -25,8 +25,8 @@ import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.massindexing.MassIndexer;
 import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.hibernate.search.util.common.SearchException;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
@@ -42,9 +42,9 @@ import javax.transaction.Transactional;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Component
+@Component()
 @Slf4j
-public class HibernateSearchInit implements ApplicationListener<ContextRefreshedEvent> {
+public class HibernateSearchInit implements ApplicationListener<ApplicationReadyEvent> {
 
     /**
      * The Entity Manager.
@@ -59,7 +59,7 @@ public class HibernateSearchInit implements ApplicationListener<ContextRefreshed
      */
     @Override
     @Transactional
-    public void onApplicationEvent(ContextRefreshedEvent event) {
+    public void onApplicationEvent(ApplicationReadyEvent event) {
         // Once the application has booted up, access the search session
         SearchSession searchSession = Search.session( entityManager );
 

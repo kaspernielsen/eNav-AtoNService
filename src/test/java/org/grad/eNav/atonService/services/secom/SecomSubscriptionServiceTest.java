@@ -16,8 +16,9 @@
 
 package org.grad.eNav.atonService.services.secom;
 
+import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
+import org.grad.eNav.atonService.components.SecomSignatureValidatorImpl;
 import org.grad.eNav.atonService.config.GlobalConfig;
-import org.grad.eNav.atonService.models.domain.Pair;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
@@ -27,7 +28,6 @@ import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
-import org.grad.secom.core.models.SECOM_ExchangeMetadata;
 import org.grad.secom.core.models.UploadObject;
 import org.grad.secom.core.models.enums.AckRequestEnum;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
@@ -58,6 +58,7 @@ import org.springframework.messaging.MessageHeaders;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -122,6 +123,18 @@ class SecomSubscriptionServiceTest {
      */
     @Mock
     SecomSubscriptionNotificationService secomSubscriptionNotificationService;
+
+    /**
+     * The SECOM Signature Provider implementation mock.
+     */
+    @Mock
+    SecomSignatureProviderImpl signatureProvider;
+
+    /**
+     * The SECOM Signature Validator implementation mock.
+     */
+    @Mock
+    SecomSignatureValidatorImpl signatureValidator;
 
     /**
      * The SECOM Subscription Repo mock.
@@ -481,14 +494,13 @@ class SecomSubscriptionServiceTest {
      * the SECOM client discovered through the SECOM service.
      */
     @Test
-    void testSendToSubscription() {
+    void testSendToSubscription() throws IOException {
         // We need to use the actual Spring model mapper to pick up the type-maps
         this.secomSubscriptionService.modelMapper = new GlobalConfig().modelMapper();
 
         // Mock a SECOM client
         final SecomClient secomClient = mock(SecomClient.class);
         doReturn(secomClient).when(this.secomService).getClient(this.existingSubscriptionRequest.getClientMrn());
-        doReturn(new Pair<>("signature", new SECOM_ExchangeMetadata())).when(this.secomService).signPayload(any());
 
         // Perform the service call
         this.secomSubscriptionService.sendToSubscription(this.existingSubscriptionRequest, Collections.singletonList(this.aidsToNavigation));
@@ -500,9 +512,7 @@ class SecomSubscriptionServiceTest {
         // Verify that the constructed object seems valid
         assertNotNull(uploadArgument.getValue());
         assertNotNull(uploadArgument.getValue().getEnvelope());
-        assertEquals("signature", uploadArgument.getValue().getEnvelope().getData());
-        assertNotNull(uploadArgument.getValue().getEnvelope().getExchangeMetadata());
-        assertEquals(ContainerTypeEnum.S100_DataSet, uploadArgument.getValue().getEnvelope().getContainerType());
+        assertTrue(uploadArgument.getValue().getEnvelope().getData().length()> 0);
         assertEquals(SECOM_DataProductType.S125, uploadArgument.getValue().getEnvelope().getDataProductType());
         assertEquals(Boolean.TRUE, uploadArgument.getValue().getEnvelope().getFromSubscription());
         assertEquals(AckRequestEnum.NO_ACK_REQUESTED, uploadArgument.getValue().getEnvelope().getAckRequest());

@@ -16,9 +16,7 @@
 
 package org.grad.eNav.atonService.services.secom;
 
-import org.grad.eNav.atonService.models.domain.Pair;
 import org.grad.secom.core.exceptions.SecomValidationException;
-import org.grad.secom.core.models.SECOM_ExchangeMetadata;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.springboot.components.SecomClient;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +27,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Base64;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -134,25 +131,4 @@ class SecomServiceTest {
         assertThrows(SecomValidationException.class, () -> this.secomService.getClient("urn:mrn:org:test"));
     }
 
-    /**
-     * Test that the SECOM service will encode the provided payloads using
-     * Base64 encoding and will also generate a signature using the CKeeper
-     * microservice functionality.
-     *
-     * TODO: Implement the CKeeper functionality
-     */
-    @Test
-    void testSignPayload() {
-        // Create a test payload
-        String payload = "This is a test payload";
-
-        // Perform the service call
-        Pair<String, SECOM_ExchangeMetadata> result = this.secomService.signPayload(payload);
-
-        // Make sure the result seems UK
-        assertNotNull(result);
-        assertNotNull(result.getKey());
-        assertNotNull(result.getValue());
-        assertEquals(payload, new String(Base64.getDecoder().decode(result.getKey().getBytes())));
-    }
 }

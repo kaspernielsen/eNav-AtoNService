@@ -18,10 +18,8 @@ package org.grad.eNav.atonService.services.secom;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.grad.eNav.atonService.models.domain.Pair;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
-import org.grad.secom.core.models.SECOM_ExchangeMetadata;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.SearchParameters;
@@ -88,7 +86,7 @@ public class SecomService {
                 })
                 .map(url -> {
                     try {
-                        return new SecomClient(url, secomConfigProperties);
+                        return new SecomClient(url, this.secomConfigProperties);
                     } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException ex) {
                         this.log.error("Unable to initialise the SSL context for the SECOM discovery service...", ex);
                         return null;
@@ -147,32 +145,11 @@ public class SecomService {
 
         // Now construct and return a SECOM client for the discovered URI
         try {
-            return new SecomClient(new URL(instance.getEndpointUri()), secomConfigProperties);
+            return new SecomClient(new URL(instance.getEndpointUri()), this.secomConfigProperties);
         } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException ex) {
             this.log.error(ex.getMessage(), ex);
             throw new SecomValidationException(ex.getMessage());
         }
-    }
-
-    /**
-     * This helper function is to be used to implement the SECOM exchange
-     * metadata population operation, by acquiring a signature for the
-     * provided payload.
-     *
-     * @param payload the payload to be signed
-     * @return the service exchange metadata with the signature information
-     */
-    public Pair<String, SECOM_ExchangeMetadata> signPayload(String payload) {
-        // Sign the payload
-        final String signedPayload = Base64.getEncoder().encodeToString(payload.getBytes());
-
-        // Generate the SECOM metadata
-        final SECOM_ExchangeMetadata serviceExchangeMetadata = new SECOM_ExchangeMetadata();
-        serviceExchangeMetadata.setDataProtection(false);
-        serviceExchangeMetadata.setCompressionFlag(false);
-
-        // And return the information tuple
-        return new Pair<>(signedPayload, serviceExchangeMetadata);
     }
 
 }
