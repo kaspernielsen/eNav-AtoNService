@@ -26,8 +26,9 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
+import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
+import org.grad.eNav.atonService.components.SecomSignatureValidatorImpl;
 import org.grad.eNav.atonService.config.GlobalConfig;
-import org.grad.eNav.atonService.models.domain.Pair;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
@@ -37,7 +38,6 @@ import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
 import org.grad.secom.core.models.EnvelopeUploadObject;
-import org.grad.secom.core.models.SECOM_ExchangeMetadata;
 import org.grad.secom.core.models.UploadObject;
 import org.grad.secom.core.models.enums.AckRequestEnum;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
@@ -130,6 +130,18 @@ public class SecomSubscriptionService implements MessageHandler {
      */
     @Autowired
     SecomSubscriptionNotificationService secomSubscriptionNotificationService;
+
+    /**
+     * The SECOM Signature Provider implementation.
+     */
+    @Autowired
+    SecomSignatureProviderImpl signatureProvider;
+
+    /**
+     * The SECOM Signature Validator implementation.
+     */
+    @Autowired
+    SecomSignatureValidatorImpl signatureValidator;
 
     /**
      * The SECOM Subscription Repo.
@@ -346,13 +358,13 @@ public class SecomSubscriptionService implements MessageHandler {
 
         // Identify the subscription client if possible through the client MRN
         final SecomClient secomClient = this.secomService.getClient(subscriptionRequest.getClientMrn());
+        secomClient.setSignatureProvider(this.signatureProvider);
+        secomClient.setSignatureValidator(this.signatureValidator);
 
         // Build the upload object
         UploadObject uploadObject = new UploadObject();
         EnvelopeUploadObject envelopeUploadObject = new EnvelopeUploadObject();
-        Pair<String, SECOM_ExchangeMetadata> signedData = this.secomService.signPayload(GlobalConfig.convertTos125DataSet(this.modelMapper, aidsToNavigationList));
-        envelopeUploadObject.setData(signedData.getKey());
-        envelopeUploadObject.setExchangeMetadata(signedData.getValue());
+        envelopeUploadObject.setData(Base64.getEncoder().encodeToString(GlobalConfig.convertTos125DataSet(this.modelMapper, aidsToNavigationList).getBytes()));
         envelopeUploadObject.setContainerType(ContainerTypeEnum.S100_DataSet);
         envelopeUploadObject.setDataProductType(SECOM_DataProductType.S125);
         envelopeUploadObject.setFromSubscription(true);

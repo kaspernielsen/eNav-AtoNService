@@ -21,13 +21,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
-import org.grad.eNav.atonService.models.domain.Pair;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
-import org.grad.eNav.atonService.services.secom.SecomService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.WKTUtil;
@@ -37,7 +35,6 @@ import org.grad.secom.core.interfaces.GetSecomInterface;
 import org.grad.secom.core.models.DataResponseObject;
 import org.grad.secom.core.models.GetResponseObject;
 import org.grad.secom.core.models.PaginationObject;
-import org.grad.secom.core.models.SECOM_ExchangeMetadata;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.locationtech.jts.geom.Geometry;
@@ -57,8 +54,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import javax.xml.bind.JAXBException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -99,12 +96,6 @@ public class GetSecomController implements GetSecomInterface {
     @Autowired
     UnLoCodeService unLoCodeService;
 
-    /**
-     * The SECOM Service.
-     */
-    @Autowired
-    SecomService secomService;
-
     // Class Variables
     private final GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(),4326);
 
@@ -136,14 +127,14 @@ public class GetSecomController implements GetSecomInterface {
                                  @QueryParam("validTo") LocalDateTime validTo,
                                  @QueryParam("page") @Min(0) Integer page,
                                  @QueryParam("pageSize") @Min(0) Integer pageSize) {
-        this.log.debug("SECOM request to get page of Dataset");
-        Optional.ofNullable(dataReference).ifPresent(v -> this.log.debug("Data Reference specified as: {}", dataReference));
-        Optional.ofNullable(containerType).ifPresent(v -> this.log.debug("Coontainer Type specified as: {}", containerType));
-        Optional.ofNullable(dataProductType).ifPresent(v -> this.log.debug("Data Product Type specified as: {}", dataProductType));
-        Optional.ofNullable(geometry).ifPresent(v -> this.log.debug("Geometry specified as: {}", geometry));
-        Optional.ofNullable(unlocode).ifPresent(v -> this.log.debug("UNLOCODE specified as: {}", unlocode));
-        Optional.ofNullable(validFrom).ifPresent(v -> this.log.debug("Valid From time specified as: {}", validFrom));
-        Optional.ofNullable(validTo).ifPresent(v -> this.log.debug("Valid To time specified as: {}", validTo));
+        log.debug("SECOM request to get page of Dataset");
+        Optional.ofNullable(dataReference).ifPresent(v -> log.debug("Data Reference specified as: {}", dataReference));
+        Optional.ofNullable(containerType).ifPresent(v -> log.debug("Coontainer Type specified as: {}", containerType));
+        Optional.ofNullable(dataProductType).ifPresent(v -> log.debug("Data Product Type specified as: {}", dataProductType));
+        Optional.ofNullable(geometry).ifPresent(v -> log.debug("Geometry specified as: {}", geometry));
+        Optional.ofNullable(unlocode).ifPresent(v -> log.debug("UNLOCODE specified as: {}", unlocode));
+        Optional.ofNullable(validFrom).ifPresent(v -> log.debug("Valid From time specified as: {}", validFrom));
+        Optional.ofNullable(validTo).ifPresent(v -> log.debug("Valid To time specified as: {}", validTo));
 
         // Init local variables
         Geometry jtsGeometry = null;
@@ -195,7 +186,7 @@ public class GetSecomController implements GetSecomInterface {
                     final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
                     final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
                     data = S125Utils.marshalS125(dataset, Boolean.FALSE);
-                } catch (JAXBException ex) {
+                } catch (Exception ex) {
                     throw new ValidationException(ex.getMessage());
                 }
             }
@@ -204,9 +195,7 @@ public class GetSecomController implements GetSecomInterface {
         // Generate the Get Response Object
         final GetResponseObject getResponseObject = new GetResponseObject();
         final DataResponseObject dataResponseObject = new DataResponseObject();
-        final Pair<String, SECOM_ExchangeMetadata> signedTuple = this.secomService.signPayload(data);
-        dataResponseObject.setData(signedTuple.getKey());
-        dataResponseObject.setExchangeMetadata(signedTuple.getValue());
+        dataResponseObject.setData(Base64.getEncoder().encodeToString(data.getBytes()));
         getResponseObject.setDataResponseObject(dataResponseObject);
         getResponseObject.setPagination(new PaginationObject(
                 (int) atonPage.getTotalElements(),
