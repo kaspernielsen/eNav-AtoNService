@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomSignatureProvider;
+import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -50,6 +51,17 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
     CKeeperClient cKeeperClient;
 
     /**
+     * Returns the digital signature algorithm for the signature provider.
+     * In SECOM, by default this should be DSA, but ECDSA should be used
+     * to generate smaller signatures.
+     *
+     * @return the digital signature algorithm for the signature provider
+     */
+    public DigitalSignatureAlgorithmEnum getSignatureAlgorithm() {
+        return DigitalSignatureAlgorithmEnum.ECDSA;
+    }
+
+    /**
      * This function overrides the interface definition to link the SECOM
      * signature provision with the cKeeper operation. A service can request
      * cKeeper to sign a payload, using a valid certificate based on the
@@ -65,7 +77,7 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
         // Get the signature generated from cKeeper
         final Response response = this.cKeeperClient.generateCertificateSignature(
                 new BigInteger(signatureCertificate.getCertificateAlias()),
-                null,
+                algorithm,
                 payload);
 
         // Parse the response
