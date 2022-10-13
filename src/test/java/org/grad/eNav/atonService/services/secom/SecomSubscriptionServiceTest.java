@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.services.secom;
 
+import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
 import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
 import org.grad.eNav.atonService.components.SecomSignatureValidatorImpl;
 import org.grad.eNav.atonService.config.GlobalConfig;
@@ -123,6 +124,12 @@ class SecomSubscriptionServiceTest {
      */
     @Mock
     SecomSubscriptionNotificationService secomSubscriptionNotificationService;
+
+    /**
+     * The SECOM Certificate Provider implementation mock.
+     */
+    @Mock
+    SecomCertificateProviderImpl certificateProvider;
 
     /**
      * The SECOM Signature Provider implementation mock.
