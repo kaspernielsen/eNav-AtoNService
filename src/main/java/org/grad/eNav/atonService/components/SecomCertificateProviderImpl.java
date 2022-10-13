@@ -28,9 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.security.spec.InvalidKeySpecException;
 
 /**
  * The SECOM Certificate Provider Implementation.
@@ -77,9 +75,9 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
         // Build the SECOM digital certificate object
         try {
             digitalSignatureCertificate.setCertificate(SecomPemUtils.getCertFromPem(response.getCertificate()));
-            digitalSignatureCertificate.setPublicKey(SecomPemUtils.getPublicKeFromPem("RSA", response.getPublicKey()));
+            digitalSignatureCertificate.setPublicKey(digitalSignatureCertificate.getCertificate().getPublicKey());
             digitalSignatureCertificate.setRootCertificate(SecomPemUtils.getCertFromPem(response.getRootCertificate()));
-        } catch (CertificateException | NoSuchAlgorithmException | InvalidKeySpecException ex) {
+        } catch (CertificateException ex) {
             log.error(ex.getMessage());
             return null;
         }

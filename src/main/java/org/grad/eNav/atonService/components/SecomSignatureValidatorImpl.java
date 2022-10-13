@@ -72,7 +72,7 @@ public class SecomSignatureValidatorImpl implements SecomSignatureValidator {
         verificationRequest.setSignature(signature);
 
         // Ask cKeeper to verify the signature
-        final Response response = this.cKeeperClient.verifyEntitySignature(appName, verificationRequest);
+        final Response response = this.cKeeperClient.verifyEntitySignature(this.appName, verificationRequest);
 
         // If everything went OK, return a positive response
         return response.status() < 300;
