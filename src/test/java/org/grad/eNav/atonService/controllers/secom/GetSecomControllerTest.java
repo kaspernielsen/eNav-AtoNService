@@ -170,7 +170,7 @@ class GetSecomControllerTest {
         X509Certificate mockCertificate = mock(X509Certificate.class);
         doReturn("certificate".getBytes()).when(mockCertificate).getEncoded();
         PublicKey mockPublicKey = mock(PublicKey.class);
-        doReturn("publicKey".getBytes()).when(mockPublicKey).getEncoded();
+        doReturn(mockPublicKey).when(mockCertificate).getPublicKey();
         X509Certificate mockRootCertificate = mock(X509Certificate.class);
         doReturn("rootCertificate".getBytes()).when(mockRootCertificate).getEncoded();
         DigitalSignatureCertificate digitalSignatureCertificate = new DigitalSignatureCertificate();
@@ -179,6 +179,7 @@ class GetSecomControllerTest {
         digitalSignatureCertificate.setPublicKey(mockPublicKey);
         digitalSignatureCertificate.setRootCertificate(mockRootCertificate);
         doReturn(digitalSignatureCertificate).when(this.secomCertificateProvider).getDigitalSignatureCertificate();
+        doReturn(DigitalSignatureAlgorithmEnum.ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
         doReturn("signature").when(this.secomSignatureProvider).generateSignature(any(), any(), any());
 
         // Mock the rest
@@ -213,7 +214,7 @@ class GetSecomControllerTest {
                     assertEquals(Boolean.TRUE, getResponseObject.getDataResponseObject().getExchangeMetadata().getDataProtection());
                     assertNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getCompressionFlag());
                     assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getExchangeMetadata().getProtectionScheme());
-                    assertEquals(DigitalSignatureAlgorithmEnum.DSA, getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());
+                    assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());
                     assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue());
                     assertEquals("signature", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
                     assertEquals("Y2VydGlmaWNhdGU=", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
