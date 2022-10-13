@@ -26,6 +26,7 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
+import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
 import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
 import org.grad.eNav.atonService.components.SecomSignatureValidatorImpl;
 import org.grad.eNav.atonService.config.GlobalConfig;
@@ -130,6 +131,12 @@ public class SecomSubscriptionService implements MessageHandler {
      */
     @Autowired
     SecomSubscriptionNotificationService secomSubscriptionNotificationService;
+
+    /**
+     * The SECOM Certificate Provider implementation.
+     */
+    @Autowired
+    SecomCertificateProviderImpl certificateProvider;
 
     /**
      * The SECOM Signature Provider implementation.
@@ -358,6 +365,7 @@ public class SecomSubscriptionService implements MessageHandler {
 
         // Identify the subscription client if possible through the client MRN
         final SecomClient secomClient = this.secomService.getClient(subscriptionRequest.getClientMrn());
+        secomClient.setCertificateProvider(this.certificateProvider);
         secomClient.setSignatureProvider(this.signatureProvider);
         secomClient.setSignatureValidator(this.signatureValidator);
 
