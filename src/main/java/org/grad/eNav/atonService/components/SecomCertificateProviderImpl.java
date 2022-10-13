@@ -70,10 +70,11 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
         final DigitalSignatureCertificate digitalSignatureCertificate = new DigitalSignatureCertificate();
 
         // Get the signature certificate from cKeeper
-        final SignatureCertificateDto response = this.cKeeperClient.getSignatureCertificate(this.appName, null, McpEntityType.SERVICE.getValue());
+        final SignatureCertificateDto response = this.cKeeperClient.getSignatureCertificate("aton-service", null, McpEntityType.SERVICE.getValue());
 
         // Build the SECOM digital certificate object
         try {
+            digitalSignatureCertificate.setCertificateAlias(String.format("%d", response.getCertificateId()));
             digitalSignatureCertificate.setCertificate(SecomPemUtils.getCertFromPem(response.getCertificate()));
             digitalSignatureCertificate.setPublicKey(digitalSignatureCertificate.getCertificate().getPublicKey());
             digitalSignatureCertificate.setRootCertificate(SecomPemUtils.getCertFromPem(response.getRootCertificate()));
