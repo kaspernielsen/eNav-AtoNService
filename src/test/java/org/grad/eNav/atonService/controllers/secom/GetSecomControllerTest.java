@@ -17,18 +17,21 @@
 package org.grad.eNav.atonService.controllers.secom;
 
 import _int.iala_aism.s125.gml._0_0.DataSet;
-import feign.Response;
 import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
+import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
+import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.s125.utils.S125Utils;
+import org.grad.secom.core.base.DigitalSignatureCertificate;
+import org.grad.secom.core.base.SecomConstants;
 import org.grad.secom.core.models.GetResponseObject;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
+import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,13 +53,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import javax.xml.bind.JAXBException;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.PublicKey;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.UUID;
 
-import static org.grad.eNav.atonService.components.SecomSignatureProviderImpl.*;
 import static org.grad.secom.core.interfaces.GetSecomInterface.GET_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -93,10 +99,16 @@ class GetSecomControllerTest {
     UnLoCodeService unLoCodeService;
 
     /**
-     * The cKeeper Client mock.
+     * The Secom Certificate Provider mock.
      */
     @MockBean
-    CKeeperClient cKeeperClient;
+    SecomCertificateProviderImpl secomCertificateProvider;
+
+    /**
+     * The Secom Signature Provider mock.
+     */
+    @MockBean
+    SecomSignatureProviderImpl secomSignatureProvider;
 
     // Test Variables
     private GeometryFactory geometryFactory;
@@ -153,18 +165,21 @@ class GetSecomControllerTest {
      * expected Get Response Object output.
      */
     @Test
-    void testGet() throws IOException {
-        // Mock a cKeeper response
-        Response signatureResponse = mock(Response.class);
-        Map<String, Collection<String>> headers = new HashMap();
-        headers.put(CKEEPER_PUBLIC_CERTIFICATE_HEADER, Collections.singletonList("certificate"));
-        headers.put(CKEEPER_SIGNATURE_ALGORITHM_HEADER, Collections.singletonList("algorithm"));
-        headers.put(CKEEPER_ROOT_CERTIFICATE_THUMBPRINT, Collections.singletonList("thumbprint"));
-        Response.Body signatureBody = mock(Response.Body.class);
-        doReturn(new ByteArrayInputStream("signature".getBytes())).when(signatureBody).asInputStream();
-        doReturn(headers).when(signatureResponse).headers();
-        doReturn(signatureBody).when(signatureResponse).body();
-        doReturn(signatureResponse).when(this.cKeeperClient).generateEntitySignature(any(), any(), any(), any());
+    void testGet() throws CertificateEncodingException, IOException {
+        // Mock the SECOM library certificate and signature providers
+        X509Certificate mockCertificate = mock(X509Certificate.class);
+        doReturn("certificate".getBytes()).when(mockCertificate).getEncoded();
+        PublicKey mockPublicKey = mock(PublicKey.class);
+        doReturn("publicKey".getBytes()).when(mockPublicKey).getEncoded();
+        X509Certificate mockRootCertificate = mock(X509Certificate.class);
+        doReturn("rootCertificate".getBytes()).when(mockRootCertificate).getEncoded();
+        DigitalSignatureCertificate digitalSignatureCertificate = new DigitalSignatureCertificate();
+        digitalSignatureCertificate.setCertificateAlias("secom");
+        digitalSignatureCertificate.setCertificate(mockCertificate);
+        digitalSignatureCertificate.setPublicKey(mockPublicKey);
+        digitalSignatureCertificate.setRootCertificate(mockRootCertificate);
+        doReturn(digitalSignatureCertificate).when(this.secomCertificateProvider).getDigitalSignatureCertificate();
+        doReturn("signature").when(this.secomSignatureProvider).generateSignature(any(), any(), any());
 
         // Mock the rest
         doReturn(this.s125DataSet).when(this.datasetService).findOne(any());
@@ -196,13 +211,13 @@ class GetSecomControllerTest {
                     assertNotNull(getResponseObject.getPagination());
                     assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata());
                     assertEquals(Boolean.TRUE, getResponseObject.getDataResponseObject().getExchangeMetadata().getDataProtection());
-                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getExchangeMetadata().getCompressionFlag());
-                    assertEquals(DATA_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getExchangeMetadata().getProtectionScheme());
-                    assertEquals("algorithm", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());
+                    assertNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getCompressionFlag());
+                    assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getExchangeMetadata().getProtectionScheme());
+                    assertEquals(DigitalSignatureAlgorithmEnum.DSA, getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());
                     assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue());
-                    assertEquals("7369676E6174757265", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
-                    assertEquals("certificate", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
-                    assertEquals("thumbprint", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
+                    assertEquals("signature", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
+                    assertEquals("Y2VydGlmaWNhdGU=", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
+                    assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
                     assertEquals(Integer.MAX_VALUE, getResponseObject.getPagination().getMaxItemsPerPage());
                     assertEquals(0, getResponseObject.getPagination().getTotalItems());
 

@@ -19,16 +19,16 @@ package org.grad.eNav.atonService.components;
 import feign.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.feign.CKeeperClient;
-import org.grad.eNav.atonService.models.dtos.McpEntityType;
-import org.grad.secom.core.exceptions.SecomInvalidCertificateException;
-import org.grad.secom.core.interfaces.SecomSignatureProvider;
-import org.grad.secom.core.models.DigitalSignatureValue;
-import org.grad.secom.core.models.SECOM_ExchangeMetadataObject;
+import org.grad.secom.core.base.DigitalSignatureCertificate;
+import org.grad.secom.core.base.SecomSignatureProvider;
+import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.IOException;
+import java.math.BigInteger;
 
 /**
  * The SECOM Signature Provider Implementation.
@@ -50,54 +50,31 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
     @Lazy
     CKeeperClient cKeeperClient;
 
-    // Class Variables
-    final public static String DATA_PROTECTION_SCHEME = "SECOM";
-    final public String CKEEPER_SERVICE_NAME = "aton-service";
-    final public static String CKEEPER_PUBLIC_CERTIFICATE_HEADER = "PUBLIC_CERTIFICATE";
-    final public static String CKEEPER_SIGNATURE_ALGORITHM_HEADER = "SIGNATURE_ALGORITHM";
-    final public static String CKEEPER_ROOT_CERTIFICATE_THUMBPRINT = "ROOT_CERTIFICATE_THUMBPRINT";
-
     /**
-     * The signature generation function. It simply required the payload that
-     * will be used to generate the signature, which will be returned as a
-     * String.
+     * This function overrides the interface definition to link the SECOM
+     * signature provision with the cKeeper operation. A service can request
+     * cKeeper to sign a payload, using a valid certificate based on the
+     * provided digital signature certificate information.
      *
-     * @param payload       The payload to generate the signature for
-     * @return The signature generated
+     * @param signatureCertificate  The digital signature certificate to be used for the signature generation
+     * @param algorithm             The algorithm to be used for the signature generation
+     * @param payload               The payload to be signed
+     * @return
      */
     @Override
-    public void generateSignature(byte[] payload, SECOM_ExchangeMetadataObject metadata) {
-        // Sanity Checks
-        if(metadata == null) {
-            return;
-        }
+    public String generateSignature(DigitalSignatureCertificate signatureCertificate, String algorithm, byte[] payload) {
+        // Get the signature generated from cKeeper
+        final Response response = this.cKeeperClient.generateCertificateSignature(
+                new BigInteger(signatureCertificate.getCertificateAlias()),
+                DigitalSignatureAlgorithmEnum.DSA.getValue(),
+                payload);
+
+        // Parse the response
         try {
-            // Get the signature from cKeeper
-            final Response response = this.cKeeperClient.generateEntitySignature(
-                    CKEEPER_SERVICE_NAME,
-                    null,
-                    McpEntityType.SERVICE.getValue(),
-                    payload);
-
-            // Parse the response
-            final String certificate = response.headers().get(CKEEPER_PUBLIC_CERTIFICATE_HEADER).stream().findFirst().orElse(null);
-            final String algorithm = response.headers().get(CKEEPER_SIGNATURE_ALGORITHM_HEADER).stream().findFirst().orElse(null);
-            final String rootCertThumbprint = response.headers().get(CKEEPER_ROOT_CERTIFICATE_THUMBPRINT).stream().findFirst().orElse(null);
-            final String signature = DatatypeConverter.printHexBinary(response.body().asInputStream().readAllBytes());
-
-            // And now populate the SECOM metadata
-            if(metadata.getDigitalSignatureValue() == null) {
-                metadata.setDigitalSignatureValue(new DigitalSignatureValue());
-            }
-            metadata.setDataProtection(Boolean.TRUE);
-            metadata.setProtectionScheme(DATA_PROTECTION_SCHEME);
-            metadata.setCompressionFlag(Boolean.FALSE);
-            metadata.setDigitalSignatureReference(algorithm);
-            metadata.getDigitalSignatureValue().setDigitalSignature(signature);
-            metadata.getDigitalSignatureValue().setPublicCertificate(certificate);
-            metadata.getDigitalSignatureValue().setPublicRootCertificateThumbprint(rootCertThumbprint);
-        } catch(Exception ex) {
-            throw new SecomInvalidCertificateException(ex.getMessage());
+            return DatatypeConverter.printHexBinary(response.body().asInputStream().readAllBytes());
+        } catch (IOException ex) {
+            log.error(ex.getMessage());
+            return null;
         }
     }
 }
