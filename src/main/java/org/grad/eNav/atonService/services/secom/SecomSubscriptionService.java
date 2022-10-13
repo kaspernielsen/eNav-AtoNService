@@ -89,16 +89,16 @@ import java.util.*;
 public class SecomSubscriptionService implements MessageHandler {
 
     /**
-     * The Entity Manager Factory.
-     */
-    @Autowired
-    EntityManagerFactory entityManagerFactory;
-
-    /**
      * The Model Mapper.
      */
     @Autowired
     ModelMapper modelMapper;
+
+    /**
+     * The Entity Manager Factory.
+     */
+    @Autowired
+    EntityManagerFactory entityManagerFactory;
 
     /**
      * The Request Context.

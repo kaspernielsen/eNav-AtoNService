@@ -18,11 +18,14 @@ package org.grad.eNav.atonService.feign;
 
 import feign.Response;
 import org.grad.eNav.atonService.config.FeignClientConfig;
+import org.grad.eNav.atonService.models.dtos.SignatureCertificateDto;
 import org.grad.eNav.atonService.models.dtos.SignatureVerificationRequestDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigInteger;
 
 /**
  * The Feign Interface For the CKeeper Client.
@@ -33,14 +36,18 @@ import org.springframework.web.bind.annotation.*;
 @FeignClient(name = "ckeeper", configuration = FeignClientConfig.class)
 public interface CKeeperClient {
 
-    @RequestMapping(method = RequestMethod.POST, value = "/api/signature/entity/generate/{entityId}", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
-    Response generateEntitySignature(@PathVariable String entityId,
-                                     @RequestParam("mmsi") String mmsi,
-                                     @RequestParam("entityType") String entityType,
-                                     @RequestBody byte[] signaturePayload);
+    @RequestMapping(method = RequestMethod.GET, value = "/api/signature/certificate", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    SignatureCertificateDto getSignatureCertificate(@RequestParam("entityName") String entityName,
+                                                    @RequestParam(value = "mmsi", required = false) String mmsi,
+                                                    @RequestParam(value = "entityType", required = false) String entityType);
 
-    @RequestMapping(method = RequestMethod.POST, value = "/api/signature/entity/verify/{entityId}",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    void verifyEntitySignature(@PathVariable String entityId,
-                               @RequestBody SignatureVerificationRequestDto signatureVerificationRequestDto);
+    @RequestMapping(method = RequestMethod.POST, value = "/api/signature/certificate/{certificateId}", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+    Response generateCertificateSignature(@PathVariable BigInteger certificateId,
+                                          @RequestParam(value="algorithm", required = false) String algorithm,
+                                          @RequestBody byte[] signaturePayload);
+
+    @RequestMapping(method = RequestMethod.POST, value = "/api/signature/entity/verify/{entityName}",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    Response verifyEntitySignature(@PathVariable String entityName,
+                                   @RequestBody SignatureVerificationRequestDto signatureVerificationRequestDto);
 
 }

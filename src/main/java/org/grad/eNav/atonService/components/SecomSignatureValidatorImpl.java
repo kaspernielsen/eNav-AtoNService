@@ -16,11 +16,14 @@
 
 package org.grad.eNav.atonService.components;
 
+import feign.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.models.dtos.SignatureVerificationRequestDto;
-import org.grad.secom.core.interfaces.SecomSignatureValidator;
+import org.grad.secom.core.base.DigitalSignatureCertificate;
+import org.grad.secom.core.base.SecomSignatureValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +41,12 @@ import org.springframework.stereotype.Component;
 public class SecomSignatureValidatorImpl implements SecomSignatureValidator {
 
     /**
+     * The Application Name.
+     */
+    @Value("${spring.application.name:aton-service}")
+    String appName;
+
+    /**
      * The cKeeper Feign Client.
      */
     @Autowired
@@ -45,31 +54,27 @@ public class SecomSignatureValidatorImpl implements SecomSignatureValidator {
     CKeeperClient cKeeperClient;
 
     /**
-     * The signature validation operation. This should support the provision
-     * of the message content (preferably in a Base64 format) and the signature
-     * to validate the content against.
+     * This function overrides the interface definition to link the SECOM
+     * signature verification with the cKeeper operation. A service can request
+     * cKeeper to verify a content, using a valid certificate and the signature
+     * provided.
      *
-     * @param content       The context (in Base64 format) to be validated
-     * @param signature     The signature to validate the context against
-     * @return whether the signature validation was successful or not
+     * @param signatureCertificate  The digital signature certificate to be used for the signature generation
+     * @param content               The context (in Base64 format) to be validated
+     * @param signature             The signature to validate the context against
+     * @return
      */
     @Override
-    public boolean validateSignature(String content, String signature) {
+    public boolean validateSignature(DigitalSignatureCertificate signatureCertificate, String content, String signature) {
         // Construct the signature verification object
-        final SignatureVerificationRequestDto dto = new SignatureVerificationRequestDto();
-        dto.setContent(content);
-        dto.setSignature(signature);
+        final SignatureVerificationRequestDto verificationRequest = new SignatureVerificationRequestDto();
+        verificationRequest.setContent(content);
+        verificationRequest.setSignature(signature);
+
         // Ask cKeeper to verify the signature
-        try {
-            System.out.println("test");
-//            this.cKeeperClient.verifyEntitySignature(
-//                    "aton-service",
-//                    dto);
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-            return false;
-        }
+        final Response response = this.cKeeperClient.verifyEntitySignature(appName, verificationRequest);
+
         // If everything went OK, return a positive response
-        return true;
+        return response.status() < 300;
     }
 }
