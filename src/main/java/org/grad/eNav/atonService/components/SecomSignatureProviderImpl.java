@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomSignatureProvider;
-import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -66,7 +65,7 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
         // Get the signature generated from cKeeper
         final Response response = this.cKeeperClient.generateCertificateSignature(
                 new BigInteger(signatureCertificate.getCertificateAlias()),
-                DigitalSignatureAlgorithmEnum.DSA.getValue(),
+                null,
                 payload);
 
         // Parse the response
