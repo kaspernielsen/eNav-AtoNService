@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Optional;
 
 /**
  * The SECOM Signature Provider Implementation.
@@ -74,11 +75,11 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
      * @return
      */
     @Override
-    public String generateSignature(DigitalSignatureCertificate signatureCertificate, String algorithm, byte[] payload) {
+    public String generateSignature(DigitalSignatureCertificate signatureCertificate, DigitalSignatureAlgorithmEnum algorithm, byte[] payload) {
         // Get the signature generated from cKeeper
         final Response response = this.cKeeperClient.generateCertificateSignature(
                 new BigInteger(signatureCertificate.getCertificateAlias()),
-                algorithm,
+                Optional.ofNullable(algorithm).map(DigitalSignatureAlgorithmEnum::getValue).orElse(DigitalSignatureAlgorithmEnum.ECDSA.getValue()),
                 payload);
 
         // Parse the response
