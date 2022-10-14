@@ -41,6 +41,10 @@
 		<repository>
 			<id>grad-snapshots</id>
 			<url>https://rnavlab.gla-rad.org:8081/repository/grad-snapshots/</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
 		</repository>
 	</repositories>
 
