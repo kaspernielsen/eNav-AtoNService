@@ -383,7 +383,7 @@ class SecomControllerTest {
                     assertNotNull(getResponseObject.getPagination());
                     assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata());
                     assertEquals(Boolean.TRUE, getResponseObject.getDataResponseObject().getExchangeMetadata().getDataProtection());
-                    assertNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getCompressionFlag());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getExchangeMetadata().getCompressionFlag());
                     assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getExchangeMetadata().getProtectionScheme());
                     assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());
                     assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue());
