@@ -417,7 +417,6 @@ class SecomControllerTest {
      */
     @Test
     void testGetNotFound() {
-        doReturn(DigitalSignatureAlgorithmEnum.ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
         doThrow(DataNotFoundException.class).when(this.datasetService).findOne(any());
 
         webTestClient.get()
@@ -444,8 +443,6 @@ class SecomControllerTest {
      */
     @Test
     void testGetBadRequest() {
-        doReturn(DigitalSignatureAlgorithmEnum.ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
-
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/secom" + GET_INTERFACE_PATH)
