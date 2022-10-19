@@ -60,6 +60,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
+import javax.xml.bind.DatatypeConverter;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.security.PublicKey;
@@ -351,7 +352,7 @@ class SecomControllerTest {
         digitalSignatureCertificate.setRootCertificate(mockRootCertificate);
         doReturn(digitalSignatureCertificate).when(this.secomCertificateProvider).getDigitalSignatureCertificate();
         doReturn(DigitalSignatureAlgorithmEnum.ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
-        doReturn("signature").when(this.secomSignatureProvider).generateSignature(any(), any(), any());
+        doReturn("signature".getBytes()).when(this.secomSignatureProvider).generateSignature(any(), any(), any());
 
         // Mock the rest
         doReturn(this.s125DataSet).when(this.datasetService).findOne(any());
@@ -387,8 +388,8 @@ class SecomControllerTest {
                     assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getExchangeMetadata().getProtectionScheme());
                     assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());
                     assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue());
-                    assertEquals("signature", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
-                    assertEquals("Y2VydGlmaWNhdGU=", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
+                    assertEquals(DatatypeConverter.printHexBinary("signature".getBytes()), getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
+                    assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
                     assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
                     assertEquals(Integer.MAX_VALUE, getResponseObject.getPagination().getMaxItemsPerPage());
                     assertEquals(0, getResponseObject.getPagination().getTotalItems());

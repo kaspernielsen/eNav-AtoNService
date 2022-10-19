@@ -26,7 +26,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Optional;
@@ -71,20 +70,20 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
      *
      * @param signatureCertificate  The digital signature certificate to be used for the signature generation
      * @param algorithm             The algorithm to be used for the signature generation
-     * @param payload               The payload to be signed
-     * @return
+     * @param payload               The payload to be signed, (preferably Base64 encoded)
+     * @return The signature generated
      */
     @Override
-    public String generateSignature(DigitalSignatureCertificate signatureCertificate, DigitalSignatureAlgorithmEnum algorithm, byte[] payload) {
+    public byte[] generateSignature(DigitalSignatureCertificate signatureCertificate, DigitalSignatureAlgorithmEnum algorithm, String payload) {
         // Get the signature generated from cKeeper
         final Response response = this.cKeeperClient.generateCertificateSignature(
                 new BigInteger(signatureCertificate.getCertificateAlias()),
-                Optional.ofNullable(algorithm).map(DigitalSignatureAlgorithmEnum::getValue).orElse(DigitalSignatureAlgorithmEnum.ECDSA.getValue()),
-                payload);
+                algorithm.getValue(),
+                Optional.ofNullable(payload).map(String::getBytes).orElse(null));
 
         // Parse the response
         try {
-            return DatatypeConverter.printHexBinary(response.body().asInputStream().readAllBytes());
+            return response.body().asInputStream().readAllBytes();
         } catch (IOException ex) {
             log.error(ex.getMessage());
             return null;
