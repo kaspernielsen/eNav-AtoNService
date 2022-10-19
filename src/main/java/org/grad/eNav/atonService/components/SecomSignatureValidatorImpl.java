@@ -20,12 +20,14 @@ import feign.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.models.dtos.SignatureVerificationRequestDto;
-import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomSignatureValidator;
+import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+
+import java.util.Base64;
 
 /**
  * The SECOM Signature Validator Implementation.
@@ -54,22 +56,22 @@ public class SecomSignatureValidatorImpl implements SecomSignatureValidator {
     CKeeperClient cKeeperClient;
 
     /**
-     * This function overrides the interface definition to link the SECOM
-     * signature verification with the cKeeper operation. A service can request
-     * cKeeper to verify a content, using a valid certificate and the signature
-     * provided.
+     * The signature validation operation. This should support the provision
+     * of the message content (preferably in a Base64 format) and the signature
+     * to validate the content against.
      *
      * @param signatureCertificate  The digital signature certificate to be used for the signature generation
+     * @param algorithm             The algorithm used for the signature generation
      * @param content               The context (in Base64 format) to be validated
      * @param signature             The signature to validate the context against
-     * @return
+     * @return whether the signature validation was successful or not
      */
     @Override
-    public boolean validateSignature(DigitalSignatureCertificate signatureCertificate, String content, String signature) {
+    public boolean validateSignature(String signatureCertificate, DigitalSignatureAlgorithmEnum algorithm, String content, byte[] signature) {
         // Construct the signature verification object
         final SignatureVerificationRequestDto verificationRequest = new SignatureVerificationRequestDto();
         verificationRequest.setContent(content);
-        verificationRequest.setSignature(signature);
+        verificationRequest.setSignature(Base64.getEncoder().encodeToString(signature));
 
         // Ask cKeeper to verify the signature
         final Response response = this.cKeeperClient.verifyEntitySignature(this.appName, verificationRequest);
