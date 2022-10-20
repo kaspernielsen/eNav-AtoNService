@@ -44,6 +44,9 @@ class SecomServiceTest {
     @Spy
     SecomService secomService;
 
+    /**
+     * The Discovery Service mock.
+     */
     @Mock
     SecomClient discoveryService;
 
