@@ -16,9 +16,6 @@
 
 package org.grad.eNav.atonService.services.secom;
 
-import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
-import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
-import org.grad.eNav.atonService.components.SecomSignatureValidatorImpl;
 import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
@@ -100,7 +97,6 @@ class SecomSubscriptionServiceTest {
     @Mock
     Optional<HttpServletRequest> httpServletRequest;
 
-
     /**
      * The S-125 Dataset Service mock.
      */
@@ -124,24 +120,6 @@ class SecomSubscriptionServiceTest {
      */
     @Mock
     SecomSubscriptionNotificationService secomSubscriptionNotificationService;
-
-    /**
-     * The SECOM Certificate Provider implementation mock.
-     */
-    @Mock
-    SecomCertificateProviderImpl certificateProvider;
-
-    /**
-     * The SECOM Signature Provider implementation mock.
-     */
-    @Mock
-    SecomSignatureProviderImpl signatureProvider;
-
-    /**
-     * The SECOM Signature Validator implementation mock.
-     */
-    @Mock
-    SecomSignatureValidatorImpl signatureValidator;
 
     /**
      * The SECOM Subscription Repo mock.

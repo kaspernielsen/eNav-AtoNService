@@ -365,9 +365,6 @@ public class SecomSubscriptionService implements MessageHandler {
 
         // Identify the subscription client if possible through the client MRN
         final SecomClient secomClient = this.secomService.getClient(subscriptionRequest.getClientMrn());
-        secomClient.setCertificateProvider(this.certificateProvider);
-        secomClient.setSignatureProvider(this.signatureProvider);
-        secomClient.setSignatureValidator(this.signatureValidator);
 
         // Build the upload object
         UploadObject uploadObject = new UploadObject();
