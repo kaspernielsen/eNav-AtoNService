@@ -22,23 +22,13 @@ import org.grad.eNav.atonService.models.dtos.McpEntityType;
 import org.grad.eNav.atonService.models.dtos.SignatureCertificateDto;
 import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomCertificateProvider;
-import org.grad.secom.core.exceptions.SecomInvalidCertificateException;
-import org.grad.secom.core.utils.KeyStoreUtils;
 import org.grad.secom.core.utils.SecomPemUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.security.cert.PKIXParameters;
-import java.security.cert.TrustAnchor;
-import java.security.cert.X509Certificate;
 
 /**
  * The SECOM Certificate Provider Implementation.
@@ -58,24 +48,6 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
      */
     @Value("${spring.application.name:aton-service}")
     String appName;
-
-    /**
-     * The X.509 Trust-Store.
-     */
-    @Value("${secom.security.ssl.truststore:truststore.jks}")
-    String trustStore;
-
-    /**
-     * The X.509 Trust-Store Password.
-     */
-    @Value("${secom.security.ssl.truststore-password:password}")
-    String trustStorePassword;
-
-    /**
-     * The X.509 Trust-Store Type.
-     */
-    @Value("${secom.security.ssl.truststore-type:JKS}")
-    String trustStoreType;
 
     /**
      * The cKeeper Feign Client.
@@ -116,39 +88,6 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
 
         // Return the output
         return digitalSignatureCertificate;
-    }
-
-    /**
-     * Returns a list of trusted certificates for the signature validation.
-     * This is only required for SECOM consumers so the default operation does
-     * not return any certificates. In this case however we need to load the
-     * whole trust-store.
-     *
-     * @return the list of trusted certificates for SECOM
-     */
-    @Override
-    public X509Certificate[] getTrustedCertificates() {
-        // Get the provided truststore
-        final KeyStore trustStore;
-        try {
-            trustStore = KeyStoreUtils.getKeyStore(this.trustStore, this.trustStorePassword, this.trustStoreType);
-        } catch (KeyStoreException | NoSuchAlgorithmException | IOException | CertificateException ex) {
-            throw new SecomInvalidCertificateException(ex.getMessage());
-        }
-
-        // Now load the PKIX parameters
-        final PKIXParameters params;
-        try {
-            params = new PKIXParameters(trustStore);
-        } catch (KeyStoreException | InvalidAlgorithmParameterException ex) {
-            throw new SecomInvalidCertificateException(ex.getMessage());
-        }
-
-        // Access and return all the available certificates
-        return params.getTrustAnchors().stream()
-                .map(TrustAnchor::getTrustedCert)
-                .toList()
-                .toArray(X509Certificate[]::new);
     }
 
 }
