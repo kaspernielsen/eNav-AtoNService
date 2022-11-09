@@ -28,7 +28,6 @@ import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
 import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
-import org.grad.eNav.atonService.components.SecomSignatureValidatorImpl;
 import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
@@ -72,6 +71,7 @@ import javax.annotation.PreDestroy;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
@@ -143,12 +143,6 @@ public class SecomSubscriptionService implements MessageHandler {
      */
     @Autowired
     SecomSignatureProviderImpl signatureProvider;
-
-    /**
-     * The SECOM Signature Validator implementation.
-     */
-    @Autowired
-    SecomSignatureValidatorImpl signatureValidator;
 
     /**
      * The SECOM Subscription Repo.
@@ -369,14 +363,13 @@ public class SecomSubscriptionService implements MessageHandler {
         // Build the upload object
         UploadObject uploadObject = new UploadObject();
         EnvelopeUploadObject envelopeUploadObject = new EnvelopeUploadObject();
-        envelopeUploadObject.setData(Base64.getEncoder().encodeToString(GlobalConfig.convertTos125DataSet(this.modelMapper, aidsToNavigationList).getBytes()));
         envelopeUploadObject.setContainerType(ContainerTypeEnum.S100_DataSet);
         envelopeUploadObject.setDataProductType(SECOM_DataProductType.S125);
+        envelopeUploadObject.setData(GlobalConfig.convertTos125DataSet(this.modelMapper, aidsToNavigationList).getBytes(StandardCharsets.UTF_8));
         envelopeUploadObject.setFromSubscription(true);
         envelopeUploadObject.setAckRequest(AckRequestEnum.NO_ACK_REQUESTED);
         envelopeUploadObject.setTransactionIdentifier(UUID.randomUUID());
         uploadObject.setEnvelope(envelopeUploadObject);
-        uploadObject.setEnvelopeSignature("To be implemented");
 
         // Now upload the message to the subscription client
         secomClient.upload(uploadObject);

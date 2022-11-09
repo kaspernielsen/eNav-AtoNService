@@ -245,7 +245,8 @@ class SecomControllerTest {
     void testGetSummary() {
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
                 .when(this.datasetService).findAll(any(), any(), any(), any(), any());
-        doReturn(0L).when(this.aidsToNavigationService).findAllTotalCount(any(), any(), any(), any());
+        doReturn(new PageImpl<>(Collections.emptyList(), Pageable.ofSize(1), 0))
+                .when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -380,10 +381,10 @@ class SecomControllerTest {
                     GetResponseObject getResponseObject = response.getResponseBody();
                     assertNotNull(getResponseObject);
                     assertNotNull(getResponseObject.getDataResponseObject());
-                    assertNotNull(1, getResponseObject.getDataResponseObject().getData());
+                    assertNotNull(getResponseObject.getDataResponseObject().getData());
                     assertNotNull(getResponseObject.getPagination());
                     assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata());
-                    assertEquals(Boolean.TRUE, getResponseObject.getDataResponseObject().getExchangeMetadata().getDataProtection());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getExchangeMetadata().getDataProtection());
                     assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getExchangeMetadata().getCompressionFlag());
                     assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getExchangeMetadata().getProtectionScheme());
                     assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());

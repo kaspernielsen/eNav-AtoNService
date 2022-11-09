@@ -16,15 +16,19 @@
 
 package org.grad.eNav.atonService.controllers.secom;
 
+import _int.iala_aism.s125.gml._0_0.DataSet;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
+import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.WKTUtil;
+import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.interfaces.GetSummarySecomInterface;
 import org.grad.secom.core.models.GetSummaryResponseObject;
 import org.grad.secom.core.models.PaginationObject;
@@ -36,9 +40,11 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -64,6 +70,12 @@ import java.util.stream.Collectors;
 @Validated
 @Slf4j
 public class GetSummarySecomController implements GetSummarySecomInterface {
+
+    /**
+     * The Model Mapper.
+     */
+    @Autowired
+    ModelMapper modelMapper;
 
     /**
      * The Dataset Service.
@@ -173,12 +185,20 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
                     summaryObject.setInfo_lastModifiedDate(s125Dataset.getLastUpdatedAt());
 
                     // Calculate the summary size
-                    summaryObject.setInfo_size(this.aidsToNavigationService.findAllTotalCount(
-                            null,
-                            GeometryUtils.joinGeometries(s125Dataset.getGeometry(), finalReqGeometry),
-                            validFrom,
-                            validTo)
-                    );
+                    try {
+                        final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
+                        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
+                                null,
+                                finalReqGeometry,
+                                validFrom,
+                                validTo,
+                                Pageable.unpaged()
+                        );
+                        final DataSet dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atonPage.getContent());
+                        summaryObject.setInfo_size((long) S125Utils.marshalS125(dataset, Boolean.FALSE).length());
+                    } catch (Exception ex) {
+                        throw new ValidationException(ex.getMessage());
+                    }
 
                     // And return the summary object
                     return summaryObject;
