@@ -19,15 +19,19 @@ package org.grad.eNav.atonService.components;
 import feign.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.feign.CKeeperClient;
+import org.grad.eNav.atonService.models.dtos.SignatureVerificationRequestDto;
 import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomSignatureProvider;
 import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Optional;
 
 /**
@@ -42,6 +46,12 @@ import java.util.Optional;
 @Component
 @Slf4j
 public class SecomSignatureProviderImpl implements SecomSignatureProvider {
+
+    /**
+     * The Application Name.
+     */
+    @Value("${spring.application.name:aton-service}")
+    String appName;
 
     /**
      * The cKeeper Feign Client.
@@ -74,12 +84,12 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
      * @return The signature generated
      */
     @Override
-    public byte[] generateSignature(DigitalSignatureCertificate signatureCertificate, DigitalSignatureAlgorithmEnum algorithm, String payload) {
+    public byte[] generateSignature(DigitalSignatureCertificate signatureCertificate, DigitalSignatureAlgorithmEnum algorithm, byte[] payload) {
         // Get the signature generated from cKeeper
         final Response response = this.cKeeperClient.generateCertificateSignature(
                 new BigInteger(signatureCertificate.getCertificateAlias()),
                 algorithm.getValue(),
-                Optional.ofNullable(payload).map(String::getBytes).orElse(null));
+                Optional.ofNullable(payload).orElse(null));
 
         // Parse the response
         try {
@@ -89,4 +99,30 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
             return null;
         }
     }
+
+    /**
+     * The signature validation operation. This should support the provision
+     * of the message content (expected in a Base64 format) and the signature
+     * to validate the content against.
+     *
+     * @param signatureCertificate  The digital signature certificate to be used for the signature generation
+     * @param algorithm             The algorithm used for the signature generation
+     * @param content               The context (in Base64 format) to be validated
+     * @param signature             The signature to validate the context against
+     * @return whether the signature validation was successful or not
+     */
+    @Override
+    public boolean validateSignature(String signatureCertificate, DigitalSignatureAlgorithmEnum algorithm, byte[] signature, byte[] content) {
+        // Construct the signature verification object
+        final SignatureVerificationRequestDto verificationRequest = new SignatureVerificationRequestDto();
+        verificationRequest.setContent(new String(content, StandardCharsets.UTF_8));
+        verificationRequest.setSignature(Base64.getEncoder().encodeToString(signature));
+
+        // Ask cKeeper to verify the signature
+        final Response response = this.cKeeperClient.verifyEntitySignature(this.appName, verificationRequest);
+
+        // If everything went OK, return a positive response
+        return response.status() < 300;
+    }
+
 }

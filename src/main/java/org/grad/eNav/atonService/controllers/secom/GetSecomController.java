@@ -45,6 +45,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -54,8 +55,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -175,7 +176,10 @@ public class GetSecomController implements GetSecomInterface {
                 finalReqGeometry,
                 validFrom,
                 validTo,
-                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
+                Optional.ofNullable(page)
+                        .map(p -> PageRequest.of(p, Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)))
+                        .map(Pageable.class::cast)
+                        .orElse(Pageable.unpaged())
         );
 
         // We only support S-100 Datasets here
@@ -195,7 +199,7 @@ public class GetSecomController implements GetSecomInterface {
         // Generate the Get Response Object
         final GetResponseObject getResponseObject = new GetResponseObject();
         final DataResponseObject dataResponseObject = new DataResponseObject();
-        dataResponseObject.setData(Base64.getEncoder().encodeToString(data.getBytes()));
+        dataResponseObject.setData(data.getBytes(StandardCharsets.UTF_8));
         getResponseObject.setDataResponseObject(dataResponseObject);
         getResponseObject.setPagination(new PaginationObject(
                 (int) atonPage.getTotalElements(),

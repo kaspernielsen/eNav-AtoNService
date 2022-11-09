@@ -497,12 +497,11 @@ class SecomSubscriptionServiceTest {
         // Verify that the constructed object seems valid
         assertNotNull(uploadArgument.getValue());
         assertNotNull(uploadArgument.getValue().getEnvelope());
-        assertTrue(uploadArgument.getValue().getEnvelope().getData().length()> 0);
+        assertTrue(uploadArgument.getValue().getEnvelope().getData().length > 0);
         assertEquals(SECOM_DataProductType.S125, uploadArgument.getValue().getEnvelope().getDataProductType());
         assertEquals(Boolean.TRUE, uploadArgument.getValue().getEnvelope().getFromSubscription());
         assertEquals(AckRequestEnum.NO_ACK_REQUESTED, uploadArgument.getValue().getEnvelope().getAckRequest());
         assertNotNull(uploadArgument.getValue().getEnvelope().getTransactionIdentifier());
-        assertNotNull(uploadArgument.getValue().getEnvelopeSignature());
     }
 
     /**

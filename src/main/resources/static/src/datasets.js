@@ -348,7 +348,17 @@ function loadDatasetContent(event, table, button, config) {
         success: (response) => {
             // Show the content
             if(response.dataResponseObject) {
-                $('#datasetContentTextArea').val(formatXml(atob(response.dataResponseObject.data)));
+                var raw = response.dataResponseObject.data;
+                var processed = atob(raw).split('').map(x => x.charCodeAt(0));
+                // Decompress if required
+                if(response.dataResponseObject.exchangeMetadata.compressionFlag) {
+                    processed = pako.ungzip(new Uint8Array(decoded), { to: 'string' });
+                }
+                // Decode if required
+                if(response.dataResponseObject.exchangeMetadata.dataProtection) {
+                    processed = processed; // Not implemented yet
+                }
+                $('#datasetContentTextArea').val(formatXml(decompressed));
             } else {
                 $('#datasetContentTextArea').val("No data found");
             }

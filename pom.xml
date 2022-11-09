@@ -298,12 +298,12 @@
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-core</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.0.7-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-springboot</artifactId>
-			<version>0.0.6-SNAPSHOT</version>
+			<version>0.0.7</version>
 		</dependency>
 
 		<!-- Bouncy Castle -->
