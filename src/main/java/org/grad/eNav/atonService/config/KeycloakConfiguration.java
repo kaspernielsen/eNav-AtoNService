@@ -6,12 +6,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * The Boostrap Configuration.
+ * Keycloak Configuration.
+ *
+ * Spring Boot 2.6.x seems to have introduced some change causing the
+ * previously-working integration with Keycloak to have a circular reference,
+ * preventing application start; it works and starts fine with the current
+ * 2.5.x release.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Configuration
-public class BootstrapConfig {
+public class KeycloakConfiguration {
 
     /**
      * Load Keycloak configuration from application.properties or application.yml
