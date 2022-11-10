@@ -2,9 +2,6 @@ package org.grad.eNav.atonService.config;
 
 import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
-import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
-import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,25 +12,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class BootstrapConfig {
-
-    /**
-     * <p>
-     * Add an HTTP trace repository in memory to be used for the respective
-     * actuator.
-     * </p>
-     * <p>
-     * The functionality has been removed by default in Spring Boot 2.2.0. For
-     * more info see:
-     * </p>
-     * <a href="https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.2.0-M3-Release-Notes#actuator-http-trace-and-auditing-are-disabled-by-default">...</a>
-     *
-     * @return the in memory HTTP trance repository
-     */
-    @ConditionalOnProperty(value = "management.trace.http.enabled", havingValue = "true")
-    @Bean
-    public HttpTraceRepository httpTraceRepository() {
-        return new InMemoryHttpTraceRepository();
-    }
 
     /**
      * Load Keycloak configuration from application.properties or application.yml
