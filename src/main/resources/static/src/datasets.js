@@ -358,7 +358,7 @@ function loadDatasetContent(event, table, button, config) {
                 if(response.dataResponseObject.exchangeMetadata.dataProtection) {
                     processed = processed; // Not implemented yet
                 }
-                $('#datasetContentTextArea').val(formatXml(decompressed));
+                $('#datasetContentTextArea').val(formatXml(processed));
             } else {
                 $('#datasetContentTextArea').val("No data found");
             }
