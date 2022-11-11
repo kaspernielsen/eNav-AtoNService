@@ -358,6 +358,8 @@ function loadDatasetContent(event, table, button, config) {
                 if(response.dataResponseObject.exchangeMetadata.dataProtection) {
                     processed = processed; // Not implemented yet
                 }
+                // Back to a string
+                processed = String.fromCharCode.apply(null, processed);
                 $('#datasetContentTextArea').val(formatXml(processed));
             } else {
                 $('#datasetContentTextArea').val("No data found");
