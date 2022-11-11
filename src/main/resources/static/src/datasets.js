@@ -349,18 +349,23 @@ function loadDatasetContent(event, table, button, config) {
             // Show the content
             if(response.dataResponseObject) {
                 var raw = response.dataResponseObject.data;
-                var processed = atob(raw).split('').map(x => x.charCodeAt(0));
+                // Decode as required
+                var processed = atob(raw);
+                processed = processed.split('').map(x => x.charCodeAt(0));
                 // Decompress if required
                 if(response.dataResponseObject.exchangeMetadata.compressionFlag) {
                     processed = pako.ungzip(new Uint8Array(decoded), { to: 'string' });
+                    processed = processed.split('').map(x => x.charCodeAt(0));
                 }
-                // Decode if required
+                // Decrypt if required
                 if(response.dataResponseObject.exchangeMetadata.dataProtection) {
-                    processed = processed; // Not implemented yet
+                    log.warn("Decryption not supported yet!!!");
+                    processed = processed; // Not supported yet
                 }
-                // Back to a string
-                processed = String.fromCharCode.apply(null, processed);
-                $('#datasetContentTextArea').val(formatXml(processed));
+                // To XML string
+                var xml  = formatXml(String.fromCharCode.apply(null, processed));
+                // And finally display
+                $('#datasetContentTextArea').val(xml);
             } else {
                 $('#datasetContentTextArea').val("No data found");
             }
