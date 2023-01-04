@@ -89,7 +89,12 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
         final Response response = this.cKeeperClient.generateCertificateSignature(
                 new BigInteger(signatureCertificate.getCertificateAlias()),
                 algorithm.getValue(),
-                Optional.ofNullable(payload).orElse(null));
+                Optional.ofNullable(payload).orElse(new byte[]{}));
+
+        // Make sure the response is valid
+        if(response == null || response.body() == null) {
+            return null;
+        }
 
         // Parse the response
         try {
@@ -120,6 +125,11 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
 
         // Ask cKeeper to verify the signature
         final Response response = this.cKeeperClient.verifyEntitySignature(this.appName, verificationRequest);
+
+        // Make sure the response is valid
+        if(response == null) {
+            return false;
+        }
 
         // If everything went OK, return a positive response
         return response.status() < 300;
