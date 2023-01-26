@@ -381,22 +381,24 @@ class SecomControllerTest {
                     GetResponseObject getResponseObject = response.getResponseBody();
                     assertNotNull(getResponseObject);
                     assertNotNull(getResponseObject.getDataResponseObject());
-                    assertNotNull(getResponseObject.getDataResponseObject().getData());
                     assertNotNull(getResponseObject.getPagination());
-                    assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata());
-                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getExchangeMetadata().getDataProtection());
-                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getExchangeMetadata().getCompressionFlag());
-                    assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getExchangeMetadata().getProtectionScheme());
-                    assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureReference());
-                    assertNotNull(getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue());
-                    assertEquals(DatatypeConverter.printHexBinary("signature".getBytes()), getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
-                    assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
-                    assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
+                    assertEquals(1, getResponseObject.getDataResponseObject().size());
+                    assertNotNull(getResponseObject.getDataResponseObject().get(0));
+                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getData());
+                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getExchangeMetadata());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDataProtection());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getCompressionFlag());
+                    assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getProtectionScheme());
+                    assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureReference());
+                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue());
+                    assertEquals(DatatypeConverter.printHexBinary("signature".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
+                    assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
+                    assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
                     assertEquals(Integer.MAX_VALUE, getResponseObject.getPagination().getMaxItemsPerPage());
                     assertEquals(0, getResponseObject.getPagination().getTotalItems());
 
                     // Try to parse the incoming data
-                    String s125Xml = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().getData()));
+                    String s125Xml = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().get(0).getData()));
                     try {
                         DataSet result = S125Utils.unmarshallS125(s125Xml);
                         assertNotNull(result);

@@ -346,19 +346,19 @@ function loadDatasetContent(event, table, button, config) {
         type: 'GET',
         contentType: 'application/json; charset=utf-8',
         success: (response) => {
-            // Show the content
-            if(response.dataResponseObject) {
-                var raw = response.dataResponseObject.data;
+            // Show the content - we asked only for one dataset
+            if(response.dataResponseObject && response.dataResponseObject.length == 1) {
+                var raw = response.dataResponseObject[0].data;
                 // Decode as required
                 var processed = atob(raw);
                 processed = processed.split('').map(x => x.charCodeAt(0));
                 // Decompress if required
-                if(response.dataResponseObject.exchangeMetadata.compressionFlag) {
+                if(response.dataResponseObject[0].exchangeMetadata.compressionFlag) {
                     processed = pako.ungzip(new Uint8Array(decoded), { to: 'string' });
                     processed = processed.split('').map(x => x.charCodeAt(0));
                 }
                 // Decrypt if required
-                if(response.dataResponseObject.exchangeMetadata.dataProtection) {
+                if(response.dataResponseObject[0].exchangeMetadata.dataProtection) {
                     log.warn("Decryption not supported yet!!!");
                     processed = processed; // Not supported yet
                 }
