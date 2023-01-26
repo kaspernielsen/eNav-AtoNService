@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
+import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.SearchParameters;
@@ -132,14 +133,13 @@ public class SecomService {
         searchFilterObject.setQuery(searchParameters);
 
         // Lookup the endpoints of the clients from the SECOM discovery service
-        final Optional<SearchObjectResult[]> instances = Optional.ofNullable(discoveryService)
-                .map(ds -> ds.search(searchFilterObject, 0, Integer.MAX_VALUE))
-                .orElse(Optional.empty());
+        final List<SearchObjectResult> instances = Optional.ofNullable(this.discoveryService)
+                .flatMap(ds -> ds.searchService(searchFilterObject, 0, Integer.MAX_VALUE))
+                .map(ResponseSearchObject::getSearchServiceResult)
+                .orElse(Collections.emptyList());
 
         // Extract the latest matching instance
-        final SearchObjectResult instance = instances.map(Arrays::asList)
-                .orElse(Collections.emptyList())
-                .stream()
+        final SearchObjectResult instance = instances.stream()
                 .max(Comparator.comparing(SearchObjectResult::getVersion))
                 .orElseThrow(() -> new SecomNotFoundException(mrn));
 

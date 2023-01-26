@@ -57,6 +57,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -200,7 +201,7 @@ public class GetSecomController implements GetSecomInterface {
         final GetResponseObject getResponseObject = new GetResponseObject();
         final DataResponseObject dataResponseObject = new DataResponseObject();
         dataResponseObject.setData(data.getBytes(StandardCharsets.UTF_8));
-        getResponseObject.setDataResponseObject(dataResponseObject);
+        getResponseObject.setDataResponseObject(Collections.singletonList(dataResponseObject));
         getResponseObject.setPagination(new PaginationObject(
                 (int) atonPage.getTotalElements(),
                 Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)));
