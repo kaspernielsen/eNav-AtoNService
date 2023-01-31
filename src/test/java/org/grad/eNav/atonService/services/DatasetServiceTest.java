@@ -34,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -57,6 +58,12 @@ class DatasetServiceTest {
     DatasetService datasetService;
 
     /**
+     * The Model Mapper.
+     */
+    @Spy
+    ModelMapper modelMapper;
+
+    /**
      * The Entity Manager mock.
      */
     @Mock
@@ -67,6 +74,12 @@ class DatasetServiceTest {
      */
     @Mock
     UnLoCodeService unLoCodeService;
+
+    /**
+     * The Aids to Navigation Service mock.
+     */
+    @Mock
+    AidsToNavigationService aidsToNavigationService;
 
     /**
      * The Dataset Repo mock.
@@ -166,7 +179,7 @@ class DatasetServiceTest {
         doReturn(mockedQuery).when(this.datasetService).geDatasetSearchQuery(any(), any(), any(), any(), any());
 
         // Perform the service call
-        Page<S125DataSet> result = this.datasetService.findAll("uid", null, null, null, pageable);
+        Page<S125DataSet> result = this.datasetService.findAll(UUID.randomUUID(), null, null, null, pageable);
 
         // Test the result
         assertNotNull(result);

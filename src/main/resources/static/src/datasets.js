@@ -231,7 +231,7 @@ $(function () {
             selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
                 $.ajax({
                     type: 'DELETE',
-                    url: `./api/dataset/${this.data()["id"]}`,
+                    url: `./api/dataset/${this.data()["uuid"]}`,
                     crossDomain: true,
                     success: success,
                     error: error

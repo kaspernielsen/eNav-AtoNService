@@ -21,13 +21,13 @@ import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
 import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
-import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.services.secom.SecomSubscriptionService;
+import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomConstants;
@@ -44,6 +44,7 @@ import org.locationtech.geomesa.utils.interop.WKTUtils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -94,6 +95,12 @@ class SecomControllerTest {
     WebTestClient webTestClient;
 
     /**
+     * The Model Mapper.
+     */
+    @Autowired
+    ModelMapper modelMapper;
+
+    /**
      * The Dataset Service mock.
      */
     @MockBean
@@ -142,6 +149,7 @@ class SecomControllerTest {
     private Integer queryPage;
     private Integer queryPageSize;
     private S125DataSet s125DataSet;
+    private String s125DataSetAsXml;
     private SubscriptionRequest subscriptionRequest;
     private SubscriptionRequest savedSubscriptionRequest;
     private RemoveSubscriptionObject removeSubscriptionObject;
@@ -150,7 +158,7 @@ class SecomControllerTest {
      * Common setup for all the tests.
      */
     @BeforeEach
-    void setUp() {
+    void setUp() throws JAXBException {
         // Setup the query arguments
         this.geometryFactory = new GeometryFactory(new PrecisionModel(),4326);
         this.queryDataReference = UUID.randomUUID();
@@ -180,6 +188,11 @@ class SecomControllerTest {
                 new Coordinate(180, -90),
                 new Coordinate(-180, -90),
         }));
+
+        // Marshal the dataset
+        final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
+        final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, Collections.emptyList());
+        this.s125DataSetAsXml = S125Utils.marshalS125(dataset, Boolean.FALSE);
 
         // Setup the subscription requests and responses
         this.subscriptionRequest = new SubscriptionRequest();
@@ -245,8 +258,8 @@ class SecomControllerTest {
     void testGetSummary() {
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
                 .when(this.datasetService).findAll(any(), any(), any(), any(), any());
-        doReturn(new PageImpl<>(Collections.emptyList(), Pageable.ofSize(1), 0))
-                .when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
+        doReturn(this.s125DataSetAsXml)
+                .when(this.datasetService).getDatasetContent(any());
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -356,9 +369,10 @@ class SecomControllerTest {
         doReturn("signature".getBytes()).when(this.secomSignatureProvider).generateSignature(any(), any(), any());
 
         // Mock the rest
-        doReturn(this.s125DataSet).when(this.datasetService).findOne(any());
-        doReturn(new PageImpl<>(Collections.emptyList(), Pageable.ofSize(1), 0))
-                .when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
+        doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
+                .when(this.datasetService).findAll(any(), any(), any(), any(), any());
+        doReturn(this.s125DataSetAsXml)
+                .when(this.datasetService).getDatasetContent(any());
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -395,7 +409,7 @@ class SecomControllerTest {
                     assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
                     assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
                     assertEquals(Integer.MAX_VALUE, getResponseObject.getPagination().getMaxItemsPerPage());
-                    assertEquals(0, getResponseObject.getPagination().getTotalItems());
+                    assertEquals(1, getResponseObject.getPagination().getTotalItems());
 
                     // Try to parse the incoming data
                     String s125Xml = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().get(0).getData()));
@@ -413,32 +427,6 @@ class SecomControllerTest {
                         fail(ex);
                     }
                 });
-    }
-
-    /**
-     * Test that the SECOM Get interface will return an HTTP Status NOT_FOUND
-     * if the dataset reference points to an unknown dataset.
-     */
-    @Test
-    void testGetNotFound() {
-        doThrow(DataNotFoundException.class).when(this.datasetService).findOne(any());
-
-        webTestClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/api/secom" + GET_INTERFACE_PATH)
-                        .queryParam("dataReference", this.queryDataReference)
-                        .queryParam("containerType", this.queryContainerType.getValue())
-                        .queryParam("dataProductType", this.queryDataProductType)
-                        .queryParam("productVersion", this.queryProductVersion)
-                        .queryParam("geometry", this.queryGeometry)
-                        .queryParam("unlocode", this.queryUnlocode)
-                        .queryParam("validFrom", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidFrom))
-                        .queryParam("validTo", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidTo))
-                        .queryParam("page", this.queryPage)
-                        .queryParam("pageSize", this.queryPageSize)
-                        .build())
-                .exchange()
-                .expectStatus().isNotFound();
     }
 
     /**

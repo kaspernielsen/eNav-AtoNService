@@ -17,6 +17,7 @@
 package org.grad.eNav.atonService.services;
 
 
+import _int.iala_aism.s125.gml._0_0.DataSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -27,9 +28,12 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.DatasetRepo;
+import org.grad.eNav.atonService.utils.S125DatasetBuilder;
+import org.grad.eNav.s125.utils.S125Utils;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -39,6 +43,7 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -47,6 +52,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -72,10 +78,22 @@ public class DatasetService {
     EntityManager entityManager;
 
     /**
+     * The Model Mapper.
+     */
+    @Autowired
+    ModelMapper modelMapper;
+
+    /**
      * The UN/LoCode Service.
      */
     @Autowired
     UnLoCodeService unLoCodeService;
+
+    /**
+     * The Aids to Navigation Service.
+     */
+    @Autowired
+    AidsToNavigationService aidsToNavigationService;
 
     /**
      * The Dataset Repo.
@@ -101,7 +119,7 @@ public class DatasetService {
     /**
      * Find one dataset by UUID.
      *
-     * @param uuid the UUID
+     * @param uuid the UUID of the dataset
      * @return the dataset
      */
     @Transactional(readOnly = true)
@@ -113,11 +131,15 @@ public class DatasetService {
     /**
      * Get all the Datasets in a pageable search.
      *
-     * @param pageable the pagination information
-     * @return the list of Datasets
+     * @param uuid      The dataset UUID
+     * @param geometry  The dataset geometry
+     * @param fromTime  the dataset validity starting time
+     * @param toTime    the dataset validity ending time
+     * @param pageable  The pageable result ouput
+     * @return The matching datasets in a paged response
      */
     @Transactional(readOnly = true)
-    public Page<S125DataSet> findAll(String datasetTitle,
+    public Page<S125DataSet> findAll(UUID uuid,
                                      Geometry geometry,
                                      LocalDateTime fromTime,
                                      LocalDateTime toTime,
@@ -125,7 +147,7 @@ public class DatasetService {
         log.debug("Request to get S-125 Datasets in a pageable search");
         // Create the search query - always sort by name
         SearchQuery<S125DataSet> searchQuery = this.geDatasetSearchQuery(
-                datasetTitle,
+                uuid,
                 geometry,
                 fromTime,
                 toTime,
@@ -134,7 +156,7 @@ public class DatasetService {
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
-                .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
+                .map(query -> pageable.isPaged() ? query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()) : query.fetchAll())
                 .map(searchResult -> new PageImpl<>(searchResult.hits(), pageable, searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
     }
@@ -196,19 +218,59 @@ public class DatasetService {
     /**
      * Delete the Aids to Navigation by UUID.
      *
-     * @param uuid the UUID of the Aids to Navigation 21ddfeb8-a647-49cd-a6a0-2df3b92251b9
+     * @param uuid the UUID of the dataset
      */
     @Transactional
     public void delete(UUID uuid) {
         log.debug("Request to delete Dataset with UUID : {}", uuid);
 
-        // Make sure the station node exists
+        // Make sure the dataset exists
         final S125DataSet dataSet = this.datasetRepo.findById(uuid)
-                .orElseThrow(() -> new DataNotFoundException(String.format("No Dataset found for the provided UUID: %s", uuid)));
+                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
 
         // Now delete the station node
         this.datasetRepo.delete(dataSet);
     }
+
+    /**
+     * Provided a valid dataset UUID this function will build the respective
+     * dataset and populate it with all entries that match its geographical
+     * boundaries. The resulting object will then be marshalled into an XML
+     * string and returned.
+     *
+     * @param uuid the UUID of the dataset
+     * @return
+     */
+    public String getDatasetContent(UUID uuid) {
+        log.debug("Request to retrieve the content for Dataset with UUID : {}", uuid);
+
+        // Make sure the dataset exists
+        final S125DataSet s125DataSet = this.datasetRepo.findById(uuid)
+                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
+
+        // Get all the matching Aids to Navigation
+        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
+                null,
+                s125DataSet.getGeometry(),
+                null,
+                null,
+                Pageable.unpaged()
+        );
+
+        // Now try to marshal the dataset into an XML string
+        final String xmlContent;
+        try {
+            final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
+            final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
+            xmlContent = S125Utils.marshalS125(dataset, Boolean.FALSE);
+        } catch (Exception ex) {
+            throw new ValidationException(ex.getMessage());
+        }
+
+        // And return the output
+        return xmlContent;
+    }
+
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
@@ -240,14 +302,14 @@ public class DatasetService {
      * For any more elaborate search, the getSearchMessageQueryByText function
      * can be used.
      *
-     * @param datasetTitle the Dataset title to be searched
+     * @param uuid the dataset UUID to be searched
      * @param geometry the geometry that the results should intersect with
      * @param fromTime the date-time the results should match from
      * @param toTime the date-time the results should match to
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<S125DataSet> geDatasetSearchQuery(String datasetTitle,
+    protected SearchQuery<S125DataSet> geDatasetSearchQuery(UUID uuid,
                                                             Geometry geometry,
                                                             LocalDateTime fromTime,
                                                             LocalDateTime toTime,
@@ -258,8 +320,8 @@ public class DatasetService {
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
                             b.must(f.matchAll());
-                            Optional.ofNullable(datasetTitle).ifPresent(v -> b.must(f.match()
-                                    .field("datasetIdentificationInformation.datasetTitle")
+                            Optional.ofNullable(uuid).ifPresent(v -> b.must(f.match()
+                                    .field("uuid")
                                     .matching(v)));
                             Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
                                     .field("dateStart")
