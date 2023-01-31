@@ -16,19 +16,14 @@
 
 package org.grad.eNav.atonService.controllers.secom;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
-import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.WKTUtil;
-import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.interfaces.GetSummarySecomInterface;
 import org.grad.secom.core.models.GetSummaryResponseObject;
 import org.grad.secom.core.models.PaginationObject;
@@ -40,9 +35,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -55,10 +48,10 @@ import javax.validation.constraints.Pattern;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * The SECOM Get Summary Interface Controller.
@@ -70,12 +63,6 @@ import java.util.stream.Collectors;
 @Validated
 @Slf4j
 public class GetSummarySecomController implements GetSummarySecomInterface {
-
-    /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
 
     /**
      * The Dataset Service.
@@ -133,8 +120,11 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
         Optional.ofNullable(validTo).ifPresent(v -> log.debug("Valid To time specified as: {}", validTo));
 
         // Init local variables
-        Geometry reqGeometry = null;
-        List<SummaryObject> data = null;
+        Geometry jtsGeometry = null;
+        Pageable pageable = Optional.ofNullable(page)
+                .map(p -> PageRequest.of(p, Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)))
+                .map(Pageable.class::cast)
+                .orElse(Pageable.unpaged());
 
         // Parse the arguments
         final ContainerTypeEnum reqContainerType = Optional.ofNullable(containerType)
@@ -143,75 +133,56 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
                 .orElse(SECOM_DataProductType.S125);
         if(Objects.nonNull(geometry)) {
             try {
-                reqGeometry = WKTUtil.convertWKTtoGeometry(geometry);
+                jtsGeometry = WKTUtil.convertWKTtoGeometry(geometry);
             } catch (ParseException ex) {
                 throw new ValidationException(ex.getMessage());
             }
         }
         if(Objects.nonNull(unlocode)) {
-            reqGeometry = GeometryUtils.joinGeometries(reqGeometry, Optional.ofNullable(unlocode)
+            jtsGeometry = GeometryUtils.joinGeometries(jtsGeometry, Optional.ofNullable(unlocode)
                     .map(this.unLoCodeService::getUnLoCodeMapEntry)
                     .map(UnLoCodeMapEntry::getGeometry)
                     .orElseGet(() -> this.geometryFactory.createEmpty(0)));
         }
 
-        // Handle the input request
-        final Geometry finalReqGeometry = reqGeometry;
-        final Page<S125DataSet> s125DataSetPage = this.datasetService.findAll(
-                null,
-                reqGeometry,
-                null,
-                null,
-                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
-        );
-
         // We only support S-100 Datasets here
+        final List<SummaryObject> summaryObjectList = new ArrayList<>();
         if(reqContainerType == ContainerTypeEnum.S100_DataSet) {
             // We only support specifically S-125 Datasets
             if (reqDataProductType == SECOM_DataProductType.S125) {
-                data = s125DataSetPage.get().map(s125Dataset -> {
-                    // Create and populate the summary object
-                    SummaryObject summaryObject = new SummaryObject();
-                    summaryObject.setDataReference(s125Dataset.getUuid());
-                    summaryObject.setDataProtection(Boolean.FALSE);
-                    summaryObject.setDataCompression(Boolean.FALSE);
-                    summaryObject.setContainerType(reqContainerType);
-                    summaryObject.setDataProductType(reqDataProductType);
-                    summaryObject.setInfo_productVersion(s125Dataset.getDatasetIdentificationInformation().getProductEdition());
-                    summaryObject.setInfo_identifier(s125Dataset.getDatasetIdentificationInformation().getDatasetFileIdentifier());
-                    summaryObject.setInfo_name(s125Dataset.getDatasetIdentificationInformation().getDatasetTitle());
-                    summaryObject.setInfo_status(InfoStatusEnum.PRESENT.getValue());
-                    summaryObject.setInfo_description(s125Dataset.getDatasetIdentificationInformation().getDatasetAbstract());
-                    summaryObject.setInfo_lastModifiedDate(s125Dataset.getLastUpdatedAt());
+                this.datasetService.findAll(null, jtsGeometry, validFrom, validTo, pageable)
+                        .stream()
+                        .map(s125Dataset -> {
+                            // Create and populate the summary object
+                            SummaryObject summaryObject = new SummaryObject();
+                            summaryObject.setDataReference(s125Dataset.getUuid());
+                            summaryObject.setDataProtection(Boolean.FALSE);
+                            summaryObject.setDataCompression(Boolean.FALSE);
+                            summaryObject.setContainerType(reqContainerType);
+                            summaryObject.setDataProductType(reqDataProductType);
+                            summaryObject.setInfo_productVersion(s125Dataset.getDatasetIdentificationInformation().getProductEdition());
+                            summaryObject.setInfo_identifier(s125Dataset.getDatasetIdentificationInformation().getDatasetFileIdentifier());
+                            summaryObject.setInfo_name(s125Dataset.getDatasetIdentificationInformation().getDatasetTitle());
+                            summaryObject.setInfo_status(InfoStatusEnum.PRESENT.getValue());
+                            summaryObject.setInfo_description(s125Dataset.getDatasetIdentificationInformation().getDatasetAbstract());
+                            summaryObject.setInfo_lastModifiedDate(s125Dataset.getLastUpdatedAt());
 
-                    // Calculate the summary size
-                    try {
-                        final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-                        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
-                                null,
-                                finalReqGeometry,
-                                validFrom,
-                                validTo,
-                                Pageable.unpaged()
-                        );
-                        final DataSet dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atonPage.getContent());
-                        summaryObject.setInfo_size((long) S125Utils.marshalS125(dataset, Boolean.FALSE).length());
-                    } catch (Exception ex) {
-                        throw new ValidationException(ex.getMessage());
-                    }
+                            // Calculate the summary size
+                            String xml = this.datasetService.getDatasetContent(s125Dataset.getUuid());
+                            summaryObject.setInfo_size((long) xml.length());
 
-                    // And return the summary object
-                    return summaryObject;
-                })
-                .collect(Collectors.toList());
+                            // And return the summary object
+                            return summaryObject;
+                        })
+                        .forEach(summaryObjectList::add);
             }
         }
 
         // Start building the response
         final GetSummaryResponseObject getSummaryResponseObject = new GetSummaryResponseObject();
-        getSummaryResponseObject.setSummaryObject(data);
+        getSummaryResponseObject.setSummaryObject(summaryObjectList);
         getSummaryResponseObject.setPagination(new PaginationObject(
-                (int) s125DataSetPage.getTotalElements(),
+                summaryObjectList.size(),
                 Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)));
 
         // And return the Get Summary Response Object

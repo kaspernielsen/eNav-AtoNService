@@ -16,21 +16,14 @@
 
 package org.grad.eNav.atonService.controllers.secom;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
-import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.WKTUtil;
-import org.grad.eNav.s125.utils.S125Utils;
-import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.interfaces.GetSecomInterface;
 import org.grad.secom.core.models.DataResponseObject;
 import org.grad.secom.core.models.GetResponseObject;
@@ -41,9 +34,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -55,12 +46,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The SECOM Get Interface Controller.
@@ -72,13 +59,6 @@ import java.util.UUID;
 @Validated
 @Slf4j
 public class GetSecomController implements GetSecomInterface {
-
-
-    /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
 
     /**
      * The Dataset Service.
@@ -140,22 +120,16 @@ public class GetSecomController implements GetSecomInterface {
 
         // Init local variables
         Geometry jtsGeometry = null;
-        String data = null;
-        S125DataSet s125DataSet = new S125DataSet();
+        Pageable pageable = Optional.ofNullable(page)
+                .map(p -> PageRequest.of(p, Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)))
+                .map(Pageable.class::cast)
+                .orElse(Pageable.unpaged());
 
         // Parse the arguments
         final ContainerTypeEnum reqContainerType = Optional.ofNullable(containerType)
                 .orElse(ContainerTypeEnum.S100_DataSet);
         final SECOM_DataProductType reqDataProductType = Optional.ofNullable(dataProductType)
                 .orElse(SECOM_DataProductType.S125);
-        if(Objects.nonNull(dataReference)) {
-            try {
-                s125DataSet = this.datasetService.findOne(dataReference);
-                jtsGeometry = s125DataSet.getGeometry();
-            } catch (DataNotFoundException ex) {
-                throw new SecomNotFoundException(dataReference.toString());
-            }
-        }
         if(Objects.nonNull(geometry)) {
             try {
                 jtsGeometry = GeometryUtils.joinGeometries(jtsGeometry, WKTUtil.convertWKTtoGeometry(geometry));
@@ -170,27 +144,26 @@ public class GetSecomController implements GetSecomInterface {
                     .orElseGet(() -> this.geometryFactory.createEmpty(0)));
         }
 
-        // Handle the input request
-        final Geometry finalReqGeometry = jtsGeometry;
-        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
-                null,
-                finalReqGeometry,
-                validFrom,
-                validTo,
-                Optional.ofNullable(page)
-                        .map(p -> PageRequest.of(p, Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)))
-                        .map(Pageable.class::cast)
-                        .orElse(Pageable.unpaged())
-        );
-
         // We only support S-100 Datasets here
+        final List<DataResponseObject> dataResponseObjectList = new ArrayList<>();
         if(reqContainerType == ContainerTypeEnum.S100_DataSet) {
             // We only support specifically S-125 Datasets
             if(reqDataProductType == SECOM_DataProductType.S125) {
                 try {
-                    final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-                    final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
-                    data = S125Utils.marshalS125(dataset, Boolean.FALSE);
+                    // Retrieve all matching datasets
+                    this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, pageable)
+                            .stream()
+                            .map(d -> this.datasetService.getDatasetContent(d.getUuid()))
+                            .map(String::getBytes)
+                            .map(bytes -> {
+                                // Create and populate the data response objects
+                                DataResponseObject dataResponseObject = new DataResponseObject();
+                                dataResponseObject.setData(bytes);
+
+                                // And return the summary object
+                                return dataResponseObject;
+                            })
+                            .forEach(dataResponseObjectList::add);
                 } catch (Exception ex) {
                     throw new ValidationException(ex.getMessage());
                 }
@@ -199,11 +172,9 @@ public class GetSecomController implements GetSecomInterface {
 
         // Generate the Get Response Object
         final GetResponseObject getResponseObject = new GetResponseObject();
-        final DataResponseObject dataResponseObject = new DataResponseObject();
-        dataResponseObject.setData(data.getBytes(StandardCharsets.UTF_8));
-        getResponseObject.setDataResponseObject(Collections.singletonList(dataResponseObject));
+        getResponseObject.setDataResponseObject(dataResponseObjectList);
         getResponseObject.setPagination(new PaginationObject(
-                (int) atonPage.getTotalElements(),
+                dataResponseObjectList.size(),
                 Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)));
 
         // And final return the Get Response Object

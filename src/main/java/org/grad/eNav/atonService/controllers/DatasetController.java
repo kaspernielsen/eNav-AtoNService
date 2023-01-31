@@ -67,20 +67,20 @@ public class DatasetController {
     /**
      * GET /api/dataset : Returns a paged list of all current datasets.
      *
-     * @param datasetTitle the S-125 Dataset Title
+     * @param uuid the UUID of the dataset to be retrieved
      * @param geometry the geometry for Dataset filtering
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Page<S125DataSetDto>> getDatasets(@RequestParam("datasetTitle") Optional<String> datasetTitle,
+    public ResponseEntity<Page<S125DataSetDto>> getDatasets(@RequestParam("datasetTitle") Optional<UUID> uuid,
                                                             @RequestParam("geometry") Optional<Geometry> geometry,
                                                             Pageable pageable) {
         this.log.debug("REST request to get page of Dataset");
-        datasetTitle.ifPresent(v -> this.log.debug("Dataset title specified as: {}", datasetTitle));
+        uuid.ifPresent(v -> this.log.debug("Dataset UUID specified as: {}", uuid.toString()));
         geometry.ifPresent(v -> this.log.debug("Dataset geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
         Page<S125DataSet> datasetPage = this.datasetService.findAll(
-                datasetTitle.orElse(null),
+                uuid.orElse(null),
                 geometry.orElse(null),
                 null,
                 null,
