@@ -17,9 +17,9 @@
       {
         "url": "https://rnavlab.gla-rad.org/aton-service"
       },{
-        "url": "http://enav.grad-rrnav.pub/aton-service"
+        "url": "https://enav.grad-rrnav.pub/aton-service"
       }, {
-        "url": "http://zombie:8766"
+        "url": "http://cupid:8766"
       }, {
         "url": "http://localhost:8766"
       }
