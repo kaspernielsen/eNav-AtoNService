@@ -19,7 +19,7 @@ package org.grad.eNav.atonService.controllers.secom;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
-import org.grad.eNav.atonService.services.AidsToNavigationService;
+import org.grad.eNav.atonService.services.DatasetContentService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
@@ -71,10 +71,10 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
     DatasetService datasetService;
 
     /**
-     * The Aids to Navigation Service.
+     * The Dataset Content Service.
      */
     @Autowired
-    AidsToNavigationService aidsToNavigationService;
+    DatasetContentService datasetContentService;
 
     /**
      * The UN/LOCODE Service.
@@ -166,10 +166,7 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
                             summaryObject.setInfo_status(InfoStatusEnum.PRESENT.getValue());
                             summaryObject.setInfo_description(s125Dataset.getDatasetIdentificationInformation().getDatasetAbstract());
                             summaryObject.setInfo_lastModifiedDate(s125Dataset.getLastUpdatedAt());
-
-                            // Calculate the summary size
-                            String xml = this.datasetService.getDatasetContent(s125Dataset.getUuid());
-                            summaryObject.setInfo_size((long) xml.length());
+                            summaryObject.setInfo_size(this.datasetContentService.findLatest(s125Dataset.getUuid()).getContentLength().longValue());
 
                             // And return the summary object
                             return summaryObject;

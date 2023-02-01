@@ -19,7 +19,9 @@ package org.grad.eNav.atonService.controllers.secom;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
+import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
+import org.grad.eNav.atonService.services.DatasetContentService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
@@ -65,6 +67,12 @@ public class GetSecomController implements GetSecomInterface {
      */
     @Autowired
     DatasetService datasetService;
+
+    /**
+     * The Dataset Content Service.
+     */
+    @Autowired
+    DatasetContentService datasetContentService;
 
     /**
      * The Aids to Navigation Service.
@@ -153,14 +161,15 @@ public class GetSecomController implements GetSecomInterface {
                     // Retrieve all matching datasets
                     this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, pageable)
                             .stream()
-                            .map(d -> this.datasetService.getDatasetContent(d.getUuid()))
+                            .map(d -> this.datasetContentService.findLatest(d.getUuid()))
+                            .map(DatasetContent::getContent)
                             .map(String::getBytes)
                             .map(bytes -> {
-                                // Create and populate the data response objects
+                                // Create and populate the data response object
                                 DataResponseObject dataResponseObject = new DataResponseObject();
                                 dataResponseObject.setData(bytes);
 
-                                // And return the summary object
+                                // And return the data response object
                                 return dataResponseObject;
                             })
                             .forEach(dataResponseObjectList::add);

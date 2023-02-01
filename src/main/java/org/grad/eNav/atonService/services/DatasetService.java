@@ -17,7 +17,6 @@
 package org.grad.eNav.atonService.services;
 
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -27,13 +26,11 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
+import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.DatasetRepo;
-import org.grad.eNav.atonService.utils.S125DatasetBuilder;
-import org.grad.eNav.s125.utils.S125Utils;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -43,7 +40,6 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -52,7 +48,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -78,22 +73,10 @@ public class DatasetService {
     EntityManager entityManager;
 
     /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
-
-    /**
      * The UN/LoCode Service.
      */
     @Autowired
     UnLoCodeService unLoCodeService;
-
-    /**
-     * The Aids to Navigation Service.
-     */
-    @Autowired
-    AidsToNavigationService aidsToNavigationService;
 
     /**
      * The Dataset Repo.
@@ -191,6 +174,7 @@ public class DatasetService {
      * @param dataSet the Dataset entity to be saved
      * @return the saved Dataset entity
      */
+    @LogDataset
     @Transactional
     public S125DataSet save(@NotNull S125DataSet dataSet) {
         log.debug("Request to save Dataset : {}", dataSet);
@@ -220,8 +204,9 @@ public class DatasetService {
      *
      * @param uuid the UUID of the dataset
      */
+    @LogDataset
     @Transactional
-    public void delete(UUID uuid) {
+    public S125DataSet delete(UUID uuid) {
         log.debug("Request to delete Dataset with UUID : {}", uuid);
 
         // Make sure the dataset exists
@@ -230,47 +215,10 @@ public class DatasetService {
 
         // Now delete the station node
         this.datasetRepo.delete(dataSet);
+
+        // And return the object for AOP
+        return dataSet;
     }
-
-    /**
-     * Provided a valid dataset UUID this function will build the respective
-     * dataset and populate it with all entries that match its geographical
-     * boundaries. The resulting object will then be marshalled into an XML
-     * string and returned.
-     *
-     * @param uuid the UUID of the dataset
-     * @return
-     */
-    public String getDatasetContent(UUID uuid) {
-        log.debug("Request to retrieve the content for Dataset with UUID : {}", uuid);
-
-        // Make sure the dataset exists
-        final S125DataSet s125DataSet = this.datasetRepo.findById(uuid)
-                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
-
-        // Get all the matching Aids to Navigation
-        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
-                null,
-                s125DataSet.getGeometry(),
-                null,
-                null,
-                Pageable.unpaged()
-        );
-
-        // Now try to marshal the dataset into an XML string
-        final String xmlContent;
-        try {
-            final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-            final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
-            xmlContent = S125Utils.marshalS125(dataset, Boolean.FALSE);
-        } catch (Exception ex) {
-            throw new ValidationException(ex.getMessage());
-        }
-
-        // And return the output
-        return xmlContent;
-    }
-
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided

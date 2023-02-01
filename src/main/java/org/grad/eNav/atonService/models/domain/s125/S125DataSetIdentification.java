@@ -21,6 +21,8 @@ import _int.iho.s100.gml.base._1_0.MDTopicCategoryCode;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.math.BigInteger;
@@ -36,6 +38,7 @@ import java.util.List;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Cacheable
 @Indexed
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -73,6 +76,7 @@ public class S125DataSetIdentification {
     private String datasetTitle;
 
     @GenericField()
+    @LastModifiedDate
     private LocalDate datasetReferenceDate;
 
     @Enumerated(EnumType.STRING)
