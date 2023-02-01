@@ -34,7 +34,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -56,12 +55,6 @@ class DatasetServiceTest {
     @InjectMocks
     @Spy
     DatasetService datasetService;
-
-    /**
-     * The Model Mapper.
-     */
-    @Spy
-    ModelMapper modelMapper;
 
     /**
      * The Entity Manager mock.
@@ -113,11 +106,11 @@ class DatasetServiceTest {
         // Create a pageable definition
         this.pageable = PageRequest.of(0, 5);
 
-        // Create a Dataset without an ID
+        // Create a Dataset without a UUID
         this.newDataset = new S125DataSet("NewDataset");
         this.newDataset.setGeometry(this.factory.createPoint(new Coordinate(51.98, 1.28)));
 
-        // Create a Dataset with an ID
+        // Create a Dataset with a UUID
         this.existingDataset = new S125DataSet("ExistingDataset");
         this.existingDataset.setUuid(UUID.randomUUID());
         this.existingDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));

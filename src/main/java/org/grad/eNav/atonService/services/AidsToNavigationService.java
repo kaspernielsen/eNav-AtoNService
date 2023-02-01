@@ -26,6 +26,7 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
+import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
@@ -200,6 +201,7 @@ public class AidsToNavigationService {
      * @param aidsToNavigation the Aids to Navigation entity to be saved
      * @return the saved Aids to Navigation entity
      */
+    @LogDataset
     @Transactional
     public AidsToNavigation save(AidsToNavigation aidsToNavigation) {
         log.debug("Request to save Aids to Navigation : {}", aidsToNavigation);
@@ -217,8 +219,9 @@ public class AidsToNavigationService {
      *
      * @param id the ID of the Aids to Navigation
      */
+    @LogDataset
     @Transactional
-    public void delete(BigInteger id) {
+    public AidsToNavigation delete(BigInteger id) {
         log.debug("Request to delete Aids to Navigation with ID : {}", id);
 
         // Make sure the station node exists
@@ -227,6 +230,9 @@ public class AidsToNavigationService {
 
         // Now delete the station node
         this.aidsToNavigationRepo.delete(aidsToNavigation);
+
+        // And return the object for AOP
+        return aidsToNavigation;
     }
 
     /**
@@ -234,15 +240,16 @@ public class AidsToNavigationService {
      *
      * @param atonNumber the AtoN number of the Aids to Navigation
      */
+    @LogDataset
     @Transactional
-    public void deleteByAtonNumber(String atonNumber) throws DataNotFoundException {
+    public AidsToNavigation deleteByAtonNumber(String atonNumber) throws DataNotFoundException {
         log.debug("Request to delete ids to Navigation with AtoN number : {}", atonNumber);
         BigInteger id = this.aidsToNavigationRepo.findByAtonNumber(atonNumber)
                 .map(AidsToNavigation::getId)
                 .orElseThrow(() ->
                         new DataNotFoundException(String.format("No Aids to Navigation found for the provided AtoN number: %s", atonNumber))
                 );
-        this.delete(id);
+        return this.delete(id);
     }
 
     /**

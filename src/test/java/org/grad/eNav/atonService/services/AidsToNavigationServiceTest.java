@@ -287,7 +287,7 @@ class AidsToNavigationServiceTest {
     @Test
     void testDeleteByAtonNumber() {
         doReturn(Optional.of(this.existingAidsToNavigation)).when(this.aidsToNavigationRepo).findByAtonNumber(this.existingAidsToNavigation.getAtonNumber());
-        doNothing().when(this.aidsToNavigationService).delete(this.existingAidsToNavigation.getId());
+        doReturn(this.existingAidsToNavigation).when(this.aidsToNavigationService).delete(this.existingAidsToNavigation.getId());
 
         // Perform the service call
         this.aidsToNavigationService.deleteByAtonNumber(this.existingAidsToNavigation.getAtonNumber());

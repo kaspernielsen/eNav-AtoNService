@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 GLA Research and Development Directorate
+ * Copyright (c) 2022 GLA Research and Development Directorate
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package org.grad.eNav.atonService.models.domain;
+package org.grad.eNav.atonService.aspects;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * The AtoN Message Type Enum.
- * <p></p>
- * This enumeration defines the types of AtoN message types supported by the
- * AtoN Service microservice. Although the service is primarily for
- * controlling the S125 AtoN entries, there is no reason we cannot support
- * any S-100/S-200 IALA product specification.
+ * The Log Dataset Annotation.
+ *
+ * This annotation is going to be used by AOP to log the datasets affected
+ * by the method operation onto a database table.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public enum AtonMessageType {
-    S125
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface LogDataset {
+
 }
