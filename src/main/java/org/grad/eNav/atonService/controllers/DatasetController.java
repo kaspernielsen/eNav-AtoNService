@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.controllers;
 
-import io.swagger.v3.oas.annotations.Hidden;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
@@ -34,13 +34,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
 
-@Hidden
+
 @RestController
 @RequestMapping("/api/dataset")
 @Slf4j

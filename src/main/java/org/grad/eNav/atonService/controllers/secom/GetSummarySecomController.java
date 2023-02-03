@@ -42,11 +42,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.ValidationException;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import jakarta.validation.ValidationException;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

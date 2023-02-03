@@ -20,7 +20,7 @@ import _int.iala_aism.s125.gml._0_0.S125CategoryOfRecommendedTrack;
 import _int.iala_aism.s125.gml._0_0.S125Status;
 import _int.iala_aism.s125.gml._0_0.S125TrafficFlow;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
 

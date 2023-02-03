@@ -18,10 +18,10 @@ package org.grad.eNav.atonService.models.domain.s125;
 
 import _int.iala_aism.s125.gml._0_0.*;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.util.List;
 
 /**

@@ -27,7 +27,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {
+		"org.grad.eNav.atonService",
+		"org.grad.secom",
+		"org.jboss.resteasy.springboot",
+})
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableScheduling

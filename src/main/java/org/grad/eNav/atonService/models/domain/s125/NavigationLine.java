@@ -19,7 +19,7 @@ package org.grad.eNav.atonService.models.domain.s125;
 import _int.iala_aism.s125.gml._0_0.S125CategoryOfNavigationLine;
 import _int.iala_aism.s125.gml._0_0.S125Status;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
 

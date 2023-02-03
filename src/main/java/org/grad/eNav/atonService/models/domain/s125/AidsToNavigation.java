@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.models.domain.s125;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import jakarta.validation.constraints.NotNull;
 import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
 import org.grad.eNav.atonService.utils.GeometryJSONSerializer;
@@ -27,8 +28,7 @@ import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.locationtech.jts.geom.Geometry;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;

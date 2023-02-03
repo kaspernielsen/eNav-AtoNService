@@ -25,8 +25,8 @@ import _int.iho.s100.gml.base._1_0.SurfaceProperty;
 import _int.iho.s100.gml.base._1_0.SurfaceType;
 import _int.iho.s100.gml.base._1_0_Ext.PointCurveSurfaceProperty;
 import _net.opengis.gml.profiles.*;
+import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.IOUtils;
-import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.domain.s125.VirtualAISAidToNavigation;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.*;
 import org.springframework.core.io.ClassPathResource;
 
-import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -42,7 +41,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class GeometryS125ConverterTest {
 

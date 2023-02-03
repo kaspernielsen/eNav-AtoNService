@@ -16,14 +16,8 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.*;
-
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import java.math.BigDecimal;
-import java.util.List;
+import _int.iala_aism.s125.gml._0_0.S125LandmarkType;
+import jakarta.persistence.Entity;
 
 /**
  * The S-125 Lighthouse Entity Class.
