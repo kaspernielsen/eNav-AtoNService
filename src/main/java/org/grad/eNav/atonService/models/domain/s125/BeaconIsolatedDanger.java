@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * The S-125 Beacon Isolated Danger Entity Class.

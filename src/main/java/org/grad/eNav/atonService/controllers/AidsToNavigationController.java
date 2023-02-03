@@ -16,7 +16,6 @@
 
 package org.grad.eNav.atonService.controllers;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
@@ -43,7 +42,6 @@ import java.util.Optional;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Hidden
 @RestController
 @RequestMapping("/api/atons")
 @Slf4j

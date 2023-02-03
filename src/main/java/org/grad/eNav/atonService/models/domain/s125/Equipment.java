@@ -16,8 +16,8 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 
 /**
  * The S-125 Equipment Entity Class.

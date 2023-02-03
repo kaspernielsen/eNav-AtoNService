@@ -24,14 +24,14 @@ import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.SearchParameters;
-import org.grad.secom.springboot.components.SecomClient;
-import org.grad.secom.springboot.components.SecomConfigProperties;
+import org.grad.secom.springboot3.components.SecomClient;
+import org.grad.secom.springboot3.components.SecomConfigProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -63,8 +63,8 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.bind.JAXBException;
+import jakarta.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PublicKey;

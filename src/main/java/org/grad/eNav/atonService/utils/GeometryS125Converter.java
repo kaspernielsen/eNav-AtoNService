@@ -26,7 +26,7 @@ import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.locationtech.jts.geom.*;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 import java.util.*;
 
 /**
@@ -85,7 +85,7 @@ public class GeometryS125Converter {
                                 .orElse(geometryFactory.createEmpty(0));
                     } else if(Objects.nonNull(pcs.getCurveProperty())) {
                         return geometryFactory.createGeometryCollection(Optional.of(pcs.getCurveProperty())
-                                .map(_int.iho.s100.gml.base._1_0.CurveProperty::getCurve)
+                                .map(CurveProperty::getCurve)
                                 .map(CurveType::getSegments)
                                 .map(Segments::getAbstractCurveSegments)
                                 .orElse(Collections.emptyList())
