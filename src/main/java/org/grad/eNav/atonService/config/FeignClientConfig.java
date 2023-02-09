@@ -30,7 +30,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 public class FeignClientConfig {
 
     /**
-     * The OAuth2 Authorized Client Manager bean provider. In the new Spring
+     * The OAuth2 Authorized Client Manager bean provider. Since the new Spring
      * Security 5 framework, we can use the OAuth2AuthorizedClientService
      * class to authorize our clients, as long as the configuration is found
      * in the application.properties file.
