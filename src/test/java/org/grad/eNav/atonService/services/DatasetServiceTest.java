@@ -169,7 +169,7 @@ class DatasetServiceTest {
         doReturn(this.datasetList.subList(0, 5)).when(searchResult).hits();
         doReturn(searchResultTotal).when(searchResult).total();
         doReturn(10L).when(searchResultTotal).hitCount();
-        doReturn(mockedQuery).when(this.datasetService).geDatasetSearchQuery(any(), any(), any(), any(), any());
+        doReturn(mockedQuery).when(this.datasetService).getDatasetSearchQuery(any(), any(), any(), any(), any());
 
         // Perform the service call
         Page<S125DataSet> result = this.datasetService.findAll(UUID.randomUUID(), null, null, null, pageable);

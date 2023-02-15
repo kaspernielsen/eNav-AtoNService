@@ -17,11 +17,15 @@
 package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.ValidationException;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
-import org.grad.eNav.atonService.services.AidsToNavigationService;
-import org.grad.eNav.atonService.services.DatasetContentService;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
@@ -43,11 +47,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import jakarta.validation.ValidationException;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Pattern;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.QueryParam;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -67,18 +66,6 @@ public class GetSecomController implements GetSecomInterface {
      */
     @Autowired
     DatasetService datasetService;
-
-    /**
-     * The Dataset Content Service.
-     */
-    @Autowired
-    DatasetContentService datasetContentService;
-
-    /**
-     * The Aids to Navigation Service.
-     */
-    @Autowired
-    AidsToNavigationService aidsToNavigationService;
 
     /**
      * The UN/LOCODE Service.
@@ -161,7 +148,7 @@ public class GetSecomController implements GetSecomInterface {
                     // Retrieve all matching datasets
                     this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, pageable)
                             .stream()
-                            .map(d -> this.datasetContentService.findLatest(d.getUuid()))
+                            .map(S125DataSet::getDatasetContent)
                             .map(DatasetContent::getContent)
                             .map(String::getBytes)
                             .map(bytes -> {

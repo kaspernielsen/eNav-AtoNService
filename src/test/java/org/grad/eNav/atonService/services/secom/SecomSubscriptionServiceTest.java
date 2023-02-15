@@ -128,16 +128,16 @@ class SecomSubscriptionServiceTest {
     SecomSubscriptionRepo secomSubscriptionRepo;
 
     /**
-     * The S-125 Publish Channel to listen for the publications to.
+     * The AtoN Information Publish Channel to listen for the publications to.
      */
     @Mock
-    PublishSubscribeChannel s125PublicationChannel;
+    PublishSubscribeChannel atonPublicationChannel;
 
     /**
-     * The S-125 Publish Channel to listen for the deletion to.
+     * The AtoN Information Publish Channel to listen for the deletion to.
      */
     @Mock
-    PublishSubscribeChannel s125DeletionChannel;
+    PublishSubscribeChannel atonDeletionChannel;
 
     // Test Variables
     private SubscriptionRequest newSubscriptionRequest;
@@ -197,8 +197,8 @@ class SecomSubscriptionServiceTest {
         this.secomSubscriptionService.init();
 
         verify(this.entityManagerFactory, times(1)).createEntityManager();
-        verify(this.s125PublicationChannel, times(1)).subscribe(this.secomSubscriptionService);
-        verify(this.s125DeletionChannel, times(1)).subscribe(this.secomSubscriptionService);
+        verify(this.atonPublicationChannel, times(1)).subscribe(this.secomSubscriptionService);
+        verify(this.atonDeletionChannel, times(1)).subscribe(this.secomSubscriptionService);
     }
 
     /**
@@ -214,8 +214,8 @@ class SecomSubscriptionServiceTest {
         this.secomSubscriptionService.destroy();
 
         verify(this.secomSubscriptionService.entityManager , times(1)).close();
-        verify(this.s125PublicationChannel, times(1)).destroy();
-        verify(this.s125DeletionChannel, times(1)).destroy();
+        verify(this.atonPublicationChannel, times(1)).destroy();
+        verify(this.atonDeletionChannel, times(1)).destroy();
     }
 
     /**

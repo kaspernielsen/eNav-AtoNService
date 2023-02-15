@@ -20,6 +20,9 @@ import _int.iala_aism.s125.gml._0_0.DataSet;
 import _int.iala_aism.s125.gml._0_0.MemberType;
 import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
 import _net.opengis.gml.profiles.AbstractFeatureMemberType;
+import jakarta.annotation.PreDestroy;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.data.DataStore;
 import org.geotools.data.FeatureEvent;
@@ -33,7 +36,9 @@ import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.dtos.S100AbstractNode;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
+import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
+import org.grad.eNav.atonService.utils.GeometryUtils;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.locationtech.geomesa.kafka.utils.KafkaFeatureEvent;
@@ -43,15 +48,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PreDestroy;
-import jakarta.xml.bind.JAXBElement;
-import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -86,18 +91,24 @@ public class S125GDSListener implements FeatureListener {
     AidsToNavigationService aidsToNavigationService;
 
     /**
-     * The S-125 Data Channel to publish the published data to.
+     * The Dataset Service.
      */
     @Autowired
-    @Qualifier("s125PublicationChannel")
-    PublishSubscribeChannel s125PublicationChannel;
+    DatasetService datasetService;
 
     /**
-     * The S-125 Data Channel to publish the deleted data to.
+     * The AtoN Information Channel to publish the published data to.
      */
     @Autowired
-    @Qualifier("s125DeletionChannel")
-    PublishSubscribeChannel s125DeletionChannel;
+    @Qualifier("atonPublicationChannel")
+    PublishSubscribeChannel atonPublicationChannel;
+
+    /**
+     * The AtoN Information Channel to publish the deleted data to.
+     */
+    @Autowired
+    @Qualifier("atonDeletionChannel")
+    PublishSubscribeChannel atonDeletionChannel;
 
     // Component Variables
     protected DataStore consumer;
@@ -151,10 +162,13 @@ public class S125GDSListener implements FeatureListener {
             return;
         }
 
+        // Combine all geometries to figure out the affected area
+        Geometry affectedGeometry = null;
+
         // For feature additions/changes
         if (featureEvent.getType() == FeatureEvent.Type.CHANGED) {
             // Extract the S-125 message and send it
-            Optional.of(featureEvent)
+            affectedGeometry = Optional.of(featureEvent)
                     .filter(KafkaFeatureEvent.KafkaFeatureChanged.class::isInstance)
                     .map(KafkaFeatureEvent.KafkaFeatureChanged.class::cast)
                     .map(KafkaFeatureEvent.KafkaFeatureChanged::feature)
@@ -168,15 +182,18 @@ public class S125GDSListener implements FeatureListener {
                     .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                     .map(builder -> builder.setHeader("deletion", false))
                     .map(MessageBuilder::build)
-                    .forEach(msg -> {
-                        this.aidsToNavigationService.save(msg.getPayload());
-                        this.s125PublicationChannel.send(msg);
-                    });
+                    .peek(msg -> this.aidsToNavigationService.save(msg.getPayload()))
+                    .peek(msg -> this.atonPublicationChannel.send(msg))
+                    .map(Message::getPayload)
+                    .map(AidsToNavigation::getGeometry)
+                    .filter(Objects::nonNull)
+                    .reduce(GeometryUtils::joinGeometries)
+                    .orElse(null);
         }
         // For feature deletions,
         else if (featureEvent.getType() == FeatureEvent.Type.REMOVED) {
             // Extract the S-125 message UID and use it to delete all referencing nodes
-            Optional.of(featureEvent)
+            affectedGeometry = Optional.of(featureEvent)
                     .filter(KafkaFeatureEvent.KafkaFeatureRemoved.class::isInstance)
                     .map(KafkaFeatureEvent.KafkaFeatureRemoved.class::cast)
                     .map(KafkaFeatureEvent.KafkaFeatureRemoved::getFilter)
@@ -192,11 +209,21 @@ public class S125GDSListener implements FeatureListener {
                     .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                     .map(builder -> builder.setHeader("deletion", true))
                     .map(MessageBuilder::build)
-                    .forEach(msg -> {
-                        this.aidsToNavigationService.delete(msg.getPayload().getId());
-                        this.s125DeletionChannel.send(msg);
-                    });
+                    .peek(msg -> this.aidsToNavigationService.delete(msg.getPayload().getId()))
+                    .peek(msg -> this.atonDeletionChannel.send(msg))
+                    .map(Message::getPayload)
+                    .map(AidsToNavigation::getGeometry)
+                    .filter(Objects::nonNull)
+                    .reduce(GeometryUtils::joinGeometries)
+                    .orElse(null);
         }
+
+        // Now we should update all datasets that are affected in this area
+        Optional.ofNullable(affectedGeometry)
+                .map(g -> this.datasetService.findAll(null, g, null, null, Pageable.unpaged()))
+                .orElse(Page.empty())
+                .stream()
+                .forEach(this.datasetService::save);
     }
 
     /**

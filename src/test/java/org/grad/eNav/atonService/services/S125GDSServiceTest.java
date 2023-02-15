@@ -51,16 +51,16 @@ class S125GDSServiceTest {
     ApplicationContext applicationContext;
 
     /**
-     * The S-125 Data Channel to publish the published data to.
+     * The AtoN Information Channel to publish the published data to.
      */
     @Mock
-    PublishSubscribeChannel s125PublicationChannel;
+    PublishSubscribeChannel atonPublicationChannel;
 
     /**
-     * The S-125 Data Channel to publish the deleted data to.
+     * The AtoN Information Channel to publish the deleted data to.
      */
     @Mock
-    PublishSubscribeChannel s125DeletionChannel;
+    PublishSubscribeChannel atonDeletionChannel;
 
     /**
      * The Geomesa Data Store mock.

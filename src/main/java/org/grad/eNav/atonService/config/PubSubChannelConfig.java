@@ -37,9 +37,9 @@ public class PubSubChannelConfig {
 
     /**
      * Defining a publication publish-subscribe Spring Integration channel to
-     * exchange the incoming S-125 and data between the application components.
+     * exchange the incoming S-125 datasets between the application components.
      *
-     * @return The publish subscribe channel for the incoming S-125 data
+     * @return The publish-subscribe channel for the incoming S-125 datasets
      */
     @Bean
     public PublishSubscribeChannel s125PublicationChannel() {
@@ -50,12 +50,38 @@ public class PubSubChannelConfig {
 
     /**
      * Defining a deletion publish-subscribe Spring Integration channel to
-     * exchange the deleted S-125 and data between the application components.
+     * exchange the deleted S-125 datasets between the application components.
      *
-     * @return The publish subscribe channel for the delered S-125 data
+     * @return The publish-subscribe channel for the deleted S-125 datasets
      */
     @Bean
     public PublishSubscribeChannel s125DeletionChannel() {
+        PublishSubscribeChannel pubsubChannel = new PublishSubscribeChannel();
+        pubsubChannel.setErrorHandler(new PubSubErrorHandler());
+        return pubsubChannel;
+    }
+
+    /**
+     * Defining a publication publish-subscribe Spring Integration channel to
+     * exchange the incoming AtoN information between the application components.
+     *
+     * @return The publish-subscribe channel for the incoming AtoN information
+     */
+    @Bean
+    public PublishSubscribeChannel atonPublicationChannel() {
+        PublishSubscribeChannel pubsubChannel = new PublishSubscribeChannel();
+        pubsubChannel.setErrorHandler(new PubSubErrorHandler());
+        return pubsubChannel;
+    }
+
+    /**
+     * Defining a deletion publish-subscribe Spring Integration channel to
+     * exchange the deleted AtoN information between the application components.
+     *
+     * @return The publish-subscribe channel for the deleted AtoN information
+     */
+    @Bean
+    public PublishSubscribeChannel atonDeletionChannel() {
         PublishSubscribeChannel pubsubChannel = new PublishSubscribeChannel();
         pubsubChannel.setErrorHandler(new PubSubErrorHandler());
         return pubsubChannel;
