@@ -151,18 +151,18 @@ public class SecomSubscriptionService implements MessageHandler {
     SecomSubscriptionRepo secomSubscriptionRepo;
 
     /**
-     * The S-125 Publish Channel to listen for the publications to.
+     * The AtoN Information Publish Channel to listen for the publications to.
      */
     @Autowired
-    @Qualifier("s125PublicationChannel")
-    PublishSubscribeChannel s125PublicationChannel;
+    @Qualifier("atonPublicationChannel")
+    PublishSubscribeChannel atonPublicationChannel;
 
     /**
-     * The S-125 Publish Channel to listen for the deletion to.
+     * The AtoN Information Publish Channel to listen for the deletion to.
      */
     @Autowired
-    @Qualifier("s125DeletionChannel")
-    PublishSubscribeChannel s125DeletionChannel;
+    @Qualifier("atonDeletionChannel")
+    PublishSubscribeChannel atonDeletionChannel;
 
     // Class Variables
     EntityManager entityManager;
@@ -175,8 +175,8 @@ public class SecomSubscriptionService implements MessageHandler {
     public void init() {
         log.info("SECOM Subscription Service is booting up...");
         this.entityManager = this.entityManagerFactory.createEntityManager();
-        this.s125PublicationChannel.subscribe(this);
-        this.s125DeletionChannel.subscribe(this);
+        this.atonPublicationChannel.subscribe(this);
+        this.atonDeletionChannel.subscribe(this);
     }
 
     /**
@@ -189,11 +189,11 @@ public class SecomSubscriptionService implements MessageHandler {
         if(this.entityManager != null) {
             this.entityManager.close();
         }
-        if (this.s125PublicationChannel != null) {
-            this.s125PublicationChannel.destroy();
+        if (this.atonPublicationChannel != null) {
+            this.atonPublicationChannel.destroy();
         }
-        if (this.s125DeletionChannel != null) {
-            this.s125DeletionChannel.destroy();
+        if (this.atonDeletionChannel != null) {
+            this.atonDeletionChannel.destroy();
         }
     }
 

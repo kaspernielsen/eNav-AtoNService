@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain;
 
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
@@ -74,6 +75,14 @@ public class DatasetContent implements Serializable {
     @GenericField()
     @CreatedDate
     private LocalDateTime createdAt;
+
+    @OneToOne()
+    @JoinTable(name = "dataset_content_xref",
+            joinColumns =
+                    { @JoinColumn(name = "dataset_content_id", referencedColumnName = "id", unique = true) },
+            inverseJoinColumns =
+                    { @JoinColumn(name = "dataset_uuid", referencedColumnName = "uuid", unique = true) })
+    protected S125DataSet dataset;
 
     /**
      * This is actually created in Postgres as an OID field. To actually read
@@ -211,5 +220,23 @@ public class DatasetContent implements Serializable {
      */
     public void setContentLength(BigInteger contentLength) {
         this.contentLength = contentLength;
+    }
+
+    /**
+     * Gets dataset.
+     *
+     * @return the dataset
+     */
+    public S125DataSet getDataset() {
+        return dataset;
+    }
+
+    /**
+     * Sets dataset.
+     *
+     * @param dataset the dataset
+     */
+    public void setDataset(S125DataSet dataset) {
+        this.dataset = dataset;
     }
 }

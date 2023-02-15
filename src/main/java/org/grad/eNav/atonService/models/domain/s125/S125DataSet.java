@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -89,6 +90,9 @@ public class S125DataSet {
 
     @OneToMany(mappedBy="s125DataSet", cascade = CascadeType.ALL)
     private Set<SubscriptionRequest> subscriptions;
+
+    @OneToOne(mappedBy = "dataset")
+    private DatasetContent datasetContent;
 
     /**
      * Instantiates a new Dataset.
@@ -212,5 +216,23 @@ public class S125DataSet {
      */
     public void setSubscriptions(Set<SubscriptionRequest> subscriptions) {
         this.subscriptions = subscriptions;
+    }
+
+    /**
+     * Gets dataset content.
+     *
+     * @return the dataset content
+     */
+    public DatasetContent getDatasetContent() {
+        return datasetContent;
+    }
+
+    /**
+     * Sets dataset content.
+     *
+     * @param datasetContent the dataset content
+     */
+    public void setDatasetContent(DatasetContent datasetContent) {
+        this.datasetContent = datasetContent;
     }
 }

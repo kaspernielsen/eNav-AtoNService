@@ -33,4 +33,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface LogDataset {
 
+    // Annotation Variables
+    String operation() default "UPDATE";
+
 }

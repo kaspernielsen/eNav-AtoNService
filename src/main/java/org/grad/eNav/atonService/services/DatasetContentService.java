@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -123,6 +124,16 @@ public class DatasetContentService {
     public DatasetContent save(@NotNull DatasetContent datasetContent) {
         log.debug("Request to save Dataset Content: {}", datasetContent);
 
+        // Clear any old associations
+        Optional.of(datasetContent)
+                .map(DatasetContent::getDataset)
+                .map(S125DataSet::getDatasetContent)
+                .filter(existing -> !Objects.equals(existing.getId(), datasetContent.getId()))
+                .ifPresent(existing -> {
+                    existing.setDataset(null);
+                    this.datasetContentRepo.save(existing);
+                });
+
         // Save and return the dataset
         return this.datasetContentRepo.save(datasetContent);
     }
@@ -154,6 +165,7 @@ public class DatasetContentService {
         datasetContent.setUuid(s125DataSet.getUuid());
         datasetContent.setGeometry(s125DataSet.getGeometry());
         datasetContent.setCreatedAt(LocalDateTime.now());
+        datasetContent.setDataset(s125DataSet);
 
         // Now try to marshal the dataset into an XML string
         try {

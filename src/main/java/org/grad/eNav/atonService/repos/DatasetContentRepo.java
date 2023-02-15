@@ -38,8 +38,8 @@ public interface DatasetContentRepo extends JpaRepository<DatasetContent, BigInt
      * also accepts a pageable argument to provide only a subset of the
      * matching entries (e.g. just the last one).
      *
-     * @param uuid          The UUID of the dataset
-     * @param createdAt     The creation date of the content
+     * @param uuid              The UUID of the dataset
+     * @param createdAt         The creation date of the content
      * @return The dataset content if it exists
      */
     @Query("select d from DatasetContent d where d.uuid = :uuid AND d.createdAt <= :createdAt ORDER BY d.createdAt DESC")

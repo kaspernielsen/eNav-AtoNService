@@ -17,9 +17,13 @@
 package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.ValidationException;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
-import org.grad.eNav.atonService.services.DatasetContentService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
@@ -42,11 +46,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import jakarta.validation.ValidationException;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Pattern;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.QueryParam;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,12 +68,6 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
      */
     @Autowired
     DatasetService datasetService;
-
-    /**
-     * The Dataset Content Service.
-     */
-    @Autowired
-    DatasetContentService datasetContentService;
 
     /**
      * The UN/LOCODE Service.
@@ -166,7 +159,7 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
                             summaryObject.setInfo_status(InfoStatusEnum.PRESENT.getValue());
                             summaryObject.setInfo_description(s125Dataset.getDatasetIdentificationInformation().getDatasetAbstract());
                             summaryObject.setInfo_lastModifiedDate(s125Dataset.getLastUpdatedAt());
-                            summaryObject.setInfo_size(this.datasetContentService.findLatest(s125Dataset.getUuid()).getContentLength().longValue());
+                            summaryObject.setInfo_size(s125Dataset.getDatasetContent().getContentLength().longValue());
 
                             // And return the summary object
                             return summaryObject;

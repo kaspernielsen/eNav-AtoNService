@@ -28,8 +28,10 @@ import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.GeomesaS125;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
+import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.utils.GeoJSONUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +48,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.opengis.feature.simple.SimpleFeature;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.Message;
 
@@ -74,26 +78,33 @@ class S125GDSListenerTest {
     ModelMapper modelMapper;
 
     /**
-     * The Aids to Navigation Service.
+     * The Aids to Navigation Service mock.
      */
     @Mock
     AidsToNavigationService aidsToNavigationService;
 
     /**
-     * The S-125 Data Channel to publish the published data to.
+     * The Dataset Service mock.
      */
     @Mock
-    PublishSubscribeChannel s125PublicationChannel;
+    DatasetService datasetService;
 
     /**
-     * The S-125 Data Channel to publish the deleted data to.
+     * The AtoN Information Channel to publish the published data to.
      */
     @Mock
-    PublishSubscribeChannel s125DeletionChannel;
+    PublishSubscribeChannel atonPublicationChannel;
+
+    /**
+     * The AtoN Information Channel to publish the deleted data to.
+     */
+    @Mock
+    PublishSubscribeChannel atonDeletionChannel;
 
     // Test Variables
     private Geometry geometry;
     private S125Node s125Node;
+    private S125DataSet s125DataSet;
 
     // Geomesa Variables
     private GeometryFactory geometryFactory;
@@ -129,6 +140,7 @@ class S125GDSListenerTest {
         // Now create the S125 node object and populate the data
         this.s125Node = new S125Node("test_aton", point, xml);
         this.geomesaData = new GeomesaS125(this.geometry);
+        this.s125DataSet = new S125DataSet("test_aton_dataset");
 
         // Also mock the GeoMesa DataStore data and consumer
         this.featureSource = mock(SimpleFeatureSource.class);
@@ -158,7 +170,7 @@ class S125GDSListenerTest {
         assertEquals(this.s125GDSListener.geomesaData, this.geomesaData);
         assertEquals(this.s125GDSListener.geometry, this.geometry);
         assertNotNull(this.s125GDSListener.modelMapper);
-        assertTrue(this.featureListeners.size() == 1);
+        assertEquals(1, this.featureListeners.size());
     }
 
     /**
@@ -178,7 +190,7 @@ class S125GDSListenerTest {
         this.s125GDSListener.destroy();
 
         // Assert that the feature listeners list is empty
-        assertTrue(this.featureListeners.size() == 0);
+        assertEquals(0, this.featureListeners.size());
     }
 
     /**
@@ -197,6 +209,10 @@ class S125GDSListenerTest {
         doReturn(FeatureEvent.Type.CHANGED).when(featureEvent).getType();
         doReturn(simpleFeatureList.stream().findFirst().orElse(null)).when(featureEvent).feature();
 
+        // Add a matching dataset
+        doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(1), 1))
+                .when(this.datasetService).findAll(isNull(), any(), isNull(), isNull(), any());
+
         // We need to use the actual Spring model mapper to pick up the type-maps
         this.s125GDSListener.modelMapper = new GlobalConfig().modelMapper();
 
@@ -205,7 +221,9 @@ class S125GDSListenerTest {
         this.s125GDSListener.changed(featureEvent);
 
         // Verify that our message was saved and sent
-        verify(this.s125PublicationChannel, times(1)).send(any(Message.class));
+        verify(this.atonPublicationChannel, times(1)).send(any(Message.class));
+        verify(this.datasetService, times(1)).findAll(isNull(), any(), isNull(), isNull(), any());
+        verify(this.datasetService, times(1)).save(eq(this.s125DataSet));
     }
 
     /**
@@ -239,7 +257,9 @@ class S125GDSListenerTest {
         this.s125GDSListener.changed(featureEvent);
 
         // Verify that our message was not saved or sent
-        verify(this.s125PublicationChannel, never()).send(any(Message.class));
+        verify(this.atonPublicationChannel, never()).send(any(Message.class));
+        verify(this.datasetService, never()).findAll(any(), any(), any(), any(), any());
+        verify(this.datasetService, never()).save(any());
 
     }
 
@@ -252,6 +272,7 @@ class S125GDSListenerTest {
     @Test
     void testListenToEventsRemoved() throws IOException {
         AidsToNavigation aidsToNavigation = new BeaconCardinal();
+        aidsToNavigation.setGeometry(this.geometryFactory.createPoint(new Coordinate(0, 0)));
         doReturn(Optional.of(aidsToNavigation)).when(this.aidsToNavigationService).findByAtonNumber(any());
 
         // Mock a new event
@@ -261,12 +282,18 @@ class S125GDSListenerTest {
         doReturn(FeatureEvent.Type.REMOVED).when(featureEvent).getType();
         doReturn(filter).when(featureEvent).getFilter();
 
+        // Add a matching dataset
+        doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(1), 1))
+                .when(this.datasetService).findAll(isNull(), any(), isNull(), isNull(), any());
+
         // Init and perform the component call
         this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry);
         this.s125GDSListener.changed(featureEvent);
 
         // Make sure the evaluation works
-        verify(this.s125DeletionChannel, times(1)).send(any(Message.class));
+        verify(this.atonDeletionChannel, times(1)).send(any(Message.class));
+        verify(this.datasetService, times(1)).findAll(isNull(), any(), isNull(), isNull(), any());
+        verify(this.datasetService, times(1)).save(eq(this.s125DataSet));
     }
 
 }

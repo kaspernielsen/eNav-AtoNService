@@ -20,13 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.DatasetContentService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -81,24 +78,6 @@ public class DatasetAspect {
         else if(Optional.ofNullable(proceed).filter(p -> isObjectCollectionOfClass(p, S125DataSet.class)).isPresent()) {
             ((Collection<?>) proceed).stream()
                     .map(S125DataSet.class::cast)
-                    .map(this.datasetContentService::generateDatasetContent)
-                    .forEach(this.datasetContentService::save);
-        }
-        // Handle if the object is an Aids to Navigation
-        else if(Optional.ofNullable(proceed).filter(AidsToNavigation.class::isInstance).isPresent()) {
-            Optional.of(proceed)
-                    .map(AidsToNavigation.class::cast)
-                    .map(aton -> this.datasetService.findAll(null, aton.getGeometry(), null, null, Pageable.unpaged()))
-                    .orElse(Page.empty())
-                    .stream()
-                    .map(this.datasetContentService::generateDatasetContent)
-                    .forEach(this.datasetContentService::save);
-        }
-        // Handle if the object is an Aids to Navigation collection
-        else if(Optional.ofNullable(proceed).filter(p -> isObjectCollectionOfClass(p, AidsToNavigation.class)).isPresent()) {
-            ((Collection<?>) proceed).stream()
-                    .map(AidsToNavigation.class::cast)
-                    .flatMap(aton -> this.datasetService.findAll(null, aton.getGeometry(), null, null, Pageable.unpaged()).stream())
                     .map(this.datasetContentService::generateDatasetContent)
                     .forEach(this.datasetContentService::save);
         }

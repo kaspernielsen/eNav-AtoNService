@@ -56,8 +56,8 @@ public class S125WebSocketService implements MessageHandler {
      * The S-125 Publish Channel to listen for the publications to.
      */
     @Autowired
-    @Qualifier("s125PublicationChannel")
-    PublishSubscribeChannel s125PublicationChannel;
+    @Qualifier("atonPublicationChannel")
+    PublishSubscribeChannel atonPublicationChannel;
 
     /**
      * Attach the web-socket as a simple messaging template
@@ -73,7 +73,7 @@ public class S125WebSocketService implements MessageHandler {
     @PostConstruct
     public void init() {
         log.info("S-125 Web Socket Service is booting up...");
-        this.s125PublicationChannel.subscribe(this);
+        this.atonPublicationChannel.subscribe(this);
     }
 
     /**
@@ -83,8 +83,8 @@ public class S125WebSocketService implements MessageHandler {
     @PreDestroy
     public void destroy() {
         log.info("S-125 Web Socket Service is shutting down...");
-        if (this.s125PublicationChannel != null) {
-            this.s125PublicationChannel.destroy();
+        if (this.atonPublicationChannel != null) {
+            this.atonPublicationChannel.destroy();
         }
     }
 

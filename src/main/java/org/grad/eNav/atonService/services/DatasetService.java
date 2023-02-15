@@ -17,6 +17,8 @@
 package org.grad.eNav.atonService.services;
 
 
+import _int.iala_aism.s125.gml._0_0.DataSet;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
@@ -29,9 +31,13 @@ import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.exceptions.SavingFailedException;
+import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.DatasetRepo;
+import org.grad.eNav.atonService.utils.S125DatasetBuilder;
+import org.grad.eNav.s125.utils.S125Utils;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -41,6 +47,7 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -48,12 +55,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The S-125 Dataset Service.
@@ -67,6 +70,12 @@ import java.util.UUID;
 public class DatasetService {
 
     /**
+     * The Model Mapper.
+     */
+    @Autowired
+    ModelMapper modelMapper;
+
+    /**
      * The Entity Manager.
      */
     @Autowired
@@ -77,6 +86,12 @@ public class DatasetService {
      */
     @Autowired
     UnLoCodeService unLoCodeService;
+
+    /**
+     * The Aids to Navigation Service.
+     */
+    @Autowired
+    AidsToNavigationService aidsToNavigationService;
 
     /**
      * The Dataset Repo.
@@ -129,7 +144,7 @@ public class DatasetService {
                                      Pageable pageable) {
         log.debug("Request to get S-125 Datasets in a pageable search");
         // Create the search query - always sort by name
-        SearchQuery<S125DataSet> searchQuery = this.geDatasetSearchQuery(
+        SearchQuery<S125DataSet> searchQuery = this.getDatasetSearchQuery(
                 uuid,
                 geometry,
                 fromTime,
@@ -171,32 +186,34 @@ public class DatasetService {
      * A simple saving operation that persists the models in the database using
      * the correct repository based on the instance type.
      *
-     * @param dataSet the Dataset entity to be saved
+     * @param dataset the Dataset entity to be saved
      * @return the saved Dataset entity
      */
     @LogDataset
     @Transactional
-    public S125DataSet save(@NotNull S125DataSet dataSet) {
-        log.debug("Request to save Dataset : {}", dataSet);
+    public S125DataSet save(@NotNull S125DataSet dataset) {
+        log.debug("Request to save Dataset : {}", dataset);
 
-        // First load any pre-existing subscriptions
-        Optional.of(dataSet)
+        // First load any pre-existing subscriptions and content
+        Optional.of(dataset)
                 .map(S125DataSet::getUuid)
                 .flatMap(this.datasetRepo::findById)
-                .map(S125DataSet::getSubscriptions)
-                .ifPresent(dataSet::setSubscriptions);
+                .ifPresent(existing -> {
+                    dataset.setSubscriptions(existing.getSubscriptions());
+                    dataset.setDatasetContent(existing.getDatasetContent());
+                });
 
         // Now update all subscriptions with the new geometry
-        Optional.of(dataSet)
+        Optional.of(dataset)
                 .map(S125DataSet::getSubscriptions)
                 .orElse(Collections.emptySet())
                 .forEach(sub -> {
-                    sub.setS125DataSet(dataSet);
+                    sub.setS125DataSet(dataset);
                     sub.updateSubscriptionGeometry(this.unLoCodeService);
                 });
 
         // Save and return the dataset
-        return this.datasetRepo.save(dataSet);
+        return this.datasetRepo.save(dataset);
     }
 
     /**
@@ -204,7 +221,7 @@ public class DatasetService {
      *
      * @param uuid the UUID of the dataset
      */
-    @LogDataset
+    @LogDataset(operation = "DELETE")
     @Transactional
     public S125DataSet delete(UUID uuid) {
         log.debug("Request to delete Dataset with UUID : {}", uuid);
@@ -257,11 +274,11 @@ public class DatasetService {
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<S125DataSet> geDatasetSearchQuery(UUID uuid,
-                                                            Geometry geometry,
-                                                            LocalDateTime fromTime,
-                                                            LocalDateTime toTime,
-                                                            Sort sort) {
+    protected SearchQuery<S125DataSet> getDatasetSearchQuery(UUID uuid,
+                                                             Geometry geometry,
+                                                             LocalDateTime fromTime,
+                                                             LocalDateTime toTime,
+                                                             Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
@@ -305,5 +322,37 @@ public class DatasetService {
                 .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false , true)))
                 .map(strategy::makeQuery)
                 .orElse(null);
+    }
+
+    /**
+     * Provided a valid dataset this function will build the respective
+     * dataset content and populate it with all entries that match its
+     * geographical boundaries. The resulting object will then be marshalled
+     * into an XML string and returned.
+     *
+     * @param s125DataSet the UUID of the dataset
+     * @return
+     */
+    protected String generateDatasetAsXml(@NotNull S125DataSet s125DataSet) {
+        // Get all the matching Aids to Navigation
+        final List<AidsToNavigation> aidsToNavigation = this.aidsToNavigationService.findAll(
+                        null,
+                        s125DataSet.getGeometry(),
+                        null,
+                        null,
+                        Pageable.unpaged()
+                ).toList();
+
+        // Now try to marshal the dataset into an XML string
+        try {
+            final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
+            final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, aidsToNavigation);
+            return S125Utils.marshalS125(dataset, Boolean.FALSE);
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+        }
+
+        // If not successfully throw an error
+        throw new SavingFailedException("Failed to generate the dataset content as an XML");
     }
 }

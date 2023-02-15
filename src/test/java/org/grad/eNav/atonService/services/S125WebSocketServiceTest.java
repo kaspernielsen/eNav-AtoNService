@@ -56,10 +56,10 @@ class S125WebSocketServiceTest {
     S125WebSocketService s125WebSocketService;
 
     /**
-     * The AtoN Publish Subscribe Channel mock.
+     * The AtoN Information Publish Subscribe Channel mock.
      */
     @Mock
-    PublishSubscribeChannel s125PublicationChannel;
+    PublishSubscribeChannel atonPublicationChannel;
 
     /**
      * The Web Socket mock.
@@ -100,7 +100,7 @@ class S125WebSocketServiceTest {
         // Perform the service call
         this.s125WebSocketService.init();
 
-        verify(this.s125PublicationChannel, times(1)).subscribe(this.s125WebSocketService);
+        verify(this.atonPublicationChannel, times(1)).subscribe(this.s125WebSocketService);
     }
 
     /**
@@ -112,7 +112,7 @@ class S125WebSocketServiceTest {
         // Perform the service call
         this.s125WebSocketService.destroy();
 
-        verify(this.s125PublicationChannel, times(1)).destroy();
+        verify(this.atonPublicationChannel, times(1)).destroy();
     }
 
     /**

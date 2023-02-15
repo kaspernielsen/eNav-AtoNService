@@ -17,6 +17,8 @@
 package org.grad.eNav.atonService.controllers.secom;
 
 import _int.iala_aism.s125.gml._0_0.DataSet;
+import jakarta.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.JAXBException;
 import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
@@ -25,7 +27,6 @@ import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetType;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
-import org.grad.eNav.atonService.services.DatasetContentService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.services.secom.SecomSubscriptionService;
@@ -63,8 +64,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
-import jakarta.xml.bind.DatatypeConverter;
-import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.PublicKey;
@@ -108,12 +107,6 @@ class SecomControllerTest {
      */
     @MockBean
     DatasetService datasetService;
-
-    /**
-     * The Dataset Content Service mock.
-     */
-    @MockBean
-    DatasetContentService datasetContentService;
 
     /**
      * The UN/LOCODE Service mock.
@@ -204,6 +197,7 @@ class SecomControllerTest {
         this.datasetContent.setGeometry(this.s125DataSet.getGeometry());
         this.datasetContent.setContent(this.s125DataSetAsXml);
         this.datasetContent.setContentLength(BigInteger.valueOf(this.s125DataSetAsXml.length()));
+        this.s125DataSet.setDatasetContent(this.datasetContent);
 
         // Setup the subscription requests and responses
         this.subscriptionRequest = new SubscriptionRequest();
@@ -269,8 +263,6 @@ class SecomControllerTest {
     void testGetSummary() {
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
                 .when(this.datasetService).findAll(any(), any(), any(), any(), any());
-        doReturn(this.datasetContent)
-                .when(this.datasetContentService).findLatest(any());
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -382,8 +374,6 @@ class SecomControllerTest {
         // Mock the rest
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
                 .when(this.datasetService).findAll(any(), any(), any(), any(), any());
-        doReturn(this.datasetContent)
-                .when(this.datasetContentService).findLatest(any());
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder

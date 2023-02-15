@@ -201,7 +201,6 @@ public class AidsToNavigationService {
      * @param aidsToNavigation the Aids to Navigation entity to be saved
      * @return the saved Aids to Navigation entity
      */
-    @LogDataset
     @Transactional
     public AidsToNavigation save(AidsToNavigation aidsToNavigation) {
         log.debug("Request to save Aids to Navigation : {}", aidsToNavigation);
@@ -219,7 +218,6 @@ public class AidsToNavigationService {
      *
      * @param id the ID of the Aids to Navigation
      */
-    @LogDataset
     @Transactional
     public AidsToNavigation delete(BigInteger id) {
         log.debug("Request to delete Aids to Navigation with ID : {}", id);
