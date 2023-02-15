@@ -281,8 +281,9 @@
 		<!-- S-125 -->
 		<dependency>
 			<groupId>org.grad.eNav</groupId>
-			<artifactId>S125-jakarta</artifactId>
-			<version>0.5.15</version>
+			<artifactId>S125</artifactId>
+			<version>0.5.16</version>
+			<classifier>jakarta</classifier>
 		</dependency>
 
 		<!-- SECOM -->
