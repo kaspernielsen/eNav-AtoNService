@@ -56,7 +56,7 @@ public class SecomService {
     /**
      * The Service Registry URL.
      */
-    @Value("${gla.rad.aton-service.service-registry.url:}" )
+    @Value("${secom.service-registry.url:}" )
     String discoveryServiceUrl;
 
     /**

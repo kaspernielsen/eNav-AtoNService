@@ -213,10 +213,7 @@ public class SecomSubscriptionService implements MessageHandler {
                                 s125Dataset.getUuid(),
                                 s125Dataset.getGeometry(),
                                 s125Dataset.getLastUpdatedAt())
-                        .forEach(subscription -> this.sendToSubscription(
-                                subscription,
-                                s125Dataset));
-
+                        .forEach(subscription -> this.sendToSubscription(subscription, s125Dataset));
             } else {
                 // Get the matching subscriptions and inform them of the deletion
                 this.findAll(null,
@@ -266,7 +263,8 @@ public class SecomSubscriptionService implements MessageHandler {
         );
 
         // Map the results to a paged response
-        return searchQuery.fetchAll().hits();
+        return searchQuery.fetchAll()
+                .hits();
     }
 
     /**
