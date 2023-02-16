@@ -16,13 +16,14 @@
 
 package org.grad.eNav.atonService.services.secom;
 
-import org.grad.eNav.atonService.config.GlobalConfig;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.servlet.http.HttpServletRequest;
+import org.grad.eNav.atonService.models.domain.DatasetContent;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
-import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
@@ -47,20 +48,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -80,12 +75,6 @@ class SecomSubscriptionServiceTest {
     SecomSubscriptionService secomSubscriptionService;
 
     /**
-     * The Model Mapper.
-     */
-    @Spy
-    ModelMapper modelMapper;
-
-    /**
      * The Entity Manager Factory mock.
      */
     @Mock
@@ -96,12 +85,6 @@ class SecomSubscriptionServiceTest {
      */
     @Mock
     Optional<HttpServletRequest> httpServletRequest;
-
-    /**
-     * The S-125 Dataset Service mock.
-     */
-    @Mock
-    DatasetService datasetService;
 
     /**
      * The UN/LoCode Service mock.
@@ -128,22 +111,23 @@ class SecomSubscriptionServiceTest {
     SecomSubscriptionRepo secomSubscriptionRepo;
 
     /**
-     * The AtoN Information Publish Channel to listen for the publications to.
+     * TThe S-125 Dataset Channel to publish the published data to.
      */
     @Mock
-    PublishSubscribeChannel atonPublicationChannel;
+    PublishSubscribeChannel s125PublicationChannel;
 
     /**
-     * The AtoN Information Publish Channel to listen for the deletion to.
+     * The S-125 Dataset Channel to publish the deleted data to.
      */
     @Mock
-    PublishSubscribeChannel atonDeletionChannel;
+    PublishSubscribeChannel s125DeletionChannel;
 
     // Test Variables
     private SubscriptionRequest newSubscriptionRequest;
     private SubscriptionRequest existingSubscriptionRequest;
     private RemoveSubscription removeSubscription;
-    private AidsToNavigation aidsToNavigation;
+    private S125DataSet s125Dataset;
+    private DatasetContent datasetContent;
 
     /**
      * Common setup for all the tests.
@@ -168,7 +152,7 @@ class SecomSubscriptionServiceTest {
         this.existingSubscriptionRequest.setDataProductType(SECOM_DataProductType.S125);
         this.existingSubscriptionRequest.setSubscriptionPeriodStart(LocalDateTime.now());
         this.existingSubscriptionRequest.setSubscriptionPeriodEnd(LocalDateTime.now());
-        this.existingSubscriptionRequest.setGeometry(factory.createPoint(new Coordinate(52.98, 28)));
+        this.existingSubscriptionRequest.setGeometry(factory.createPoint(new Coordinate(52.98, 1.28)));
         this.existingSubscriptionRequest.setClientMrn("urn:mrn:org:test");
 
         // Create a remove subscription object
@@ -176,15 +160,17 @@ class SecomSubscriptionServiceTest {
         this.removeSubscription.setSubscriptionIdentifier(this.existingSubscriptionRequest.getUuid());
 
         // Create a new AtoN message
-        this.aidsToNavigation = new BeaconCardinal();
-        this.aidsToNavigation.setId(BigInteger.valueOf(1));
-        this.aidsToNavigation.setAtonNumber("AtonNumber001");
-        this.aidsToNavigation.setIdCode("ID001");
-        this.aidsToNavigation.setTextualDescription("Description of AtoN No 1");
-        this.aidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No 1" );
-        this.aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(52.98, 28)));
-        this.aidsToNavigation.setDateStart(LocalDate.now());
-        this.aidsToNavigation.setDateEnd(LocalDate.now());
+        this.s125Dataset = new S125DataSet("S-125 Dataset");
+        this.s125Dataset.setUuid(UUID.randomUUID());
+        this.s125Dataset.setGeometry(factory.createPoint(new Coordinate(52.98, 1.28)));
+        this.s125Dataset.setCreatedAt(LocalDateTime.now());
+        this.s125Dataset.setLastUpdatedAt(LocalDateTime.now());
+        this.datasetContent = new DatasetContent();
+        this.datasetContent.setId(BigInteger.ONE);
+        this.datasetContent.setContent("S-125 dataset content");
+        this.datasetContent.setContentLength(BigInteger.valueOf(this.datasetContent.getContent().length()));
+        this.datasetContent.setGeneratedAt(LocalDateTime.now());
+        this.s125Dataset.setDatasetContent(this.datasetContent);
     }
 
     /**
@@ -197,8 +183,8 @@ class SecomSubscriptionServiceTest {
         this.secomSubscriptionService.init();
 
         verify(this.entityManagerFactory, times(1)).createEntityManager();
-        verify(this.atonPublicationChannel, times(1)).subscribe(this.secomSubscriptionService);
-        verify(this.atonDeletionChannel, times(1)).subscribe(this.secomSubscriptionService);
+        verify(this.s125PublicationChannel, times(1)).subscribe(this.secomSubscriptionService);
+        verify(this.s125DeletionChannel, times(1)).subscribe(this.secomSubscriptionService);
     }
 
     /**
@@ -214,22 +200,23 @@ class SecomSubscriptionServiceTest {
         this.secomSubscriptionService.destroy();
 
         verify(this.secomSubscriptionService.entityManager , times(1)).close();
-        verify(this.atonPublicationChannel, times(1)).destroy();
-        verify(this.atonDeletionChannel, times(1)).destroy();
+        verify(this.s125PublicationChannel, times(1)).destroy();
+        verify(this.s125DeletionChannel, times(1)).destroy();
     }
 
     /**
-     * Test that the SECOM subscription service can process correctly the Aids
-     * to Navigation publications received through the S-125 publish-subscribe
-     * channel.
+     * Test that the SECOM subscription service can process correctly the S-125
+     * dataset publications received through the S-125 dataset publish-subscribe
+     * publication channel. This operation should identify all matching
+     * subscription requests and inform them of the new update available.
      */
     @Test
-    void testHandleMessage() {
-        doReturn(Collections.singletonList(this.existingSubscriptionRequest)).when(this.secomSubscriptionService).findAll(any(), any(), any());
+    void testHandleMessagePublication() {
+        doReturn(Collections.singletonList(this.existingSubscriptionRequest)).when(this.secomSubscriptionService).findAll(any(), any(), any(), any(), any(), any());
         doNothing().when(this.secomSubscriptionService).sendToSubscription(any(), any());
 
         // Create a message to be handled
-        Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
+        Message<S125DataSet> message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                 .map(builder -> builder.setHeader("deletion", false))
                 .map(MessageBuilder::build)
@@ -239,42 +226,60 @@ class SecomSubscriptionServiceTest {
         this.secomSubscriptionService.handleMessage(message);
 
         // Verify that we look up the subscriptions in the proper way
+        ArgumentCaptor<ContainerTypeEnum> containerTypeArgument = ArgumentCaptor.forClass(ContainerTypeEnum.class);
+        ArgumentCaptor<SECOM_DataProductType> dataProductTypeArgument = ArgumentCaptor.forClass(SECOM_DataProductType.class);
+        ArgumentCaptor<String> productVersionArgument = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<UUID> uuidArgument = ArgumentCaptor.forClass(UUID.class);
         ArgumentCaptor<Geometry> geometryArgument = ArgumentCaptor.forClass(Geometry.class);
-        ArgumentCaptor<LocalDateTime> fromTimeArgument = ArgumentCaptor.forClass(LocalDateTime.class);
-        ArgumentCaptor<LocalDateTime> toTimeArgument = ArgumentCaptor.forClass(LocalDateTime.class);
-        verify(this.secomSubscriptionService, times(1)).findAll(geometryArgument.capture(), fromTimeArgument.capture(), toTimeArgument.capture());
+        ArgumentCaptor<LocalDateTime> timestampArgument = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(this.secomSubscriptionService, times(1)).findAll(
+                containerTypeArgument.capture(),
+                dataProductTypeArgument.capture(),
+                productVersionArgument.capture(),
+                uuidArgument.capture(),
+                geometryArgument.capture(),
+                timestampArgument.capture());
 
         // Verify the arguments
+        assertNotNull(containerTypeArgument.getValue());
+        assertNotNull(dataProductTypeArgument.getValue());
+        assertNotNull(productVersionArgument.getValue());
+        assertNotNull(uuidArgument.getValue());
         assertNotNull(geometryArgument.getValue());
-        assertNotNull(fromTimeArgument.getValue());
-        assertNotNull(toTimeArgument.getValue());
-        assertEquals(this.aidsToNavigation.getGeometry(), geometryArgument.getValue());
-        assertEquals(this.aidsToNavigation.getDateStart().atStartOfDay(), fromTimeArgument.getValue());
-        assertEquals(this.aidsToNavigation.getDateEnd().atTime(LocalTime.MAX), toTimeArgument.getValue());
+        assertNotNull(timestampArgument.getValue());
+        assertEquals(ContainerTypeEnum.S100_DataSet, containerTypeArgument.getValue());
+        assertEquals(SECOM_DataProductType.S125, dataProductTypeArgument.getValue());
+        assertEquals(this.s125Dataset.getDatasetIdentificationInformation().getProductEdition(), productVersionArgument.getValue());
+        assertEquals(this.s125Dataset.getUuid(), uuidArgument.getValue());
+        assertEquals(this.s125Dataset.getGeometry(), geometryArgument.getValue());
+        assertEquals(this.s125Dataset.getLastUpdatedAt(), timestampArgument.getValue());
 
         // Verify that we try to update the registered clients
         ArgumentCaptor<SubscriptionRequest> subscriptionRequestArgument = ArgumentCaptor.forClass(SubscriptionRequest.class);
-        ArgumentCaptor<List<AidsToNavigation>> atonListArgument = ArgumentCaptor.forClass(List.class);
-        verify(this.secomSubscriptionService, times(1)).sendToSubscription(subscriptionRequestArgument.capture(), atonListArgument.capture());
+        ArgumentCaptor<S125DataSet> s125DatasetArgument = ArgumentCaptor.forClass(S125DataSet.class);
+        verify(this.secomSubscriptionService, times(1)).sendToSubscription(subscriptionRequestArgument.capture(), s125DatasetArgument.capture());
 
         // Verify the arguments
         assertNotNull(subscriptionRequestArgument.getValue());
-        assertNotNull(atonListArgument.getValue());
+        assertNotNull(s125DatasetArgument.getValue());
         assertEquals(this.existingSubscriptionRequest.getUuid(), subscriptionRequestArgument.getValue().getUuid());
-        assertEquals(1, atonListArgument.getValue().size());
+        assertEquals(this.s125Dataset.getUuid(), s125DatasetArgument.getValue().getUuid());
     }
 
     /**
-     * Test that the SECOM subscription service can process correctly the Aids
-     * to Navigation deletions received through the S-125 publish-subscribe
-     * channel. For the time being however, this won't really do much... the
-     * SECOM standard and the S-125 data product don't explain how to deal with
-     * this situation.
+     * Test that the SECOM subscription service can process correctly the S-125
+     * dataset deletions received through the S-125 dataset publish-subscribe
+     * deletion channel. This operation should identify the affected
+     * subscription requests directly linked to the deleted dataset and notify
+     * them of the deletion.
      */
     @Test
     void testHandleMessageDeletion() {
+        doReturn(Collections.singletonList(this.existingSubscriptionRequest)).when(this.secomSubscriptionService).findAll(any(), any(), any(), any(), any(), any());
+        doReturn(this.existingSubscriptionRequest.getUuid()).when(this.secomSubscriptionService).delete(any());
+
         // Create a message to be handled
-        Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
+        Message<S125DataSet> message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                 .map(builder -> builder.setHeader("deletion", true))
                 .map(MessageBuilder::build)
@@ -283,9 +288,60 @@ class SecomSubscriptionServiceTest {
         // Perform the service call
         this.secomSubscriptionService.handleMessage(message);
 
+        // Verify that we look up the subscriptions in the proper way for the deletion
+        ArgumentCaptor<ContainerTypeEnum> containerTypeArgument = ArgumentCaptor.forClass(ContainerTypeEnum.class);
+        ArgumentCaptor<SECOM_DataProductType> dataProductTypeArgument = ArgumentCaptor.forClass(SECOM_DataProductType.class);
+        ArgumentCaptor<String> productVersionArgument = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<UUID> uuidArgument = ArgumentCaptor.forClass(UUID.class);
+        ArgumentCaptor<Geometry> geometryArgument = ArgumentCaptor.forClass(Geometry.class);
+        ArgumentCaptor<LocalDateTime> timestampArgument = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(this.secomSubscriptionService, times(1)).findAll(
+                containerTypeArgument.capture(),
+                dataProductTypeArgument.capture(),
+                productVersionArgument.capture(),
+                uuidArgument.capture(),
+                geometryArgument.capture(),
+                timestampArgument.capture());
+
+        // Verify the arguments
+        assertNull(containerTypeArgument.getValue());
+        assertNull(dataProductTypeArgument.getValue());
+        assertNull(productVersionArgument.getValue());
+        assertNotNull(uuidArgument.getValue());
+        assertNull(geometryArgument.getValue());
+        assertNull(timestampArgument.getValue());
+        assertEquals(this.s125Dataset.getUuid(), uuidArgument.getValue());
+
+        // Verify that we try to inform the registered clients for the deletion
+        ArgumentCaptor<RemoveSubscription> removeSubscriptionArgument = ArgumentCaptor.forClass(RemoveSubscription.class);
+        verify(this.secomSubscriptionService, times(1)).delete(removeSubscriptionArgument.capture());
+
+        // Verify the arguments
+        assertNotNull(removeSubscriptionArgument.getValue());
+        assertEquals(this.existingSubscriptionRequest.getUuid(), removeSubscriptionArgument.getValue().getSubscriptionIdentifier());
+    }
+
+    /**
+     * Test that the SECOM subscription service will not process any messages
+     * that are received through the publish-subscribe channels and are not in
+     * the correct format.
+     */
+    @Test
+    void testHandleMessageWrongFormat() {
+        // Create a message to be handled
+        Message message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
+                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.OTHER))
+                .map(builder -> builder.setHeader("deletion", false))
+                .map(MessageBuilder::build)
+                .orElse(null);
+
+        // Perform the service call
+        this.secomSubscriptionService.handleMessage(message);
+
         // Verify that we won't call any of the subscription functions
-        verify(this.secomSubscriptionService, never()).findAll(any(), any(), any());
+        verify(this.secomSubscriptionService, never()).findAll(any(), any(), any(), any(), any(), any());
         verify(this.secomSubscriptionService, never()).sendToSubscription(any(), any());
+        verify(this.secomSubscriptionService, never()).delete(any());
     }
 
     /**
@@ -293,17 +349,23 @@ class SecomSubscriptionServiceTest {
      * database and matching the provided criteria.
      */
     @Test
-    void testFindAllPaged() {
+    void testFindAll() {
         // Mock the full text query
-        SearchQuery<AidsToNavigation> mockedQuery = mock(SearchQuery.class);
-        SearchResult<AidsToNavigation> searchResult = mock(SearchResult.class);
+        SearchQuery<SubscriptionRequest> mockedQuery = mock(SearchQuery.class);
+        SearchResult<SubscriptionRequest> searchResult = mock(SearchResult.class);
         SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
         doReturn(searchResult).when(mockedQuery).fetchAll();
         doReturn(Collections.singletonList(this.existingSubscriptionRequest)).when(searchResult).hits();
-        doReturn(mockedQuery).when(this.secomSubscriptionService).getSubscriptionRequestSearchQuery(any(), any(), any(), any());
+        doReturn(mockedQuery).when(this.secomSubscriptionService).getSubscriptionRequestSearchQuery(any(), any(), any(), any(), any(), any(), any());
 
         // Perform the service call
-        List<SubscriptionRequest> result = this.secomSubscriptionService.findAll(this.existingSubscriptionRequest.getGeometry(), null, null);
+        List<SubscriptionRequest> result = this.secomSubscriptionService.findAll(
+                this.existingSubscriptionRequest.getContainerType(),
+                this.existingSubscriptionRequest.getDataProductType(),
+                this.existingSubscriptionRequest.getProductVersion(),
+                this.existingSubscriptionRequest.getDataReference(),
+                this.existingSubscriptionRequest.getGeometry(),
+                LocalDateTime.now());
 
         // Test the result
         assertNotNull(result);
@@ -322,27 +384,7 @@ class SecomSubscriptionServiceTest {
         }
     }
 
-    /**
-     * Test that the SECOM subscription service will not process any messages
-     * that are received through the publish subscribe channels and are not in
-     * the correct format.
-     */
-    @Test
-    void testHandleMessageWrongFormat() {
-        // Create a message to be handled
-        Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
-                .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.OTHER))
-                .map(builder -> builder.setHeader("deletion", false))
-                .map(MessageBuilder::build)
-                .orElse(null);
 
-        // Perform the service call
-        this.secomSubscriptionService.handleMessage(message);
-
-        // Verify that we won't call any of the subscription functions
-        verify(this.secomSubscriptionService, never()).findAll(any(), any(), any());
-        verify(this.secomSubscriptionService, never()).sendToSubscription(any(), any());
-    }
 
     /**
      * Test that we can successfully create a new subscription request.
@@ -354,6 +396,7 @@ class SecomSubscriptionServiceTest {
         doReturn("urn:mrn:org:test").when(httpServletRequestMock).getHeader(any());
         this.secomSubscriptionService.httpServletRequest = Optional.of(httpServletRequestMock);
         doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionRepo).save(any());
+//        doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionService.entityManager).merge(any());
 
         // Perform the service call
         SubscriptionRequest result = this.secomSubscriptionService.save(this.newSubscriptionRequest);
@@ -389,6 +432,7 @@ class SecomSubscriptionServiceTest {
         doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findByClientMrn(eq(this.existingSubscriptionRequest.getClientMrn()));
         doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findById(this.existingSubscriptionRequest.getUuid());
         doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionRepo).save(any());
+//        doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionService.entityManager).merge(any());
 
         // Perform the service call
         SubscriptionRequest result = this.secomSubscriptionService.save(this.newSubscriptionRequest);
@@ -480,15 +524,12 @@ class SecomSubscriptionServiceTest {
      */
     @Test
     void testSendToSubscription() throws IOException {
-        // We need to use the actual Spring model mapper to pick up the type-maps
-        this.secomSubscriptionService.modelMapper = new GlobalConfig().modelMapper();
-
         // Mock a SECOM client
         final SecomClient secomClient = mock(SecomClient.class);
         doReturn(secomClient).when(this.secomService).getClient(this.existingSubscriptionRequest.getClientMrn());
 
         // Perform the service call
-        this.secomSubscriptionService.sendToSubscription(this.existingSubscriptionRequest, Collections.singletonList(this.aidsToNavigation));
+        this.secomSubscriptionService.sendToSubscription(this.existingSubscriptionRequest, this.s125Dataset);
 
         // Verify that we upload the constructed SECOM upload object
         ArgumentCaptor<UploadObject> uploadArgument = ArgumentCaptor.forClass(UploadObject.class);

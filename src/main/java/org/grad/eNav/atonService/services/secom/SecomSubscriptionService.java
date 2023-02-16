@@ -16,6 +16,11 @@
 
 package org.grad.eNav.atonService.services.secom;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.Query;
@@ -26,14 +31,10 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
-import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
-import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
-import org.grad.eNav.atonService.config.GlobalConfig;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
-import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
@@ -53,7 +54,6 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
@@ -66,15 +66,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.servlet.http.HttpServletRequest;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The SECOM Subscription Service Class.
@@ -90,12 +86,6 @@ import java.util.*;
 public class SecomSubscriptionService implements MessageHandler {
 
     /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
-
-    /**
      * The Entity Manager Factory.
      */
     @Autowired
@@ -107,12 +97,6 @@ public class SecomSubscriptionService implements MessageHandler {
     @Autowired
     @Lazy
     Optional<HttpServletRequest> httpServletRequest;
-
-    /**
-     * The S-125 Dataset Service.
-     */
-    @Autowired
-    DatasetService datasetService;
 
     /**
      * The UN/LoCode Service.
@@ -133,36 +117,24 @@ public class SecomSubscriptionService implements MessageHandler {
     SecomSubscriptionNotificationService secomSubscriptionNotificationService;
 
     /**
-     * The SECOM Certificate Provider implementation.
-     */
-    @Autowired
-    SecomCertificateProviderImpl certificateProvider;
-
-    /**
-     * The SECOM Signature Provider implementation.
-     */
-    @Autowired
-    SecomSignatureProviderImpl signatureProvider;
-
-    /**
      * The SECOM Subscription Repo.
      */
     @Autowired
     SecomSubscriptionRepo secomSubscriptionRepo;
 
     /**
-     * The AtoN Information Publish Channel to listen for the publications to.
+     * The S-125 Dataset Channel to publish the published data to.
      */
     @Autowired
-    @Qualifier("atonPublicationChannel")
-    PublishSubscribeChannel atonPublicationChannel;
+    @Qualifier("s125PublicationChannel")
+    PublishSubscribeChannel s125PublicationChannel;
 
     /**
-     * The AtoN Information Publish Channel to listen for the deletion to.
+     * The S-125 Dataset Channel to publish the deleted data to.
      */
     @Autowired
-    @Qualifier("atonDeletionChannel")
-    PublishSubscribeChannel atonDeletionChannel;
+    @Qualifier("s125DeletionChannel")
+    PublishSubscribeChannel s125DeletionChannel;
 
     // Class Variables
     EntityManager entityManager;
@@ -175,8 +147,8 @@ public class SecomSubscriptionService implements MessageHandler {
     public void init() {
         log.info("SECOM Subscription Service is booting up...");
         this.entityManager = this.entityManagerFactory.createEntityManager();
-        this.atonPublicationChannel.subscribe(this);
-        this.atonDeletionChannel.subscribe(this);
+        this.s125PublicationChannel.subscribe(this);
+        this.s125DeletionChannel.subscribe(this);
     }
 
     /**
@@ -189,11 +161,11 @@ public class SecomSubscriptionService implements MessageHandler {
         if(this.entityManager != null) {
             this.entityManager.close();
         }
-        if (this.atonPublicationChannel != null) {
-            this.atonPublicationChannel.destroy();
+        if (this.s125PublicationChannel != null) {
+            this.s125PublicationChannel.destroy();
         }
-        if (this.atonDeletionChannel != null) {
-            this.atonDeletionChannel.destroy();
+        if (this.s125DeletionChannel != null) {
+            this.s125DeletionChannel.destroy();
         }
     }
 
@@ -209,8 +181,14 @@ public class SecomSubscriptionService implements MessageHandler {
     @Override
     public void handleMessage(Message<?> message) throws MessagingException {
         // Get the headers of the incoming message
-        SECOM_DataProductType contentType = message.getHeaders().get(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.class);
-        Boolean deletion = message.getHeaders().get("deletion", Boolean.class);
+        final SECOM_DataProductType contentType = Optional.of(message)
+                .map(Message::getHeaders)
+                .map(headers -> headers.get(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.class))
+                .orElse(null);
+        final boolean deletion = Optional.of(message)
+                .map(Message::getHeaders)
+                .map(headers -> headers.get("deletion", Boolean.class))
+                .orElse(false);
 
         // Only listen to valid content types
         if(Objects.isNull(contentType)) {
@@ -218,26 +196,38 @@ public class SecomSubscriptionService implements MessageHandler {
         }
 
         // Handle only messages that seem valid
-        if(SECOM_DataProductType.S125.equals(contentType) && message.getPayload() instanceof AidsToNavigation) {
+        if(SECOM_DataProductType.S125.equals(contentType) && message.getPayload() instanceof S125DataSet s125Dataset) {
             // Get the payload of the incoming message
-            AidsToNavigation aidsToNavigation = (AidsToNavigation) message.getPayload();
 
             // A simple debug message
-            log.debug(String.format("SECOM Service received AtoN %s with AtoN number: %s.",
+            log.debug(String.format("SECOM Subscription Service received an S125 dataset %s for UUID number: %s.",
                     deletion ? "deletion" : "publication",
-                    aidsToNavigation.getAtonNumber()));
+                    s125Dataset.getUuid()));
 
             // Handle based on whether this is a deletion or not
             if(!deletion) {
-                // Get the matching subscriptions and inform them
-                this.findAll(aidsToNavigation.getGeometry(),
-                                Optional.of(aidsToNavigation).map(AidsToNavigation::getDateStart).map(ld -> ld.atStartOfDay()).orElse(null),
-                                Optional.of(aidsToNavigation).map(AidsToNavigation::getDateEnd).map(ld -> ld.atTime(LocalTime.MAX)).orElse(null))
-                        .stream()
-                        .filter(subscription -> ContainerTypeEnum.S100_DataSet.equals(subscription.getContainerType()))
-                        .filter(subscription -> SECOM_DataProductType.S125.equals(subscription.getDataProductType()))
-                        .forEach(subscription -> this.sendToSubscription(subscription, Collections.singletonList(aidsToNavigation)));
+                // Get the matching subscriptions and inform them of the update
+                this.findAll(ContainerTypeEnum.S100_DataSet,
+                                SECOM_DataProductType.S125,
+                                s125Dataset.getDatasetIdentificationInformation().getProductEdition(),
+                                s125Dataset.getUuid(),
+                                s125Dataset.getGeometry(),
+                                s125Dataset.getLastUpdatedAt())
+                        .forEach(subscription -> this.sendToSubscription(
+                                subscription,
+                                s125Dataset));
 
+            } else {
+                // Get the matching subscriptions and inform them of the deletion
+                this.findAll(null,
+                                null,
+                                null,
+                                s125Dataset.getUuid(),
+                                null,
+                                null)
+                        .stream()
+                        .map(this::constructRemoveSubscription)
+                        .forEach(this::delete);
             }
         }
         else {
@@ -248,21 +238,30 @@ public class SecomSubscriptionService implements MessageHandler {
     /**
      * Get all the Subscription Requests in a search list.
      *
-     * @param geometry the query geometry
-     * @param fromTime the query from time
-     * @param toTime the query to time
+     * @param containerType         the container type of the requested subscriptions
+     * @param dataProductType       the SECOM data product type of the requested subscriptions
+     * @param productVersion        the product version of the requested subscriptions
+     * @param dataReference         the UUID data reference matched by the requested subscriptions
+     * @param geometry              the geometry intersecting with the requested subscriptions
+     * @param timestamp             the timestamp for which the requested subscriptions are valid
      * @return the list of Subscription Requests
      */
     @Transactional(readOnly = true)
-    public List<SubscriptionRequest> findAll(Geometry geometry,
-                                             LocalDateTime fromTime,
-                                             LocalDateTime toTime) {
+    public List<SubscriptionRequest> findAll(ContainerTypeEnum containerType,
+                                             SECOM_DataProductType dataProductType,
+                                             String productVersion,
+                                             UUID dataReference,
+                                             Geometry geometry,
+                                             LocalDateTime timestamp) {
         log.debug("Request to get Subscription Requests in a search");
         // Create the search query - always sort by name
         SearchQuery<SubscriptionRequest> searchQuery = this.getSubscriptionRequestSearchQuery(
+                containerType,
+                dataProductType,
+                productVersion,
+                dataReference,
                 geometry,
-                fromTime,
-                toTime,
+                timestamp,
                 new Sort(new SortedSetSortField("uuid", false))
         );
 
@@ -292,23 +291,19 @@ public class SecomSubscriptionService implements MessageHandler {
                 .ifPresent(this::delete);
 
         // Populate the subscription dataset and geometry
-        subscriptionRequest.setS125DataSet(Optional.of(subscriptionRequest)
-                .map(SubscriptionRequest::getDataReference)
-                .map(this.datasetService::findOne)
-                .orElse(null));
-        subscriptionRequest.setClientMrn(this.httpServletRequest.map(req -> req.getHeader("MRN")).orElse(null));
+        subscriptionRequest.setClientMrn(mrn);
         subscriptionRequest.updateSubscriptionGeometry(this.unLoCodeService);
 
         // Now save the request
-        final SubscriptionRequest savedSubscriptionRequest = this.secomSubscriptionRepo.save(subscriptionRequest);
+        final SubscriptionRequest result = this.secomSubscriptionRepo.save(subscriptionRequest);
 
         // Inform to the subscription client (identify through MRN) - asynchronous
         this.secomSubscriptionNotificationService.sendNotification(subscriptionRequest.getClientMrn(),
-                savedSubscriptionRequest.getUuid(),
+                result.getUuid(),
                 SubscriptionEventEnum.SUBSCRIPTION_CREATED);
 
         // Now save for each type
-        return savedSubscriptionRequest;
+        return result;
     }
 
     /**
@@ -347,10 +342,10 @@ public class SecomSubscriptionService implements MessageHandler {
      * interface of the discovered client (if a valid registration is returned)
      * will be utilised.
      *
-     * @param subscriptionRequest the subscription request
-     * @param aidsToNavigationList the list of Aids to Navigation to be pushed
+     * @param subscriptionRequest   the subscription request
+     * @param s125Dataset           the S125 dataset to be sent to the subscription
      */
-    protected void sendToSubscription(SubscriptionRequest subscriptionRequest, List<AidsToNavigation> aidsToNavigationList) {
+    protected void sendToSubscription(SubscriptionRequest subscriptionRequest, S125DataSet s125Dataset) {
         // Make sure we also have an MRN for the subscribed client
         if(Objects.isNull(subscriptionRequest.getClientMrn())) {
             log.warn("Subscription request found for S-125 dataset updates but no client MRN");
@@ -365,7 +360,7 @@ public class SecomSubscriptionService implements MessageHandler {
         EnvelopeUploadObject envelopeUploadObject = new EnvelopeUploadObject();
         envelopeUploadObject.setContainerType(ContainerTypeEnum.S100_DataSet);
         envelopeUploadObject.setDataProductType(SECOM_DataProductType.S125);
-        envelopeUploadObject.setData(GlobalConfig.convertTos125DataSet(this.modelMapper, aidsToNavigationList).getBytes(StandardCharsets.UTF_8));
+        envelopeUploadObject.setData(s125Dataset.getDatasetContent().getContent().getBytes());
         envelopeUploadObject.setFromSubscription(true);
         envelopeUploadObject.setAckRequest(AckRequestEnum.NO_ACK_REQUESTED);
         envelopeUploadObject.setTransactionIdentifier(UUID.randomUUID());
@@ -390,38 +385,82 @@ public class SecomSubscriptionService implements MessageHandler {
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
-     * AtoN UID and geometry. This query will be based solely on the aton
-     * messages table and will include the following fields:
+     * a list of subscription search parameters.
      * -
      * For any more elaborate search, the getSearchMessageQueryByText function
      * can be used.
      *
-     * @param geometry the geometry that the results should intersect with
-     * @param fromTime the date-time the results should match from
-     * @param toTime the date-time the results should match to
+     * @param containerType         the container type of the requested subscriptions
+     * @param dataProductType       the SECOM data product type of the requested subscriptions
+     * @param productVersion        the product version of the requested subscriptions
+     * @param dataReference         the UUID data reference matched by the requested subscriptions
+     * @param geometry              the geometry intersecting with the requested subscriptions
+     * @param timestamp             the timestamp for which the requested subscriptions are valid
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<SubscriptionRequest> getSubscriptionRequestSearchQuery(Geometry geometry,
-                                                                                 LocalDateTime fromTime,
-                                                                                 LocalDateTime toTime,
+    protected SearchQuery<SubscriptionRequest> getSubscriptionRequestSearchQuery(ContainerTypeEnum containerType,
+                                                                                 SECOM_DataProductType dataProductType,
+                                                                                 String productVersion,
+                                                                                 UUID dataReference,
+                                                                                 Geometry geometry,
+                                                                                 LocalDateTime timestamp,
                                                                                  Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<SubscriptionRequest> scope = searchSession.scope( SubscriptionRequest.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
-                            b.must(f.matchAll());
-                            Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
-                                    .fromLuceneQuery(createGeoSpatialQuery(g))));
-                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
-                                    .field("subscriptionPeriodEnd")
-                                    .atLeast(fromTime)));
-                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
-                                    .field("subscriptionPeriodStart")
-                                    .atMost(toTime)));
-                        })
-                )
+                    b.must(f.matchAll());
+                    Optional.ofNullable(containerType).ifPresent(v -> b.must(
+                            f.bool(b1 -> {
+                                b1.should(f.match()
+                                        .field("containerType")
+                                        .matching(v.name()));
+                                b1.should(f.match()
+                                        .field("containerType")
+                                        .matching("NULL"));
+                            })
+                    ));
+                    Optional.ofNullable(dataProductType).ifPresent(v -> b.must(
+                            f.bool(b1 -> {
+                                b1.should(f.match()
+                                        .field("dataProductType")
+                                        .matching(v.name()));
+                                b1.should(f.match()
+                                        .field("dataProductType")
+                                        .matching("NULL"));
+                            })
+                    ));
+                    Optional.ofNullable(productVersion).ifPresent(v -> b.must(
+                            f.bool(b1 -> {
+                                b1.should(f.match()
+                                        .field("productVersion")
+                                        .matching(v));
+                                b1.should(f.match()
+                                        .field("productVersion")
+                                        .matching("NULL"));
+                            })
+                    ));
+                    Optional.ofNullable(dataReference).ifPresent(v -> b.must(
+                            f.bool(b1 -> {
+                                b1.should(f.match()
+                                        .field("dataReference")
+                                        .matching(v.toString()));
+                                b1.should(f.match()
+                                        .field("dataReference")
+                                        .matching("NULL"));
+                            })
+                    ));
+                    Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
+                            .fromLuceneQuery(createGeoSpatialQuery(g))));
+                    Optional.ofNullable(timestamp).ifPresent(v -> b.must(f.range()
+                            .field("subscriptionPeriodStart")
+                            .atMost(timestamp)));
+                    Optional.ofNullable(timestamp).ifPresent(v -> b.must(f.range()
+                            .field("subscriptionPeriodEnd")
+                            .atLeast(timestamp)));
+                }))
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
                 .toQuery();
     }

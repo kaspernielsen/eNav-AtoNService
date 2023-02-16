@@ -20,6 +20,14 @@ var datasetColumnDefs = [
     visible: false,
     searchable: false
 }, {
+     data: "datasetIdentificationInformation.id",
+     title: "Information ID",
+     hoverMsg: "The Dataset Identification Information ID",
+     placeholder: "The Dataset Identification Information ID",
+     type: "hidden",
+     visible: false,
+     searchable: false
+}, {
     data: "datasetIdentificationInformation.datasetTitle",
     title: "Title",
     hoverMsg: "The Dataset Title",
@@ -210,6 +218,7 @@ $(function () {
                 data: JSON.stringify({
                     uuid: rowdata["uuid"],
                     datasetIdentificationInformation: {
+                        id: rowdata["datasetIdentificationInformation.id"],
                         datasetTitle: rowdata["datasetIdentificationInformation.datasetTitle"],
                         encodingSpecification: rowdata["datasetIdentificationInformation.encodingSpecification"],
                         encodingSpecificationEdition: rowdata["datasetIdentificationInformation.encodingSpecificationEdition"],

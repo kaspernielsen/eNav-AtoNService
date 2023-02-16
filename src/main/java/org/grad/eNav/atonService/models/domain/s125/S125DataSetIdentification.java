@@ -110,6 +110,24 @@ public class S125DataSetIdentification {
         this.datasetLanguage = ISO6391.EN;
     }
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
+    public BigInteger getId() {
+        return id;
+    }
+
+    /**
+     * Sets id.
+     *
+     * @param id the id
+     */
+    public void setId(BigInteger id) {
+        this.id = id;
+    }
+
     @Enumerated(EnumType.STRING)
     @ElementCollection(targetClass = MDTopicCategoryCode.class)
     private List<MDTopicCategoryCode> datasetTopicCategories;

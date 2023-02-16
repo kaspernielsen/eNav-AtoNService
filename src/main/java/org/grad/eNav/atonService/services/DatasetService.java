@@ -218,7 +218,7 @@ public class DatasetService {
         dataset.setDatasetContent(this.generateDatasetContent(dataset));
 
         // Now save the dataset
-        final S125DataSet result = this.entityManager.merge(this.datasetRepo.save(dataset));
+        final S125DataSet result = this.datasetRepo.save(dataset);
 
         // Publish the updated dataset to the publication channel
         this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
