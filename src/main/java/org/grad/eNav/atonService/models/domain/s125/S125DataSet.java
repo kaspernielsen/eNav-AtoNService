@@ -72,7 +72,7 @@ public class S125DataSet {
     @Column(columnDefinition="uuid", unique = true, updatable = false, nullable = false)
     private UUID uuid;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "dataset_identification_id", referencedColumnName = "id")
     @IndexedEmbedded(includeEmbeddedObjectId = false)
     private S125DataSetIdentification datasetIdentificationInformation;
@@ -91,7 +91,12 @@ public class S125DataSet {
     @OneToMany(mappedBy="s125DataSet", cascade = CascadeType.ALL)
     private Set<SubscriptionRequest> subscriptions;
 
-    @OneToOne(mappedBy = "dataset")
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinTable(name = "s125_dataset_content_xref",
+            joinColumns =
+                    { @JoinColumn(name = "dataset_uuid", referencedColumnName = "uuid", unique = true) },
+            inverseJoinColumns =
+                    { @JoinColumn(name = "dataset_content_id", referencedColumnName = "id", unique = true) })
     private DatasetContent datasetContent;
 
     /**

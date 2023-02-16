@@ -16,8 +16,12 @@
 
 package org.grad.eNav.atonService.services;
 
+import jakarta.persistence.EntityManager;
+import org.apache.commons.lang3.StringUtils;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.repos.DatasetRepo;
@@ -34,11 +38,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.integration.channel.PublishSubscribeChannel;
+import org.springframework.messaging.Message;
 
-import jakarta.persistence.EntityManager;
+import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -57,16 +66,16 @@ class DatasetServiceTest {
     DatasetService datasetService;
 
     /**
+     * The Model Mapper.
+     */
+    @Spy
+    ModelMapper modelMapper;
+
+    /**
      * The Entity Manager mock.
      */
     @Mock
     EntityManager entityManager;
-
-    /**
-     * The SECOM Service mock.
-     */
-    @Mock
-    UnLoCodeService unLoCodeService;
 
     /**
      * The Aids to Navigation Service mock.
@@ -75,16 +84,31 @@ class DatasetServiceTest {
     AidsToNavigationService aidsToNavigationService;
 
     /**
+     * The S-125 Dataset Channel to publish the published data to.
+     */
+    @Mock
+    PublishSubscribeChannel s125PublicationChannel;
+
+    /**
+     * The S-125 Dataset Channel to publish the deleted data to.
+     */
+    @Mock
+    PublishSubscribeChannel s125DeletionChannel;
+
+    /**
      * The Dataset Repo mock.
      */
     @Mock
     DatasetRepo datasetRepo;
 
     // Test Variables
+    private List<AidsToNavigation> aidsToNavigationList;
     private List<S125DataSet> datasetList;
     private Pageable pageable;
     private S125DataSet newDataset;
     private S125DataSet existingDataset;
+    private DatasetContent newDatasetContent;
+    private DatasetContent existingDatasetContent;
     private GeometryFactory factory;
 
     /**
@@ -95,7 +119,20 @@ class DatasetServiceTest {
         // Create a temp geometry factory to get a test geometries
         this.factory = new GeometryFactory(new PrecisionModel(), 4326);
 
-        // Initialise the station nodes list
+        // Initialise the AtoN messages list
+        this.aidsToNavigationList = new ArrayList<>();
+        for(long i=0; i<10; i++) {
+            AidsToNavigation aidsToNavigation = new BeaconCardinal();
+            aidsToNavigation.setId(BigInteger.valueOf(i));
+            aidsToNavigation.setAtonNumber("AtonNumber" + i);
+            aidsToNavigation.setIdCode("ID"+i);
+            aidsToNavigation.setTextualDescription("Description of AtoN No" + i);
+            aidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No" + i);
+            aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
+            this.aidsToNavigationList.add(aidsToNavigation);
+        }
+
+        // Initialise the dataset nodes list
         this.datasetList = new ArrayList<>();
         for(long i=0; i<10; i++) {
             S125DataSet dataset = new S125DataSet(String.format("Dataset{}", i));
@@ -109,11 +146,23 @@ class DatasetServiceTest {
         // Create a Dataset without a UUID
         this.newDataset = new S125DataSet("NewDataset");
         this.newDataset.setGeometry(this.factory.createPoint(new Coordinate(51.98, 1.28)));
+        this.newDatasetContent = new DatasetContent();
+        this.newDatasetContent.setId(BigInteger.ONE);
+        this.newDatasetContent.setContent("New dataset content");
+        this.newDatasetContent.setContentLength(BigInteger.valueOf(this.newDatasetContent.getContent().length()));
+        this.newDatasetContent.setGeneratedAt(LocalDateTime.now());
+        this.newDataset.setDatasetContent(this.newDatasetContent);
 
         // Create a Dataset with a UUID
         this.existingDataset = new S125DataSet("ExistingDataset");
         this.existingDataset.setUuid(UUID.randomUUID());
         this.existingDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));
+        this.existingDatasetContent = new DatasetContent();
+        this.existingDatasetContent.setId(BigInteger.TWO);
+        this.existingDatasetContent.setContent("Existing dataset content");
+        this.existingDatasetContent.setContentLength(BigInteger.valueOf(this.existingDatasetContent.getContent().length()));
+        this.existingDatasetContent.setGeneratedAt(LocalDateTime.now());
+        this.existingDataset.setDatasetContent(this.existingDatasetContent);
     }
 
     /**
@@ -265,9 +314,10 @@ class DatasetServiceTest {
     @Test
     void testSave() {
         doReturn(this.newDataset).when(this.datasetRepo).save(any());
+        doReturn(this.newDataset).when(this.entityManager).merge(any());
 
         // Perform the service call
-        S125DataSet result = this.datasetService.save(this.newDataset);
+        S125DataSet result = this.datasetService.save(new S125DataSet());
 
         // Test the result
         assertNotNull(result);
@@ -282,6 +332,12 @@ class DatasetServiceTest {
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+        assertNotNull(result.getDatasetContent());
+        assertEquals(this.newDataset.getDatasetContent().getContent(), result.getDatasetContent().getContent());
+        assertEquals(this.newDataset.getDatasetContent().getContentLength(), result.getDatasetContent().getContentLength());
+
+        // Verify that our message was saved and sent
+        verify(this.s125PublicationChannel, times(1)).send(any(Message.class));
     }
 
     /**
@@ -295,8 +351,8 @@ class DatasetServiceTest {
         // Perform the service call
         this.datasetService.delete(this.existingDataset.getUuid());
 
-        // Verify that a deletion call took place in the repository
-        verify(this.datasetRepo, times(1)).delete(this.existingDataset);
+        // Verify that our message was saved and sent
+        verify(this.s125DeletionChannel, times(1)).send(any(Message.class));
     }
 
     /**
@@ -311,6 +367,33 @@ class DatasetServiceTest {
         assertThrows(DataNotFoundException.class, () ->
                 this.datasetService.delete(this.existingDataset.getUuid())
         );
+    }
+
+    /**
+     * Test that we can successfully generate the content of a dataset provided
+     * that we can access its respective member entries. In the current case
+     * this should be an S-125 dataset with the same number of members in the
+     * content as the AtoN that are assigned to it. Also note that the dataset
+     * ID is set to null since this is a new content object and hasn't been
+     * store in the database yet.
+     */
+    @Test
+    void testGenerateDatasetContent() {
+        final int numOfAtons = 5;
+        final Page<AidsToNavigation> aidsToNavigationPage = new PageImpl<>(this.aidsToNavigationList.subList(0, numOfAtons), Pageable.ofSize(5), this.aidsToNavigationList.size());
+        doReturn(aidsToNavigationPage).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
+
+        // Perform the service call
+        DatasetContent result = this.datasetService.generateDatasetContent(this.existingDataset);
+
+        // Test the result
+        assertNotNull(result);
+        assertNull(result.getId());
+        assertNotNull(result.getGeneratedAt());
+        assertNotNull(result.getContent());
+        assertEquals(BigInteger.valueOf(result.getContent().length()), result.getContentLength());
+        assertEquals(numOfAtons, StringUtils.countMatches(result.getContent(), "<member>"));
+        assertEquals(numOfAtons, StringUtils.countMatches(result.getContent(), "</member>"));
     }
 
 }

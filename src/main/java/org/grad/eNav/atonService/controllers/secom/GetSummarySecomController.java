@@ -24,6 +24,8 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
+import org.grad.eNav.atonService.models.domain.DatasetContent;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
@@ -46,6 +48,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -145,21 +148,25 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
             if (reqDataProductType == SECOM_DataProductType.S125) {
                 this.datasetService.findAll(null, jtsGeometry, validFrom, validTo, pageable)
                         .stream()
-                        .map(s125Dataset -> {
+                        .map(dataset -> {
                             // Create and populate the summary object
                             SummaryObject summaryObject = new SummaryObject();
-                            summaryObject.setDataReference(s125Dataset.getUuid());
+                            summaryObject.setDataReference(dataset.getUuid());
                             summaryObject.setDataProtection(Boolean.FALSE);
                             summaryObject.setDataCompression(Boolean.FALSE);
                             summaryObject.setContainerType(reqContainerType);
                             summaryObject.setDataProductType(reqDataProductType);
-                            summaryObject.setInfo_productVersion(s125Dataset.getDatasetIdentificationInformation().getProductEdition());
-                            summaryObject.setInfo_identifier(s125Dataset.getDatasetIdentificationInformation().getDatasetFileIdentifier());
-                            summaryObject.setInfo_name(s125Dataset.getDatasetIdentificationInformation().getDatasetTitle());
+                            summaryObject.setInfo_productVersion(dataset.getDatasetIdentificationInformation().getProductEdition());
+                            summaryObject.setInfo_identifier(dataset.getDatasetIdentificationInformation().getDatasetFileIdentifier());
+                            summaryObject.setInfo_name(dataset.getDatasetIdentificationInformation().getDatasetTitle());
                             summaryObject.setInfo_status(InfoStatusEnum.PRESENT.getValue());
-                            summaryObject.setInfo_description(s125Dataset.getDatasetIdentificationInformation().getDatasetAbstract());
-                            summaryObject.setInfo_lastModifiedDate(s125Dataset.getLastUpdatedAt());
-                            summaryObject.setInfo_size(s125Dataset.getDatasetContent().getContentLength().longValue());
+                            summaryObject.setInfo_description(dataset.getDatasetIdentificationInformation().getDatasetAbstract());
+                            summaryObject.setInfo_lastModifiedDate(dataset.getLastUpdatedAt());
+                            summaryObject.setInfo_size(Optional.of(dataset)
+                                    .map(S125DataSet::getDatasetContent)
+                                    .map(DatasetContent::getContentLength)
+                                    .map(BigInteger::longValue)
+                                    .orElse(BigInteger.ZERO.longValue()));
 
                             // And return the summary object
                             return summaryObject;

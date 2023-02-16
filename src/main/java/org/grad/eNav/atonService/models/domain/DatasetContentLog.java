@@ -18,19 +18,17 @@ package org.grad.eNav.atonService.models.domain;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.ScaledNumberField;
+import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
- * The S-125 Dataset Entity Content Class
+ * The S-125 Dataset Entity Content Log Class
  * <p>
  * This class is used to log the generated S-125 dataset content into a
  * separate table that can be used for normal queries but also auditing
@@ -41,23 +39,31 @@ import java.time.LocalDateTime;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
+@Table(indexes = @Index(columnList = "datasetType, uuid, operation, generatedAt"))
 @EntityListeners(AuditingEntityListener.class)
 @Cacheable
-@Indexed
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class DatasetContent implements Serializable {
+public class DatasetContentLog implements Serializable {
 
     // Class Variables
     @Id
-    @ScaledNumberField(name = "id_sort", decimalScale=0, sortable = Sortable.YES)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dataset_content_generator")
-    @SequenceGenerator(name="dataset_content_generator", sequenceName = "dataset_content_seq", allocationSize=1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dataset_content_log_generator")
+    @SequenceGenerator(name="dataset_content_log_generator", sequenceName = "dataset_content_log_seq", allocationSize=1)
     @Column(name = "id", nullable = false, precision = 24, scale = 0)
     private BigInteger id;
 
-    @GenericField()
+    @Enumerated(EnumType.STRING)
+    private DatasetType datasetType;
+
+    @Column(nullable = false)
+    private UUID uuid;
+
+    private String operation;
+
     @CreatedDate
     private LocalDateTime generatedAt;
+
+    private Geometry geometry;
 
     /**
      * This is actually created in Postgres as an OID field. To actually read
@@ -90,6 +96,60 @@ public class DatasetContent implements Serializable {
     }
 
     /**
+     * Gets dataset type.
+     *
+     * @return the dataset type
+     */
+    public DatasetType getDatasetType() {
+        return datasetType;
+    }
+
+    /**
+     * Sets dataset type.
+     *
+     * @param datasetType the dataset type
+     */
+    public void setDatasetType(DatasetType datasetType) {
+        this.datasetType = datasetType;
+    }
+
+    /**
+     * Gets uuid.
+     *
+     * @return the uuid
+     */
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    /**
+     * Sets uuid.
+     *
+     * @param uuid the uuid
+     */
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    /**
+     * Gets operation.
+     *
+     * @return the operation
+     */
+    public String getOperation() {
+        return operation;
+    }
+
+    /**
+     * Sets operation.
+     *
+     * @param operation the operation
+     */
+    public void setOperation(String operation) {
+        this.operation = operation;
+    }
+
+    /**
      * Gets generated at.
      *
      * @return the generated at
@@ -105,6 +165,24 @@ public class DatasetContent implements Serializable {
      */
     public void setGeneratedAt(LocalDateTime generatedAt) {
         this.generatedAt = generatedAt;
+    }
+
+    /**
+     * Gets geometry.
+     *
+     * @return the geometry
+     */
+    public Geometry getGeometry() {
+        return geometry;
+    }
+
+    /**
+     * Sets geometry.
+     *
+     * @param geometry the geometry
+     */
+    public void setGeometry(Geometry geometry) {
+        this.geometry = geometry;
     }
 
     /**

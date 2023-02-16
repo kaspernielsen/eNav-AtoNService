@@ -24,7 +24,6 @@ import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
 import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
-import org.grad.eNav.atonService.models.domain.DatasetType;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.services.DatasetService;
@@ -133,7 +132,6 @@ class SecomControllerTest {
     SecomSignatureProviderImpl secomSignatureProvider;
 
     // Test Variables
-    private GeometryFactory geometryFactory;
     private UUID queryDataReference;
     private ContainerTypeEnum queryContainerType;
     private SECOM_DataProductType queryDataProductType;
@@ -157,12 +155,13 @@ class SecomControllerTest {
     @BeforeEach
     void setUp() throws JAXBException {
         // Setup the query arguments
-        this.geometryFactory = new GeometryFactory(new PrecisionModel(),4326);
+        // Test Variables
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         this.queryDataReference = UUID.randomUUID();
         this.queryContainerType = ContainerTypeEnum.S100_DataSet;
         this.queryDataProductType = SECOM_DataProductType.S125;
         this.queryProductVersion = "0.0.1";
-        this.queryGeometry = WKTUtils.write(this.geometryFactory.createPolygon(new Coordinate[]{
+        this.queryGeometry = WKTUtils.write(geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(-180, -90),
                 new Coordinate(-180, 90),
                 new Coordinate(180, 90),
@@ -178,7 +177,7 @@ class SecomControllerTest {
         // Construct a test S-125 Dataset
         this.s125DataSet = new S125DataSet("125Dataset");
         this.s125DataSet.setUuid(this.queryDataReference);
-        this.s125DataSet.setGeometry(this.geometryFactory.createPolygon(new Coordinate[]{
+        this.s125DataSet.setGeometry(geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(-180, -90),
                 new Coordinate(-180, 90),
                 new Coordinate(180, 90),
@@ -186,15 +185,13 @@ class SecomControllerTest {
                 new Coordinate(-180, -90),
         }));
 
-        // Marshal the dataset
+        // Marshal the dataset content
         final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
         final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, Collections.emptyList());
         this.s125DataSetAsXml = S125Utils.marshalS125(dataset, Boolean.FALSE);
         this.datasetContent = new DatasetContent();
         this.datasetContent.setId(BigInteger.ONE);
-        this.datasetContent.setUuid(this.s125DataSet.getUuid());
-        this.datasetContent.setDatasetType(DatasetType.S125);
-        this.datasetContent.setGeometry(this.s125DataSet.getGeometry());
+        this.datasetContent.setGeneratedAt(LocalDateTime.now());
         this.datasetContent.setContent(this.s125DataSetAsXml);
         this.datasetContent.setContentLength(BigInteger.valueOf(this.s125DataSetAsXml.length()));
         this.s125DataSet.setDatasetContent(this.datasetContent);

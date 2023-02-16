@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.repos;
 
-import org.grad.eNav.atonService.models.domain.DatasetContent;
+import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,11 +27,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Spring Data JPA repository for the S-125 Dataset Content entities.
+ * Spring Data JPA repository for the S-125 Dataset Content Log entities.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface DatasetContentRepo extends JpaRepository<DatasetContent, BigInteger> {
+public interface DatasetContentLogRepo extends JpaRepository<DatasetContentLog, BigInteger> {
 
     /**
      * Retrieves the latest database content entries for a specific UUID. It
@@ -39,10 +39,10 @@ public interface DatasetContentRepo extends JpaRepository<DatasetContent, BigInt
      * matching entries (e.g. just the last one).
      *
      * @param uuid              The UUID of the dataset
-     * @param createdAt         The creation date of the content
+     * @param generatedAt       The generation date of the content
      * @return The dataset content if it exists
      */
-    @Query("select d from DatasetContent d where d.uuid = :uuid AND d.createdAt <= :createdAt ORDER BY d.createdAt DESC")
-    List<DatasetContent> findLatestForUuid(UUID uuid, LocalDateTime createdAt, Pageable pageable);
+    @Query("select d from DatasetContentLog d where d.uuid = :uuid AND d.generatedAt <= :generatedAt ORDER BY d.generatedAt DESC")
+    List<DatasetContentLog> findLatestForUuid(UUID uuid, LocalDateTime generatedAt, Pageable pageable);
 
 }
