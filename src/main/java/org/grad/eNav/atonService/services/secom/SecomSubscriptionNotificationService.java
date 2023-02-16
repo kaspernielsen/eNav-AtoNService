@@ -26,6 +26,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * The SECOM Subscription Notification Service Class.
@@ -57,7 +58,7 @@ public class SecomSubscriptionNotificationService {
      * @return the received subscription notification response object
      */
     @Async
-    public SubscriptionNotificationResponseObject sendNotification(String mrn, UUID subscriptionIdentifier, SubscriptionEventEnum subscriptionEventEnum) {
+    public CompletableFuture<SubscriptionNotificationResponseObject> sendNotification(String mrn, UUID subscriptionIdentifier, SubscriptionEventEnum subscriptionEventEnum) {
         // Get the SECOM client matching the provided MRN
         final SecomClient secomClient = this.secomService.getClient(mrn);
 
@@ -67,8 +68,8 @@ public class SecomSubscriptionNotificationService {
         subscriptionNotificationObject.setEventEnum(subscriptionEventEnum);
 
         // Send the object the return the response
-        return secomClient.subscriptionNotification(subscriptionNotificationObject)
-                .orElse(null);
+        return CompletableFuture.completedFuture(secomClient.subscriptionNotification(subscriptionNotificationObject)
+                .orElse(null));
     }
 
 }

@@ -83,21 +83,24 @@ class SecomSubscriptionNotificationServiceTest {
     @Test
     void testSendNotificationCreated() {
         // Perform the service call
-        SubscriptionNotificationResponseObject result = this.secomSubscriptionNotificationService.sendNotification(
+        this.secomSubscriptionNotificationService.sendNotification(
                 "urn:mrn:org:test",
                 this.subscriptionIdentifier,
-                SubscriptionEventEnum.SUBSCRIPTION_CREATED);
+                SubscriptionEventEnum.SUBSCRIPTION_CREATED
+        ).whenCompleteAsync((result, error) -> {
+            // Verify that we send the subscription notifications in the proper way
+            ArgumentCaptor<SubscriptionNotificationObject> subscriptionNotificationObjectArgument = ArgumentCaptor.forClass(SubscriptionNotificationObject.class);
+            verify(this.secomClient).subscriptionNotification(subscriptionNotificationObjectArgument.capture());
+            assertNotNull(subscriptionNotificationObjectArgument.getValue());
+            assertEquals(this.subscriptionIdentifier, subscriptionNotificationObjectArgument.getValue().getSubscriptionIdentifier());
+            assertEquals(SubscriptionEventEnum.SUBSCRIPTION_CREATED, subscriptionNotificationObjectArgument.getValue().getEventEnum());
 
-        // Verify that we send the subscription notifications in the proper way
-        ArgumentCaptor<SubscriptionNotificationObject> subscriptionNotificationObjectArgument = ArgumentCaptor.forClass(SubscriptionNotificationObject.class);
-        verify(this.secomClient).subscriptionNotification(subscriptionNotificationObjectArgument.capture());
-        assertNotNull(subscriptionNotificationObjectArgument.getValue());
-        assertEquals(this.subscriptionIdentifier, subscriptionNotificationObjectArgument.getValue().getSubscriptionIdentifier());
-        assertEquals(SubscriptionEventEnum.SUBSCRIPTION_CREATED, subscriptionNotificationObjectArgument.getValue().getEventEnum());
+            // Make sure the response seems OK
+            assertNotNull(result);
+            assertEquals(this.subscriptionNotificationResponseObject.getResponseText(), result.getResponseText());
+        });
 
-        // Make sure the response seems OK
-        assertNotNull(result);
-        assertEquals(this.subscriptionNotificationResponseObject.getResponseText(), result.getResponseText());
+
     }
 
     /**
@@ -108,21 +111,22 @@ class SecomSubscriptionNotificationServiceTest {
     @Test
     void testSendNotificationRemoved() {
         // Perform the service call
-        SubscriptionNotificationResponseObject result = this.secomSubscriptionNotificationService.sendNotification(
+        this.secomSubscriptionNotificationService.sendNotification(
                 "urn:mrn:org:test",
                 this.subscriptionIdentifier,
-                SubscriptionEventEnum.SUBSCRIPTION_REMOVED);
+                SubscriptionEventEnum.SUBSCRIPTION_REMOVED
+        ).whenCompleteAsync((result, error) -> {
+            // Verify that we send the subscription notifications in the proper way
+            ArgumentCaptor<SubscriptionNotificationObject> subscriptionNotificationObjectArgument = ArgumentCaptor.forClass(SubscriptionNotificationObject.class);
+            verify(this.secomClient).subscriptionNotification(subscriptionNotificationObjectArgument.capture());
+            assertNotNull(subscriptionNotificationObjectArgument.getValue());
+            assertEquals(this.subscriptionIdentifier, subscriptionNotificationObjectArgument.getValue().getSubscriptionIdentifier());
+            assertEquals(SubscriptionEventEnum.SUBSCRIPTION_REMOVED, subscriptionNotificationObjectArgument.getValue().getEventEnum());
 
-        // Verify that we send the subscription notifications in the proper way
-        ArgumentCaptor<SubscriptionNotificationObject> subscriptionNotificationObjectArgument = ArgumentCaptor.forClass(SubscriptionNotificationObject.class);
-        verify(this.secomClient).subscriptionNotification(subscriptionNotificationObjectArgument.capture());
-        assertNotNull(subscriptionNotificationObjectArgument.getValue());
-        assertEquals(this.subscriptionIdentifier, subscriptionNotificationObjectArgument.getValue().getSubscriptionIdentifier());
-        assertEquals(SubscriptionEventEnum.SUBSCRIPTION_REMOVED, subscriptionNotificationObjectArgument.getValue().getEventEnum());
-
-        // Make sure the response seems OK
-        assertNotNull(result);
-        assertEquals(this.subscriptionNotificationResponseObject.getResponseText(), result.getResponseText());
+            // Make sure the response seems OK
+            assertNotNull(result);
+            assertEquals(this.subscriptionNotificationResponseObject.getResponseText(), result.getResponseText());
+        });
     }
 
 }

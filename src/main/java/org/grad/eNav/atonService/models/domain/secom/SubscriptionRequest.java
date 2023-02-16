@@ -16,9 +16,10 @@
 
 package org.grad.eNav.atonService.models.domain.secom;
 
+import jakarta.persistence.*;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.services.UnLoCodeService;
+import org.grad.eNav.atonService.utils.NullValueIndexerBridge;
 import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.grad.eNav.atonService.utils.GeometryUtils;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
@@ -27,6 +28,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
+import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
 import org.hibernate.search.mapper.pojo.common.annotation.Param;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
@@ -39,7 +41,6 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,16 +74,20 @@ public class SubscriptionRequest {
     @Column(columnDefinition="uuid", unique = true, updatable = false, nullable = false)
     private UUID uuid;
 
-    @KeywordField(sortable = Sortable.YES)
+    @KeywordField(sortable = Sortable.YES,
+                  valueBridge = @ValueBridgeRef(type = NullValueIndexerBridge.class))
     private ContainerTypeEnum containerType;
 
-    @KeywordField(sortable = Sortable.YES)
+    @KeywordField(sortable = Sortable.YES,
+                  valueBridge = @ValueBridgeRef(type = NullValueIndexerBridge.class))
     private SECOM_DataProductType dataProductType;
 
-    @KeywordField(sortable = Sortable.YES)
+    @KeywordField(sortable = Sortable.YES,
+                  valueBridge = @ValueBridgeRef(type = NullValueIndexerBridge.class))
     private String productVersion;
 
-    @GenericField(sortable = Sortable.YES)
+    @GenericField(sortable = Sortable.YES,
+                  valueBridge = @ValueBridgeRef(type = NullValueIndexerBridge.class))
     @Column(columnDefinition="uuid")
     private UUID dataReference;
 
@@ -104,10 +109,6 @@ public class SubscriptionRequest {
             params = @Param(name="fieldName", value = "subscriptionGeometry")
     ))
     private Geometry subscriptionGeometry;
-
-    @ManyToOne
-    @JoinColumn(name="dataset_uuid", nullable = true)
-    private S125DataSet s125DataSet;
 
     private String clientMrn;
 
@@ -310,24 +311,6 @@ public class SubscriptionRequest {
     }
 
     /**
-     * Gets S-125 data set.
-     *
-     * @return the S-125 dataset
-     */
-    public S125DataSet getS125DataSet() {
-        return s125DataSet;
-    }
-
-    /**
-     * Sets S-125 dataset.
-     *
-     * @param s125DataSet the S-125 dataset
-     */
-    public void setS125DataSet(S125DataSet s125DataSet) {
-        this.s125DataSet = s125DataSet;
-    }
-
-    /**
      * Gets client mrn.
      *
      * @return the client mrn
@@ -354,9 +337,6 @@ public class SubscriptionRequest {
      */
     public void updateSubscriptionGeometry(UnLoCodeService unLoCodeService) {
         Optional.ofNullable(GeometryUtils.joinGeometries(
-                        Optional.ofNullable(this.getS125DataSet())
-                                .map(S125DataSet::getGeometry)
-                                .orElse(null),
                         this.getGeometry(),
                         Optional.ofNullable(this.getUnlocode())
                                 .map(unLoCodeService::getUnLoCodeMapEntry)
