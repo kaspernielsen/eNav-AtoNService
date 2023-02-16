@@ -149,6 +149,7 @@ public class GetSecomController implements GetSecomInterface {
                     this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, pageable)
                             .stream()
                             .map(S125DataSet::getDatasetContent)
+                            .filter(Objects::nonNull)
                             .map(DatasetContent::getContent)
                             .map(String::getBytes)
                             .map(bytes -> {

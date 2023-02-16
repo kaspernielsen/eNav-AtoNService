@@ -20,9 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
-import org.grad.eNav.atonService.services.DatasetContentService;
-import org.grad.eNav.atonService.services.DatasetService;
+import org.grad.eNav.atonService.services.DatasetContentLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,16 +42,10 @@ import java.util.Optional;
 public class DatasetAspect {
 
     /**
-     * The Dataset Repo.
-     */
-    @Autowired
-    DatasetService datasetService;
-
-    /**
      * The Dataset Content Service.
      */
     @Autowired
-    DatasetContentService datasetContentService;
+    DatasetContentLogService datasetContentLogService;
 
     /**
      * The logging dataset operation. This operation will use the output of the
@@ -64,6 +58,15 @@ public class DatasetAspect {
      */
     @Around("@annotation(LogDataset)")
     public Object logDataset(ProceedingJoinPoint joinPoint) throws Throwable {
+        // Get the annotation parameters
+        String operation = Optional.of(joinPoint)
+                .map(ProceedingJoinPoint::getSignature)
+                .map(MethodSignature.class::cast)
+                .map(MethodSignature::getMethod)
+                .map(m -> m.getAnnotation(LogDataset.class))
+                .map(LogDataset::operation)
+                .orElse("");
+
         // Process and get the result object
         Object proceed = joinPoint.proceed();
 
@@ -71,15 +74,15 @@ public class DatasetAspect {
         if(Optional.ofNullable(proceed).filter(S125DataSet.class::isInstance).isPresent()) {
             Optional.of(proceed)
                     .map(S125DataSet.class::cast)
-                    .map(this.datasetContentService::generateDatasetContent)
-                    .ifPresent(this.datasetContentService::save);
+                    .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
+                    .ifPresent(this.datasetContentLogService::save);
         }
         // Handle if the object is an S-125 Dataset collection
         else if(Optional.ofNullable(proceed).filter(p -> isObjectCollectionOfClass(p, S125DataSet.class)).isPresent()) {
             ((Collection<?>) proceed).stream()
                     .map(S125DataSet.class::cast)
-                    .map(this.datasetContentService::generateDatasetContent)
-                    .forEach(this.datasetContentService::save);
+                    .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
+                    .forEach(this.datasetContentLogService::save);
         }
 
         // And return the result object

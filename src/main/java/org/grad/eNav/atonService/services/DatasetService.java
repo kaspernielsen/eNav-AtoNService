@@ -31,13 +31,14 @@ import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.exceptions.SavingFailedException;
+import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.DatasetRepo;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.s125.utils.S125Utils;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -49,12 +50,17 @@ import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.integration.channel.PublishSubscribeChannel;
+import org.springframework.integration.support.MessageBuilder;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -81,17 +87,26 @@ public class DatasetService {
     @Autowired
     EntityManager entityManager;
 
-    /**
-     * The UN/LoCode Service.
-     */
-    @Autowired
-    UnLoCodeService unLoCodeService;
 
     /**
      * The Aids to Navigation Service.
      */
     @Autowired
     AidsToNavigationService aidsToNavigationService;
+
+    /**
+     * The S-125 Dataset Channel to publish the published data to.
+     */
+    @Autowired
+    @Qualifier("s125PublicationChannel")
+    PublishSubscribeChannel s125PublicationChannel;
+
+    /**
+     * The S-125 Dataset Channel to publish the deleted data to.
+     */
+    @Autowired
+    @Qualifier("s125DeletionChannel")
+    PublishSubscribeChannel s125DeletionChannel;
 
     /**
      * The Dataset Repo.
@@ -127,7 +142,7 @@ public class DatasetService {
     }
 
     /**
-     * Get all the Datasets in a pageable search.
+     * Get all the datasets in a pageable search.
      *
      * @param uuid      The dataset UUID
      * @param geometry  The dataset geometry
@@ -160,8 +175,8 @@ public class DatasetService {
     }
 
     /**
-     * Handles a datatables pagination request and returns the results list in
-     * an appropriate format to be viewed by a datatables jQuery table.
+     * Handles a datatables pagination request and returns the dataset results
+     * list in an appropriate format to be viewed by a datatables jQuery table.
      *
      * @param dtPagingRequest the Datatables pagination request
      * @return the Datatables paged response
@@ -183,7 +198,7 @@ public class DatasetService {
     }
 
     /**
-     * A simple saving operation that persists the models in the database using
+     * A simple saving operation that persists the datasets in the database using
      * the correct repository based on the instance type.
      *
      * @param dataset the Dataset entity to be saved
@@ -194,30 +209,29 @@ public class DatasetService {
     public S125DataSet save(@NotNull S125DataSet dataset) {
         log.debug("Request to save Dataset : {}", dataset);
 
-        // First load any pre-existing subscriptions and content
-        Optional.of(dataset)
-                .map(S125DataSet::getUuid)
-                .flatMap(this.datasetRepo::findById)
-                .ifPresent(existing -> {
-                    dataset.setSubscriptions(existing.getSubscriptions());
-                    dataset.setDatasetContent(existing.getDatasetContent());
-                });
+        // Instantiate the dataset UUID if it does not exist
+        if(Objects.isNull(dataset.getUuid())) {
+            dataset.setUuid(UUID.randomUUID());
+        }
 
-        // Now update all subscriptions with the new geometry
-        Optional.of(dataset)
-                .map(S125DataSet::getSubscriptions)
-                .orElse(Collections.emptySet())
-                .forEach(sub -> {
-                    sub.setS125DataSet(dataset);
-                    sub.updateSubscriptionGeometry(this.unLoCodeService);
-                });
+        // Generate the new dataset content before the saving operation
+        dataset.setDatasetContent(this.generateDatasetContent(dataset));
 
-        // Save and return the dataset
-        return this.datasetRepo.save(dataset);
+        // Now save the dataset
+        final S125DataSet result = this.entityManager.merge(this.datasetRepo.save(dataset));
+
+        // Publish the updated dataset to the publication channel
+        this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
+                .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
+                .setHeader("deletion", false)
+                .build());
+
+        // And return the object for AOP
+        return result;
     }
 
     /**
-     * Delete the Aids to Navigation by UUID.
+     * Delete the dataset specified by its UUID.
      *
      * @param uuid the UUID of the dataset
      */
@@ -227,14 +241,20 @@ public class DatasetService {
         log.debug("Request to delete Dataset with UUID : {}", uuid);
 
         // Make sure the dataset exists
-        final S125DataSet dataSet = this.datasetRepo.findById(uuid)
+        final S125DataSet result = this.datasetRepo.findById(uuid)
                 .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
 
-        // Now delete the station node
-        this.datasetRepo.delete(dataSet);
+        // Now delete the dataset
+        this.datasetRepo.delete(result);
+
+        // Publish the updated dataset to the deleted channel
+        this.s125DeletionChannel.send(MessageBuilder.withPayload(result)
+                .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
+                .setHeader("deletion", true)
+                .build());
 
         // And return the object for AOP
-        return dataSet;
+        return result;
     }
 
     /**
@@ -331,28 +351,36 @@ public class DatasetService {
      * into an XML string and returned.
      *
      * @param s125DataSet the UUID of the dataset
-     * @return
+     * @return the generated dataset content object
      */
-    protected String generateDatasetAsXml(@NotNull S125DataSet s125DataSet) {
+    public DatasetContent generateDatasetContent(@NotNull S125DataSet s125DataSet) {
+        log.debug("Request to retrieve the content for Dataset with UUID : {}", s125DataSet.getUuid());
+
         // Get all the matching Aids to Navigation
-        final List<AidsToNavigation> aidsToNavigation = this.aidsToNavigationService.findAll(
-                        null,
-                        s125DataSet.getGeometry(),
-                        null,
-                        null,
-                        Pageable.unpaged()
-                ).toList();
+        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
+                null,
+                s125DataSet.getGeometry(),
+                null,
+                null,
+                Pageable.unpaged()
+        );
+
+        // If everything is OK up to now start building the dataset content
+        final DatasetContent datasetContent = new DatasetContent();
+        datasetContent.setContent("");
+        datasetContent.setContentLength(BigInteger.ZERO);
 
         // Now try to marshal the dataset into an XML string
         try {
             final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-            final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, aidsToNavigation);
-            return S125Utils.marshalS125(dataset, Boolean.FALSE);
+            final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
+            datasetContent.setContent(S125Utils.marshalS125(dataset, Boolean.FALSE));
+            datasetContent.setContentLength(BigInteger.valueOf(datasetContent.getContent().length()));
         } catch (Exception ex) {
             log.error(ex.getMessage());
         }
 
-        // If not successfully throw an error
-        throw new SavingFailedException("Failed to generate the dataset content as an XML");
+        // And return the dataset content
+        return datasetContent;
     }
 }
