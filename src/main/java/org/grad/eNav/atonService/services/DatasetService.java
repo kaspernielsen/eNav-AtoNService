@@ -217,17 +217,18 @@ public class DatasetService {
         // Generate the new dataset content before the saving operation
         dataset.setDatasetContent(this.generateDatasetContent(dataset));
 
-        // Now save the dataset
+        // Now save the dataset - Merge to pick up all the latest changes
         final S125DataSet result = this.datasetRepo.save(dataset);
+        final S125DataSet merged = this.entityManager.merge(result);
 
         // Publish the updated dataset to the publication channel
-        this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
+        this.s125PublicationChannel.send(MessageBuilder.withPayload(merged)
                 .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
                 .setHeader("deletion", false)
                 .build());
 
         // And return the object for AOP
-        return result;
+        return merged;
     }
 
     /**

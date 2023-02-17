@@ -57,7 +57,7 @@ public class SecomSubscriptionNotificationService {
      * @param subscriptionEventEnum     the subscription event that took place
      * @return the received subscription notification response object
      */
-    @Async
+    @Async("taskExecutor")
     public CompletableFuture<SubscriptionNotificationResponseObject> sendNotification(String mrn, UUID subscriptionIdentifier, SubscriptionEventEnum subscriptionEventEnum) {
         // Get the SECOM client matching the provided MRN
         final SecomClient secomClient = this.secomService.getClient(mrn);
