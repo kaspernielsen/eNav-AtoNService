@@ -18,9 +18,7 @@ package org.grad.eNav.atonService.models.domain.s125;
 
 import _int.iala_aism.s125.gml._0_0.*;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
 /**

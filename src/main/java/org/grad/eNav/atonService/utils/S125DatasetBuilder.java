@@ -16,12 +16,12 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
-import _int.iala_aism.s125.gml._0_0.MemberType;
+import _int.iala_aism.s125.gml._0_0.*;
 import _int.iho.s100.gml.base._1_0.DataSetStructureInformationType;
 import _net.opengis.gml.profiles.BoundingShapeType;
 import _net.opengis.gml.profiles.EnvelopeType;
 import _net.opengis.gml.profiles.Pos;
+import jakarta.xml.bind.JAXBElement;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
@@ -32,7 +32,8 @@ import org.modelmapper.ModelMapper;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.grad.eNav.atonService.models.domain.s125.S125AtonTypes.fromS125Class;
 
 public class S125DatasetBuilder {
 
@@ -41,18 +42,15 @@ public class S125DatasetBuilder {
      */
     private ModelMapper modelMapper;
 
-    private AtomicInteger idIndex;
+    // Class Variables
     private _int.iala_aism.s125.gml._0_0.ObjectFactory s125GMLFactory;
-    private _net.opengis.gml.profiles.ObjectFactory opengisGMLFactory;
 
     /**
      * Class Constructor.
      */
     public S125DatasetBuilder(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
-        this.idIndex = new AtomicInteger(1);
         this.s125GMLFactory = new _int.iala_aism.s125.gml._0_0.ObjectFactory();
-        this.opengisGMLFactory = new _net.opengis.gml.profiles.ObjectFactory();
     }
 
     /**
@@ -92,7 +90,8 @@ public class S125DatasetBuilder {
                 .orElse(Collections.emptyList())
                 .stream()
                 .map(aton -> this.modelMapper.map(aton, S125AtonTypes.fromLocalClass(aton.getClass()).getS125Class()))
-                .map(aton -> this.s125GMLFactory.createS125AidsToNavigation(aton))
+                //.map(aton -> this.s125GMLFactory.createS125AidsToNavigation(aton)) // Causes problems by introducing "xsi:type"
+                .map(this::createJaxbElement)
                 .map(jaxb -> { MemberType m = new MemberType(); m.setAbstractFeature(jaxb); return m; })
                 .forEach(dataset.getImembersAndMembers()::add);
 
@@ -147,6 +146,81 @@ public class S125DatasetBuilder {
             envelope.expandToInclude(c);
         }
         return envelope;
+    }
+
+    /**
+     * Creates a respective JAXB element based on the provided S125 AtoN type.
+     * This generation method fixes the problem where the generated XML
+     * dataset members have the type identified through the "xsi:type"
+     * argument.
+     *
+     * @return the generated JAXElement
+     */
+    protected JAXBElement<? extends S125AidsToNavigationType> createJaxbElement(S125AidsToNavigationType s125AidsToNavigationType) {
+        switch(fromS125Class(s125AidsToNavigationType.getClass())) {
+            case CARDINAL_BEACON:
+                return this.s125GMLFactory.createS125BeaconCardinal((S125BeaconCardinalType) s125AidsToNavigationType);
+            case LATERAL_BEACON:
+                return this.s125GMLFactory.createS125BeaconLateral((S125BeaconLateralType) s125AidsToNavigationType);
+            case ISOLATED_DANGER_BEACON:
+                return this.s125GMLFactory.createS125BeaconIsolatedDanger((S125BeaconIsolatedDangerType) s125AidsToNavigationType);
+            case SAFE_WATER_BEACON:
+                return this.s125GMLFactory.createS125BeaconSafeWater((S125BeaconSafeWaterType) s125AidsToNavigationType);
+            case SPECIAL_PURPOSE_BEACON:
+                return this.s125GMLFactory.createS125BeaconSpecialPurposeGeneral((S125BeaconSpecialPurposeGeneralType) s125AidsToNavigationType);
+            case CARDINAL_BUOY:
+                return this.s125GMLFactory.createS125BuoyCardinal((S125BuoyCardinalType) s125AidsToNavigationType);
+            case LATERAL_BUOY:
+                return this.s125GMLFactory.createS125BuoyLateral((S125BuoyLateralType) s125AidsToNavigationType);
+            case INSTALLATION_BUOY:
+                return this.s125GMLFactory.createS125BuoyInstallation((S125BuoyInstallationType) s125AidsToNavigationType);
+            case ISOLATED_DANGER_BUOY:
+                return this.s125GMLFactory.createS125BuoyIsolatedDanger((S125BuoyIsolatedDangerType) s125AidsToNavigationType);
+            case SAFE_WATER_BUOY:
+                return this.s125GMLFactory.createS125BuoySafeWater((S125BuoySafeWaterType) s125AidsToNavigationType);
+            case SPECIAL_PURPOSE_BUOY:
+                return this.s125GMLFactory.createS125BuoySpecialPurposeGeneral((S125BuoySpecialPurposeGeneralType) s125AidsToNavigationType);
+            case DAYMARK:
+                return this.s125GMLFactory.createS125Daymark((S125DaymarkType) s125AidsToNavigationType);
+            case FOG_SIGNAL:
+                return this.s125GMLFactory.createS125FogSignal((S125FogSignalType) s125AidsToNavigationType);
+            case LIGHT:
+                return this.s125GMLFactory.createS125Light((S125LightType) s125AidsToNavigationType);
+            case  LIGHT_FLOAT:
+                return this.s125GMLFactory.createS125LightFloat((S125LightFloatType) s125AidsToNavigationType);
+            case LANDMARK:
+                return this.s125GMLFactory.createS125Landmark((S125LandmarkType) s125AidsToNavigationType);
+            case LIGHTHOUSE:
+                return this.s125GMLFactory.createS125Lighthouse((S125LighthouseType) s125AidsToNavigationType);
+            case LIGHT_VESSEL:
+                return this.s125GMLFactory.createS125LightVessel((S125LightVesselType) s125AidsToNavigationType);
+            case NAVIGATION_LINE:
+                return this.s125GMLFactory.createS125NavigationLine((S125NavigationLineType) s125AidsToNavigationType);
+            case OFFSHORE_PLATFORM:
+                return this.s125GMLFactory.createS125OffshorePlatform((S125OffshorePlatformType) s125AidsToNavigationType);
+            case PHYSICAL_AIS_ATON:
+                return this.s125GMLFactory.createS125PhysicalAISAidToNavigation((S125PhysicalAISAidToNavigationType) s125AidsToNavigationType);
+            case PILE:
+                return this.s125GMLFactory.createS125Pile((S125PileType) s125AidsToNavigationType);
+            case RADAR_REFLECTOR:
+                return this.s125GMLFactory.createS125RadarReflector((S125RadarReflectorType) s125AidsToNavigationType);
+            case RADIO_STATION:
+                return this.s125GMLFactory.createS125RadioStation((S125RadioStationType) s125AidsToNavigationType);
+            case RECOMMENDED_TRACK:
+                return this.s125GMLFactory.createS125RecommendedTrack((S125RecommendedTrackType) s125AidsToNavigationType);
+            case RETRO_REFLECTOR:
+                return this.s125GMLFactory.createS125RetroReflector((S125RetroReflectorType) s125AidsToNavigationType);
+            case SILO_TANK:
+                return this.s125GMLFactory.createS125SiloTank((S125SiloTankType) s125AidsToNavigationType);
+            case SYNTHETIC_AIS_ATON:
+                return this.s125GMLFactory.createS125SyntheticAISAidToNavigation((S125SyntheticAISAidToNavigationType) s125AidsToNavigationType);
+            case TOPMARK:
+                return this.s125GMLFactory.createS125Topmark((S125TopmarkType) s125AidsToNavigationType);
+            case VIRTUAL_AIS_ATON:
+                return this.s125GMLFactory.createS125VirtualAISAidToNavigation((S125VirtualAISAidToNavigationType) s125AidsToNavigationType);
+            default:
+                return this.s125GMLFactory.createS125AidsToNavigation(s125AidsToNavigationType);
+        }
     }
 
 }
