@@ -33,8 +33,6 @@ import org.modelmapper.ModelMapper;
 import java.math.BigInteger;
 import java.util.*;
 
-import static org.grad.eNav.atonService.models.domain.s125.S125AtonTypes.fromS125Class;
-
 public class S125DatasetBuilder {
 
     /**
@@ -157,7 +155,7 @@ public class S125DatasetBuilder {
      * @return the generated JAXElement
      */
     protected JAXBElement<? extends S125AidsToNavigationType> createJaxbElement(S125AidsToNavigationType s125AidsToNavigationType) {
-        switch(fromS125Class(s125AidsToNavigationType.getClass())) {
+        switch(S125AtonTypes.fromS125Class(s125AidsToNavigationType.getClass())) {
             case CARDINAL_BEACON:
                 return this.s125GMLFactory.createS125BeaconCardinal((S125BeaconCardinalType) s125AidsToNavigationType);
             case LATERAL_BEACON:
