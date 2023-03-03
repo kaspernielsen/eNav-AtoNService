@@ -74,6 +74,8 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.UUID;
 
+import static org.grad.secom.core.base.SecomConstants.SECOM_DATE_TIME_FORMAT;
+import static org.grad.secom.core.base.SecomConstants.SECOM_DATE_TIME_FORMATTER;
 import static org.grad.secom.core.interfaces.CapabilitySecomInterface.CAPABILITY_INTERFACE_PATH;
 import static org.grad.secom.core.interfaces.GetSecomInterface.GET_INTERFACE_PATH;
 import static org.grad.secom.core.interfaces.GetSummarySecomInterface.GET_SUMMARY_INTERFACE_PATH;
@@ -269,8 +271,8 @@ class SecomControllerTest {
                         .queryParam("productVersion", this.queryProductVersion)
                         .queryParam("geometry", this.queryGeometry)
                         .queryParam("unlocode", this.queryUnlocode)
-                        .queryParam("validFrom", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidFrom))
-                        .queryParam("validTo", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidTo))
+                        .queryParam("validFrom", DateTimeFormatter.ofPattern(SECOM_DATE_TIME_FORMAT).format(this.queryValidFrom))
+                        .queryParam("validTo", DateTimeFormatter.ofPattern(SECOM_DATE_TIME_FORMAT).format(this.queryValidTo))
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
@@ -337,8 +339,8 @@ class SecomControllerTest {
                         .queryParam("productVersion", this.queryProductVersion)
                         .queryParam("geometry", this.queryGeometry)
                         .queryParam("unlocode", this.queryUnlocode)
-                        .queryParam("validFrom", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidFrom))
-                        .queryParam("validTo", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidTo))
+                        .queryParam("validFrom", DateTimeFormatter.ofPattern(SECOM_DATE_TIME_FORMAT).format(this.queryValidFrom))
+                        .queryParam("validTo", DateTimeFormatter.ofPattern(SECOM_DATE_TIME_FORMAT).format(this.queryValidTo))
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
@@ -381,8 +383,8 @@ class SecomControllerTest {
                         .queryParam("productVersion", this.queryProductVersion)
                         .queryParam("geometry", this.queryGeometry)
                         .queryParam("unlocode", this.queryUnlocode)
-                        .queryParam("validFrom", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidFrom))
-                        .queryParam("validTo", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidTo))
+                        .queryParam("validFrom", DateTimeFormatter.ofPattern(SECOM_DATE_TIME_FORMAT).format(this.queryValidFrom))
+                        .queryParam("validTo", DateTimeFormatter.ofPattern(SECOM_DATE_TIME_FORMAT).format(this.queryValidTo))
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
@@ -466,8 +468,8 @@ class SecomControllerTest {
                         .queryParam("productVersion", this.queryProductVersion)
                         .queryParam("geometry", this.queryGeometry)
                         .queryParam("unlocode", this.queryUnlocode)
-                        .queryParam("validFrom", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidFrom))
-                        .queryParam("validTo", DateTimeFormatter.ISO_DATE_TIME.format(this.queryValidTo))
+                        .queryParam("validFrom", SECOM_DATE_TIME_FORMATTER.format(this.queryValidFrom))
+                        .queryParam("validTo", SECOM_DATE_TIME_FORMATTER.format(this.queryValidTo))
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())

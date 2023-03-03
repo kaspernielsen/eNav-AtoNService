@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.controllers.secom;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.Min;
@@ -100,8 +101,8 @@ public class GetSecomController implements GetSecomInterface {
                                  @QueryParam("productVersion") String productVersion,
                                  @QueryParam("geometry") String geometry,
                                  @QueryParam("unlocode") @Pattern(regexp = "[A-Z]{5}") String unlocode,
-                                 @QueryParam("validFrom") LocalDateTime validFrom,
-                                 @QueryParam("validTo") LocalDateTime validTo,
+                                 @QueryParam("validFrom") @Parameter(hidden = true) LocalDateTime validFrom,
+                                 @QueryParam("validTo") @Parameter(hidden = true) LocalDateTime validTo,
                                  @QueryParam("page") @Min(0) Integer page,
                                  @QueryParam("pageSize") @Min(0) Integer pageSize) {
         log.debug("SECOM request to get page of Dataset");
