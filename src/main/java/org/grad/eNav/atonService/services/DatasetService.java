@@ -309,12 +309,12 @@ public class DatasetService {
                             Optional.ofNullable(uuid).ifPresent(v -> b.must(f.match()
                                     .field("uuid")
                                     .matching(v)));
-                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
-                                    .field("dateStart")
-                                    .atLeast(fromTime)));
-                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
-                                    .field("dateEnd")
-                                    .atMost(toTime)));
+//                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
+//                                    .field("createdAt")
+//                                    .atLeast(fromTime)));
+//                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
+//                                    .field("createdAt")
+//                                    .atMost(toTime)));
                             Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
                         })
