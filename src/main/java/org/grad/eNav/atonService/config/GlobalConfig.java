@@ -18,10 +18,11 @@ package org.grad.eNav.atonService.config;
 
 import _int.iala_aism.s125.gml._0_0.DataSet;
 import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
-import _int.iho.s100.gml.base._1_0_Ext.CurveProperty;
-import _int.iho.s100.gml.base._1_0_Ext.PointCurveSurfaceProperty;
-import _int.iho.s100.gml.base._1_0_Ext.PointProperty;
-import _int.iho.s100.gml.base._1_0_Ext.SurfaceProperty;
+import _int.iho.s100.gml.base._5_0.CurveProperty;
+import _int.iho.s100.gml.base._5_0.PointProperty;
+import _int.iho.s100.gml.base._5_0.S100SpatialAttributeType;
+import _int.iho.s100.gml.base._5_0.SurfaceProperty;
+import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
@@ -45,11 +46,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import jakarta.xml.bind.JAXBException;
+import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -127,14 +129,14 @@ public class GlobalConfig {
                         mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((S125AidsToNavigationType) ctx.getSource())))
                                 .map(src-> src, AidsToNavigation::setGeometry);
                     });
-            modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class(), s125MappingConfig)
+            modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
                     .implicitMappings()
                     .addMappings(mapper -> {
                         mapper.map(AidsToNavigation::getId, S125AidsToNavigationType::setId);
-                        mapper.using(ctx -> convertToS125Geometry((AidsToNavigation) ctx.getSource()))
+                        mapper.using(ctx -> new GeometryS125Converter().convertFromGeometry((AidsToNavigation) ctx.getSource()))
                                 .map(src -> src, (dest, val) -> {
                                     try {
-                                        new PropertyDescriptor("geometry", atonType.getS125Class()).getWriteMethod().invoke(dest, val);
+                                        new PropertyDescriptor("geometries", atonType.getS125Class()).getWriteMethod().invoke(dest, val);
                                     } catch (Exception ex) {
                                         log.error(ex.getMessage());
                                     }
@@ -197,31 +199,6 @@ public class GlobalConfig {
             return S125Utils.marshalS125(dataset);
         } catch (JAXBException ex) {
             return "";
-        }
-    }
-
-    /**
-     * Converts the geometry for an Aids to Navigation object for the local JTS
-     * format used for persistence to the S-125 data product specification
-     * compatible one.
-     *
-     * @param aidsToNavigation the Aids to Navigation to get the geometry from
-     * @return the S-125 compliant geometry description
-     */
-    public static Object convertToS125Geometry(AidsToNavigation aidsToNavigation) {
-        PointCurveSurfaceProperty pointCurveSurfaceProperty = new GeometryS125Converter().convertFromGeometry(aidsToNavigation);
-        if(pointCurveSurfaceProperty.getSurfaceProperty() != null) {
-            SurfaceProperty surfaceProperty = new SurfaceProperty();
-            surfaceProperty.setSurfaceProperty(pointCurveSurfaceProperty.getSurfaceProperty());
-            return surfaceProperty;
-        } else if(pointCurveSurfaceProperty.getSurfaceProperty() != null) {
-            CurveProperty curveProperty = new CurveProperty();
-            curveProperty.setCurveProperty(pointCurveSurfaceProperty.getCurveProperty());
-            return curveProperty;
-        } else {
-            PointProperty pointProperty = new PointProperty();
-            pointProperty.setPointProperty(pointCurveSurfaceProperty.getPointProperty());
-            return pointProperty;
         }
     }
 

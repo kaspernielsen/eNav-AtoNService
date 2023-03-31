@@ -416,7 +416,6 @@ class SecomControllerTest {
                     try {
                         DataSet result = S125Utils.unmarshallS125(s125Xml);
                         assertNotNull(result);
-                        assertNotNull(result.getDatasetStructureInformation());
                         assertNotNull(result.getDatasetIdentificationInformation());
                         assertNotNull(result.getId());
                         assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
