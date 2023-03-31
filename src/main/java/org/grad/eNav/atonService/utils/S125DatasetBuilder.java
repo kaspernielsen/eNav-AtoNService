@@ -69,6 +69,24 @@ public class S125DatasetBuilder {
         //                       BOUNDED BY SECTION                           //
         //====================================================================//
         dataset.setBoundedBy(this.generateBoundingShape(atons));
+        /*dataset.setPointsAndMultiPointsAndCurves(Optional.ofNullable(s125Dataset)
+                .map(d -> new GeometryS125Converter().geometryToS125PointCurveSurfaceGeometry(d.getGeometry()))
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(attr -> {
+                    if(attr instanceof PointProperty) {
+                        return ((PointProperty)attr).getPoint();
+                    } else if(attr instanceof MultiPointProperty) {
+                        return ((MultiPointProperty)attr).getMultiPoint();
+                    } else if(attr instanceof CurveProperty) {
+                        return ((CurveProperty)attr).getCurve();
+                    } else if(attr instanceof SurfaceProperty) {
+                        return ((SurfaceProperty)attr).getSurface();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));*/
 
         //====================================================================//
         //                      DATASET MEMBERS SECTION                       //
