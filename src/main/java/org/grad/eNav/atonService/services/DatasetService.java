@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.services;
 
 
 import _int.iala_aism.s125.gml._0_0.DataSet;
+import _int.iho.s100.gml.base._5_0.MDTopicCategoryCode;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125DataSetIdentification;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.DatasetRepo;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
@@ -63,6 +65,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static java.util.function.Predicate.not;
 
 /**
  * The S-125 Dataset Service.
@@ -212,6 +216,15 @@ public class DatasetService {
         // Instantiate the dataset UUID if it does not exist
         if(Objects.isNull(dataset.getUuid())) {
             dataset.setUuid(UUID.randomUUID());
+        }
+
+        // Set the dataset ISO 19115-1 topic category if not defined
+        if(Optional.of(dataset)
+                .map(S125DataSet::getDatasetIdentificationInformation)
+                .map(S125DataSetIdentification::getDatasetTopicCategories)
+                .filter(not(List::isEmpty))
+                .isEmpty()) {
+            dataset.getDatasetIdentificationInformation().setDatasetTopicCategories(Collections.singletonList(MDTopicCategoryCode.OCEANS));
         }
 
         // Generate the new dataset content before the saving operation
