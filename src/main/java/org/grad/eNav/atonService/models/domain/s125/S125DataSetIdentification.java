@@ -26,6 +26,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -111,6 +112,10 @@ public class S125DataSetIdentification {
         this.datasetTitle = "GRAD e-Navigation S-125 Dataset";
         this.datasetReferenceDate = LocalDate.now();
         this.datasetLanguage = Locale.getDefault().getISO3Language();
+
+        // Also se the dataset category topics by default to OCEANS
+        this.datasetTopicCategories = new ArrayList<>();
+        this.datasetTopicCategories.add(MDTopicCategoryCode.OCEANS);
     }
 
     /**
