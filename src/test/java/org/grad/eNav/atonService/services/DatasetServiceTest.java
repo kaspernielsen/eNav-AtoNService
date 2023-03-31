@@ -391,8 +391,7 @@ class DatasetServiceTest {
         assertNull(result.getId());
         assertNotNull(result.getContent());
         assertEquals(BigInteger.valueOf(result.getContent().length()), result.getContentLength());
-        assertEquals(numOfAtons, StringUtils.countMatches(result.getContent(), "<member>"));
-        assertEquals(numOfAtons, StringUtils.countMatches(result.getContent(), "</member>"));
+        assertEquals(numOfAtons*2, StringUtils.countMatches(result.getContent(), "member>"));
     }
 
 }

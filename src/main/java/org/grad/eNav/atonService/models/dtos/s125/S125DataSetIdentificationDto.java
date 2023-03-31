@@ -16,7 +16,6 @@
 
 package org.grad.eNav.atonService.models.dtos.s125;
 
-import _int.iho.s100.gml.base._1_0.ISO6391;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -60,7 +59,7 @@ public class S125DataSetIdentificationDto {
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate datasetReferenceDate;
 
-    private ISO6391 datasetLanguage;
+    private String datasetLanguage;
 
     private String datasetAbstract;
 
@@ -231,7 +230,7 @@ public class S125DataSetIdentificationDto {
      *
      * @return the dataset language
      */
-    public ISO6391 getDatasetLanguage() {
+    public String getDatasetLanguage() {
         return datasetLanguage;
     }
 
@@ -240,7 +239,7 @@ public class S125DataSetIdentificationDto {
      *
      * @param datasetLanguage the dataset language
      */
-    public void setDatasetLanguage(ISO6391 datasetLanguage) {
+    public void setDatasetLanguage(String datasetLanguage) {
         this.datasetLanguage = datasetLanguage;
     }
 

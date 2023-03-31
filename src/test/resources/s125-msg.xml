@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ns6:DataSet xmlns:ns1="http://www.opengis.net/gml/3.2" xmlns:ns2="http://www.iho.int/s100gml/1.0" xmlns:ns4="http://www.w3.org/1999/xlink" xmlns:ns5="http://www.iala-aism.int/S125/gml/0.0.1Base" xmlns:ns6="http://www.iala-aism.int/S125/gml/0.0.1" xmlns:ns7="http://www.iho.int/s100gml/1.0+EXT" ns1:id="Cork Hole Test Dataset">
+<ns5:DataSet xmlns:ns1="http://www.opengis.net/gml/3.2" xmlns:ns2="http://www.iho.int/s100gml/5.0" xmlns:ns3="http://www.w3.org/1999/xlink" xmlns:ns4="http://www.iala-aism.int/S125/gml/0.0.1Base" xmlns:ns5="http://www.iala-aism.int/S125/gml/0.0.1" ns1:id="Cork Hole Test Dataset">
     <ns1:boundedBy>
         <ns1:Envelope srsName="EPSG:4326">
-            <ns1:lowerCorner>1.4233333333333333 51.891666666666666</ns1:lowerCorner>
-            <ns1:upperCorner>1.4233333333333333 51.891666666666666</ns1:upperCorner>
+            <ns1:lowerCorner>1.4233333 51.8916667</ns1:lowerCorner>
+            <ns1:upperCorner>1.4233333 51.8916667</ns1:upperCorner>
         </ns1:Envelope>
     </ns1:boundedBy>
-    <DatasetIdentificationInformation>
+    <ns2:DatasetIdentificationInformation>
         <ns2:encodingSpecification>S100 Part 10b</ns2:encodingSpecification>
         <ns2:encodingSpecificationEdition>1.0</ns2:encodingSpecificationEdition>
         <ns2:productIdentifier>S-125</ns2:productIdentifier>
@@ -14,39 +14,34 @@
         <ns2:datasetFileIdentifier>junit</ns2:datasetFileIdentifier>
         <ns2:datasetTitle>S-125 Cork Hole Test Dataset</ns2:datasetTitle>
         <ns2:datasetReferenceDate>2001-01-01</ns2:datasetReferenceDate>
-        <ns2:datasetLanguage>en</ns2:datasetLanguage>
+        <ns2:datasetLanguage>eng</ns2:datasetLanguage>
         <ns2:datasetAbstract>Test dataset for unit testing</ns2:datasetAbstract>
-    </DatasetIdentificationInformation>
-    <member>
-        <ns6:S125_VirtualAISAidToNavigation ns1:id="ID001">
+    </ns2:DatasetIdentificationInformation>
+    <ns5:member>
+        <ns5:S125_VirtualAISAidToNavigation ns1:id="ID001">
             <ns1:boundedBy>
                 <ns1:Envelope srsName="EPSG:4326">
-                    <ns1:lowerCorner>1.4233333333333333 51.891666666666666</ns1:lowerCorner>
-                    <ns1:upperCorner>1.4233333333333333 51.891666666666666</ns1:upperCorner>
+                    <ns1:lowerCorner>1.4233333 51.8916667</ns1:lowerCorner>
+                    <ns1:upperCorner>1.4233333 51.8916667</ns1:upperCorner>
                 </ns1:Envelope>
             </ns1:boundedBy>
-            <ns2:featureObjectIdentifier>
-                <ns2:agency>GRAD</ns2:agency>
-                <ns2:featureIdentificationNumber>1</ns2:featureIdentificationNumber>
-                <ns2:featureIdentificationSubdivision>0</ns2:featureIdentificationSubdivision>
-            </ns2:featureObjectIdentifier>
-            <atonNumber>urn:mrn:grad:aton:test:corkhole</atonNumber>
-            <idCode>001</idCode>
-            <textualDescription>Test AtoN for Cork Hole</textualDescription>
-            <textualDescriptionInNationalLanguage>Description of Test AtoN for Cork Hole</textualDescriptionInNationalLanguage>
-            <virtualAISAidToNavigationType>special purpose</virtualAISAidToNavigationType>
-            <objectNameInNationalLanguage>Cork Hole Test</objectNameInNationalLanguage>
-            <objectName>Cork Hole Test</objectName>
-            <status>confirmed</status>
-            <estimatedRangeOfTransmission>20</estimatedRangeOfTransmission>
-            <MMSICode>992359598</MMSICode>
-            <geometry>
+            <ns5:atonNumber>urn:mrn:grad:aton:test:corkhole</ns5:atonNumber>
+            <ns5:idCode>001</ns5:idCode>
+            <ns5:textualDescription>Test AtoN for Cork Hole</ns5:textualDescription>
+            <ns5:textualDescriptionInNationalLanguage>Description of Test AtoN for Cork Hole</ns5:textualDescriptionInNationalLanguage>
+            <ns5:virtualAISAidToNavigationType>special purpose</ns5:virtualAISAidToNavigationType>
+            <ns5:objectNameInNationalLanguage>Cork Hole Test</ns5:objectNameInNationalLanguage>
+            <ns5:objectName>Cork Hole Test</ns5:objectName>
+            <ns5:status>confirmed</ns5:status>
+            <ns5:estimatedRangeOfTransmission>20</ns5:estimatedRangeOfTransmission>
+            <ns5:MMSICode>992359598</ns5:MMSICode>
+            <ns5:geometry>
                 <ns2:pointProperty>
-                    <ns2:Point ns1:id="ID002">
-                        <ns1:pos>1.4233333333333333 51.891666666666666</ns1:pos>
+                    <ns2:Point>
+                        <ns1:pos>1.4233333 51.8916667</ns1:pos>
                     </ns2:Point>
                 </ns2:pointProperty>
-            </geometry>
-        </ns6:S125_VirtualAISAidToNavigation>
-    </member>
-</ns6:DataSet>
+            </ns5:geometry>
+        </ns5:S125_VirtualAISAidToNavigation>
+    </ns5:member>
+</ns5:DataSet>

@@ -16,8 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iho.s100.gml.base._1_0.ISO6391;
-import _int.iho.s100.gml.base._1_0.MDTopicCategoryCode;
+import _int.iho.s100.gml.base._5_0.MDTopicCategoryCode;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
@@ -28,6 +27,7 @@ import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The Dataset Identification Entity Class
@@ -79,9 +79,8 @@ public class S125DataSetIdentification {
     @LastModifiedDate
     private LocalDate datasetReferenceDate;
 
-    @Enumerated(EnumType.STRING)
     @KeywordField(sortable = Sortable.YES)
-    private ISO6391 datasetLanguage;
+    private String datasetLanguage;
 
     @FullTextField()
     private String datasetAbstract;
@@ -107,7 +106,7 @@ public class S125DataSetIdentification {
         this.datasetFileIdentifier = datasetFileIdentifier;
         this.datasetTitle = "GRAD e-Navigation S-125 Dataset";
         this.datasetReferenceDate = LocalDate.now();
-        this.datasetLanguage = ISO6391.EN;
+        this.datasetLanguage = Locale.getDefault().getISO3Language();
     }
 
     /**
@@ -281,7 +280,7 @@ public class S125DataSetIdentification {
      *
      * @return the dataset language
      */
-    public ISO6391 getDatasetLanguage() {
+    public String getDatasetLanguage() {
         return datasetLanguage;
     }
 
@@ -290,7 +289,7 @@ public class S125DataSetIdentification {
      *
      * @param datasetLanguage the dataset language
      */
-    public void setDatasetLanguage(ISO6391 datasetLanguage) {
+    public void setDatasetLanguage(String datasetLanguage) {
         this.datasetLanguage = datasetLanguage;
     }
 

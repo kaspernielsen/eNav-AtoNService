@@ -17,7 +17,6 @@
 package org.grad.eNav.atonService.utils;
 
 import _int.iala_aism.s125.gml._0_0.*;
-import _int.iho.s100.gml.base._1_0.DataSetStructureInformationType;
 import _net.opengis.gml.profiles.BoundingShapeType;
 import _net.opengis.gml.profiles.EnvelopeType;
 import _net.opengis.gml.profiles.Pos;
@@ -72,14 +71,6 @@ public class S125DatasetBuilder {
         //====================================================================//
         dataset.setBoundedBy(this.generateBoundingShape(atons));
 
-        //====================================================================//
-        //              DATASET STRUCTURE INFORMATION SECTION                 //
-        //====================================================================//
-        DataSetStructureInformationType dataSetStructureInformationType = new DataSetStructureInformationType();
-        dataSetStructureInformationType.setCoordMultFactorX(BigInteger.ONE);
-        dataSetStructureInformationType.setCoordMultFactorY(BigInteger.ONE);
-        dataSetStructureInformationType.setCoordMultFactorZ(BigInteger.ONE);
-        dataset.setDatasetStructureInformation(dataSetStructureInformationType);
 
         //====================================================================//
         //                      DATASET MEMBERS SECTION                       //
@@ -112,11 +103,9 @@ public class S125DatasetBuilder {
                 .forEach(g -> this.enclosingEnvelopFromGeometry(envelope, g));
 
         Pos lowerCorner = new Pos();
-        lowerCorner.getValues().add(envelope.getMinX());
-        lowerCorner.getValues().add(envelope.getMaxY());
+        lowerCorner.setValue(new Double[]{envelope.getMinX(), envelope.getMaxY()});
         Pos upperCorner = new Pos();
-        upperCorner.getValues().add(envelope.getMaxX());
-        upperCorner.getValues().add(envelope.getMaxY());
+        upperCorner.setValue(new Double[]{envelope.getMaxX(), envelope.getMaxY()});
 
         // And create the bounding by envelope
         BoundingShapeType boundingShapeType = new BoundingShapeType();
