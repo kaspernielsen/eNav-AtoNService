@@ -29,7 +29,6 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 
-import java.math.BigInteger;
 import java.util.*;
 
 public class S125DatasetBuilder {
@@ -47,7 +46,7 @@ public class S125DatasetBuilder {
      */
     public S125DatasetBuilder(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
-        this.s125GMLFactory = new _int.iala_aism.s125.gml._0_0.ObjectFactory();
+        this.s125GMLFactory = new ObjectFactory();
     }
 
     /**
@@ -70,7 +69,6 @@ public class S125DatasetBuilder {
         //                       BOUNDED BY SECTION                           //
         //====================================================================//
         dataset.setBoundedBy(this.generateBoundingShape(atons));
-
 
         //====================================================================//
         //                      DATASET MEMBERS SECTION                       //
@@ -100,7 +98,7 @@ public class S125DatasetBuilder {
         final Envelope envelope = new Envelope();
         atonNodes.stream()
                 .map(AidsToNavigation::getGeometry)
-                .forEach(g -> this.enclosingEnvelopFromGeometry(envelope, g));
+                .forEach(g -> this.enclosingEnvelopeFromGeometry(envelope, g));
 
         Pos lowerCorner = new Pos();
         lowerCorner.setValue(new Double[]{envelope.getMinX(), envelope.getMaxY()});
@@ -126,7 +124,7 @@ public class S125DatasetBuilder {
      * @param geometry      The geometry to update the envelope boundaries with
      * @return the updates envelope
      */
-    protected Envelope enclosingEnvelopFromGeometry(Envelope envelope, Geometry geometry) {
+    protected Envelope enclosingEnvelopeFromGeometry(Envelope envelope, Geometry geometry) {
         final Geometry enclosingGeometry = geometry.getEnvelope();
         final Coordinate[] enclosingCoordinates = enclosingGeometry.getCoordinates();
         for (Coordinate c : enclosingCoordinates) {

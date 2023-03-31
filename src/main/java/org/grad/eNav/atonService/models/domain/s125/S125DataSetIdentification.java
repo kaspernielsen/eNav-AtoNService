@@ -17,13 +17,13 @@
 package org.grad.eNav.atonService.models.domain.s125;
 
 import _int.iho.s100.gml.base._5_0.MDTopicCategoryCode;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import jakarta.persistence.*;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
@@ -85,6 +85,10 @@ public class S125DataSetIdentification {
     @FullTextField()
     private String datasetAbstract;
 
+    @Enumerated(EnumType.STRING)
+    @ElementCollection(targetClass = MDTopicCategoryCode.class, fetch = FetchType.EAGER)
+    private List<MDTopicCategoryCode> datasetTopicCategories;
+
     /**
      * Instantiates a new Data set identification.
      */
@@ -126,10 +130,6 @@ public class S125DataSetIdentification {
     public void setId(BigInteger id) {
         this.id = id;
     }
-
-    @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = MDTopicCategoryCode.class)
-    private List<MDTopicCategoryCode> datasetTopicCategories;
 
     /**
      * Gets encoding specification.
