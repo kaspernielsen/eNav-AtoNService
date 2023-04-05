@@ -18,11 +18,14 @@ package org.grad.eNav.atonService.components;
 
 import feign.Response;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.asn1.x509.X509Name;
+import org.bouncycastle.jce.PrincipalUtil;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.models.dtos.SignatureVerificationRequestDto;
 import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomSignatureProvider;
 import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
+import org.grad.secom.core.utils.SecomPemUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -31,6 +34,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -124,7 +130,26 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
         verificationRequest.setSignature(Base64.getEncoder().encodeToString(signature));
 
         // Ask cKeeper to verify the signature
-        final Response response = this.cKeeperClient.verifyEntitySignature(this.appName, verificationRequest);
+        X509Certificate certificate = null;
+        try {
+            certificate = SecomPemUtils.getCertFromPem(signatureCertificate);
+        } catch (CertificateException ex) {
+            log.error(ex.getMessage());
+        }
+        final Response response = this.cKeeperClient.verifyEntitySignature(
+                Optional.ofNullable(certificate)
+                        .map(c -> {
+                            try {
+                                return PrincipalUtil.getSubjectX509Principal(c);
+                            } catch (CertificateEncodingException ex) {
+                                return null;
+                            }
+                        })
+                        .map(p -> p.getValues(X509Name.CN))
+                        .map(v -> v.get(0))
+                        .map(String::valueOf)
+                        .orElse(this.appName),
+                verificationRequest);
 
         // Make sure the response is valid
         if(response == null) {
