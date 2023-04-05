@@ -33,12 +33,10 @@ import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomConstants;
+import org.grad.secom.core.components.SecomSignatureFilter;
 import org.grad.secom.core.exceptions.SecomValidationException;
 import org.grad.secom.core.models.*;
-import org.grad.secom.core.models.enums.ContainerTypeEnum;
-import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
-import org.grad.secom.core.models.enums.InfoStatusEnum;
-import org.grad.secom.core.models.enums.SECOM_DataProductType;
+import org.grad.secom.core.models.enums.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -53,6 +51,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;
@@ -76,6 +75,7 @@ import java.util.UUID;
 
 import static org.grad.secom.core.base.SecomConstants.SECOM_DATE_TIME_FORMAT;
 import static org.grad.secom.core.base.SecomConstants.SECOM_DATE_TIME_FORMATTER;
+import static org.grad.secom.core.interfaces.AcknowledgementSecomInterface.ACKNOWLEDGMENT_INTERFACE_PATH;
 import static org.grad.secom.core.interfaces.CapabilitySecomInterface.CAPABILITY_INTERFACE_PATH;
 import static org.grad.secom.core.interfaces.GetSecomInterface.GET_INTERFACE_PATH;
 import static org.grad.secom.core.interfaces.GetSummarySecomInterface.GET_SUMMARY_INTERFACE_PATH;
@@ -133,6 +133,16 @@ class SecomControllerTest {
     @MockBean
     SecomSignatureProviderImpl secomSignatureProvider;
 
+    /**
+     * The Secom Signature Filter mock.
+     *
+     * This will block the actual SECOM signature verification process and will
+     * allow out test messages to go through the signature filter without valid
+     * signatures.
+     */
+    @MockBean
+    SecomSignatureFilter secomSignatureFilter;
+
     // Test Variables
     private UUID queryDataReference;
     private ContainerTypeEnum queryContainerType;
@@ -150,6 +160,7 @@ class SecomControllerTest {
     private SubscriptionRequest subscriptionRequest;
     private SubscriptionRequest savedSubscriptionRequest;
     private RemoveSubscriptionObject removeSubscriptionObject;
+    private AcknowledgementObject acknowledgementObject;
 
     /**
      * Common setup for all the tests.
@@ -208,6 +219,18 @@ class SecomControllerTest {
         this.savedSubscriptionRequest.setDataProductType(SECOM_DataProductType.S125);
         this.removeSubscriptionObject = new RemoveSubscriptionObject();
         this.removeSubscriptionObject.setSubscriptionIdentifier(UUID.randomUUID());
+
+        // Setup an acknowledgement
+        this.acknowledgementObject = new AcknowledgementObject();
+        EnvelopeAckObject envelopeAckObject = new EnvelopeAckObject();
+        envelopeAckObject.setCreatedAt(LocalDateTime.now());
+        envelopeAckObject.setTransactionIdentifier(UUID.randomUUID());
+        envelopeAckObject.setAckType(AckTypeEnum.DELIVERED_ACK);
+        envelopeAckObject.setEnvelopeSignatureCertificate("Signature Certificate");
+        envelopeAckObject.setEnvelopeRootCertificateThumbprint("Root Certificate Thumbprint");
+        envelopeAckObject.setEnvelopeSignatureTime(LocalDateTime.now());
+        this.acknowledgementObject.setEnvelope(envelopeAckObject);
+        this.acknowledgementObject.setEnvelopeSignature("Envelope Signature");
     }
 
     /**
@@ -552,7 +575,7 @@ class SecomControllerTest {
     }
 
     /**
-     * Test that the SECOM Remnove Subscription interface will return an HTTP
+     * Test that the SECOM Remove Subscription interface will return an HTTP
      * Status BAD_REQUEST if a validation error occurs.
      */
     @Test
@@ -577,6 +600,52 @@ class SecomControllerTest {
 
         webTestClient.get()
                 .uri("/api/secom" + SUBSCRIPTION_INTERFACE_PATH)
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    /**
+     * Test that the SECOM Acknowledgement interface is configured properly
+     * and returns the expected Acknowledgement Response Object output.
+     */
+    @Test
+    void testAcknowledgement() {
+        webTestClient.method(HttpMethod.POST)
+                .uri("/api/secom" + ACKNOWLEDGMENT_INTERFACE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just(acknowledgementObject), AcknowledgementObject.class))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AcknowledgementResponseObject.class)
+                .consumeWith(response -> {
+                    AcknowledgementResponseObject acknowledgementResponseObject = response.getResponseBody();
+                    assertNotNull(acknowledgementResponseObject);
+                    assertEquals(String.format("Successfully received ACK for %s", acknowledgementObject.getEnvelope().getTransactionIdentifier()), acknowledgementResponseObject.getResponseText());
+                });
+    }
+
+    /**
+     * Test that the SECOM Acknowledgement interface will return an HTTP
+     * Status BAD_REQUEST if a validation error occurs.
+     */
+    @Test
+    void testAcknowledgementBadRequest() {
+        webTestClient.post()
+                .uri("/api/secom" + ACKNOWLEDGMENT_INTERFACE_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just("Invalid acknowledgement object"), String.class))
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    /**
+     * Test that the SECOM Acknowledgement interface will return an HTTP
+     * Status METHOD_NOT_ALLOWED if a method other than a get is requested.
+     */
+    @Test
+    void testAcknowledgementNotAllowed() {
+        webTestClient.get()
+                .uri("/api/secom" + ACKNOWLEDGMENT_INTERFACE_PATH)
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }
