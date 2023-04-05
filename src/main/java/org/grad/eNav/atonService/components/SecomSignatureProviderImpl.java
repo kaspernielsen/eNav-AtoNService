@@ -146,7 +146,8 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
                                 return null;
                             }
                         })
-                        .map(p -> p.getValues(new ASN1ObjectIdentifier("0.9.2342.19200300.100.1.1")))
+                        //.map(p -> p.getValues(new ASN1ObjectIdentifier("0.9.2342.19200300.100.1.1")))
+                        .map(p -> p.getValues(new ASN1ObjectIdentifier("2.5.4.3")))
                         .map(v -> v.get(0))
                         .map(String::valueOf)
                         .orElse(this.appName),
