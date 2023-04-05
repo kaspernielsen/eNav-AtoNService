@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.components;
 
 import feign.Response;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.PrincipalUtil;
 import org.grad.eNav.atonService.feign.CKeeperClient;
@@ -126,7 +127,7 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
     public boolean validateSignature(String signatureCertificate, DigitalSignatureAlgorithmEnum algorithm, byte[] signature, byte[] content) {
         // Construct the signature verification object
         final SignatureVerificationRequestDto verificationRequest = new SignatureVerificationRequestDto();
-        verificationRequest.setContent(new String(content, StandardCharsets.UTF_8));
+        verificationRequest.setContent(Base64.getEncoder().encodeToString(content));
         verificationRequest.setSignature(Base64.getEncoder().encodeToString(signature));
 
         // Ask cKeeper to verify the signature
@@ -145,7 +146,7 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
                                 return null;
                             }
                         })
-                        .map(p -> p.getValues(X509Name.CN))
+                        .map(p -> p.getValues(new ASN1ObjectIdentifier("0.9.2342.19200300.100.1.1")))
                         .map(v -> v.get(0))
                         .map(String::valueOf)
                         .orElse(this.appName),
