@@ -19,7 +19,6 @@ package org.grad.eNav.atonService.components;
 import feign.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.jce.PrincipalUtil;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.models.dtos.SignatureVerificationRequestDto;
@@ -34,7 +33,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -130,13 +128,14 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
         verificationRequest.setContent(Base64.getEncoder().encodeToString(content));
         verificationRequest.setSignature(Base64.getEncoder().encodeToString(signature));
 
-        // Ask cKeeper to verify the signature
+        // Get the X.509 certificate from the request
         X509Certificate certificate = null;
         try {
             certificate = SecomPemUtils.getCertFromPem(signatureCertificate);
         } catch (CertificateException ex) {
             log.error(ex.getMessage());
         }
+        // Ask cKeeper to verify the signature
         final Response response = this.cKeeperClient.verifyEntitySignature(
                 Optional.ofNullable(certificate)
                         .map(c -> {
@@ -146,11 +145,10 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
                                 return null;
                             }
                         })
-                        //.map(p -> p.getValues(new ASN1ObjectIdentifier("0.9.2342.19200300.100.1.1")))
-                        .map(p -> p.getValues(new ASN1ObjectIdentifier("2.5.4.3")))
+                        .map(p -> p.getValues(new ASN1ObjectIdentifier("0.9.2342.19200300.100.1.1")))
                         .map(v -> v.get(0))
                         .map(String::valueOf)
-                        .orElse(this.appName),
+                        .orElse("unknown"),
                 verificationRequest);
 
         // Make sure the response is valid
