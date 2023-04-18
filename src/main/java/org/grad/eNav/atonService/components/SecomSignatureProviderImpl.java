@@ -74,7 +74,7 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
      */
     @Override
     public DigitalSignatureAlgorithmEnum getSignatureAlgorithm() {
-        return DigitalSignatureAlgorithmEnum.CVC_ECDSA;
+        return DigitalSignatureAlgorithmEnum.DSA;
     }
 
     /**
