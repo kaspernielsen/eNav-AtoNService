@@ -65,6 +65,9 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
     @Lazy
     CKeeperClient cKeeperClient;
 
+    // Class Variables
+    private static final String ANS10_MRN_OBJECT_IDENTIFIER = "0.9.2342.19200300.100.1.1";
+
     /**
      * Returns the digital signature algorithm for the signature provider.
      * In SECOM, by default this should be DSA, but ECDSA should be used
@@ -127,6 +130,7 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
         final SignatureVerificationRequestDto verificationRequest = new SignatureVerificationRequestDto();
         verificationRequest.setContent(Base64.getEncoder().encodeToString(content));
         verificationRequest.setSignature(Base64.getEncoder().encodeToString(signature));
+        verificationRequest.setAlgorithm(algorithm.getValue());
 
         // Get the X.509 certificate from the request
         X509Certificate certificate = null;
@@ -145,7 +149,7 @@ public class SecomSignatureProviderImpl implements SecomSignatureProvider {
                                 return null;
                             }
                         })
-                        .map(p -> p.getValues(new ASN1ObjectIdentifier("0.9.2342.19200300.100.1.1")))
+                        .map(p -> p.getValues(new ASN1ObjectIdentifier(ANS10_MRN_OBJECT_IDENTIFIER))) // The MRN from the certificate
                         .map(v -> v.get(0))
                         .map(String::valueOf)
                         .orElse("unknown"),
