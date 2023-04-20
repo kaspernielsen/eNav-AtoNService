@@ -241,6 +241,7 @@ class SecomControllerTest {
     void testCapability() {
         webTestClient.get()
                 .uri("/api/secom" + CAPABILITY_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(CapabilityResponseObject.class)
@@ -273,6 +274,7 @@ class SecomControllerTest {
     void testCapabilityMethodNotAllowed() {
         webTestClient.post()
                 .uri("/api/secom" + CAPABILITY_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }
@@ -299,6 +301,7 @@ class SecomControllerTest {
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(GetSummaryResponseObject.class)
@@ -344,6 +347,7 @@ class SecomControllerTest {
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isBadRequest();
     }
@@ -367,6 +371,7 @@ class SecomControllerTest {
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }
@@ -411,6 +416,7 @@ class SecomControllerTest {
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(GetResponseObject.class)
@@ -471,6 +477,7 @@ class SecomControllerTest {
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isBadRequest();
     }
@@ -495,6 +502,7 @@ class SecomControllerTest {
                         .queryParam("page", this.queryPage)
                         .queryParam("pageSize", this.queryPageSize)
                         .build())
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }
@@ -505,10 +513,11 @@ class SecomControllerTest {
      */
     @Test
     void testSubscription() {
-        doReturn(savedSubscriptionRequest).when(this.secomSubscriptionService).save(any());
+        doReturn(savedSubscriptionRequest).when(this.secomSubscriptionService).save(any(), any());
 
         webTestClient.post()
                 .uri("/api/secom" + SUBSCRIPTION_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just(subscriptionRequest), SubscriptionRequest.class))
                 .exchange()
@@ -528,10 +537,11 @@ class SecomControllerTest {
      */
     @Test
     void testSubscriptionBadRequest() {
-        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any());
+        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any(), any());
 
         webTestClient.post()
                 .uri("/api/secom" + SUBSCRIPTION_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just(subscriptionRequest), SubscriptionRequest.class))
                 .exchange()
@@ -544,10 +554,11 @@ class SecomControllerTest {
      */
     @Test
     void testSubscriptionMethodNotAllowed() {
-        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any());
+        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any(), any());
 
         webTestClient.get()
                 .uri("/api/secom" + SUBSCRIPTION_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }
@@ -562,6 +573,7 @@ class SecomControllerTest {
 
         webTestClient.method(HttpMethod.DELETE)
                 .uri("/api/secom" + REMOVE_SUBSCRIPTION_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just(removeSubscriptionObject), RemoveSubscriptionObject.class))
                 .exchange()
@@ -580,10 +592,11 @@ class SecomControllerTest {
      */
     @Test
     void testRemoveSubscriptionBadRequest() {
-        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any());
+        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any(), any());
 
         webTestClient.post()
                 .uri("/api/secom" + SUBSCRIPTION_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just(removeSubscriptionObject), RemoveSubscriptionObject.class))
                 .exchange()
@@ -596,10 +609,11 @@ class SecomControllerTest {
      */
     @Test
     void testRemoveSubscriptionMethodNotAllowed() {
-        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any());
+        doThrow(SecomValidationException.class).when(this.secomSubscriptionService).save(any(), any());
 
         webTestClient.get()
                 .uri("/api/secom" + SUBSCRIPTION_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }
@@ -612,6 +626,7 @@ class SecomControllerTest {
     void testAcknowledgement() {
         webTestClient.method(HttpMethod.POST)
                 .uri("/api/secom" + ACKNOWLEDGMENT_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just(acknowledgementObject), AcknowledgementObject.class))
                 .exchange()
@@ -632,6 +647,7 @@ class SecomControllerTest {
     void testAcknowledgementBadRequest() {
         webTestClient.post()
                 .uri("/api/secom" + ACKNOWLEDGMENT_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just("Invalid acknowledgement object"), String.class))
                 .exchange()
@@ -646,6 +662,7 @@ class SecomControllerTest {
     void testAcknowledgementNotAllowed() {
         webTestClient.get()
                 .uri("/api/secom" + ACKNOWLEDGMENT_INTERFACE_PATH)
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
                 .exchange()
                 .expectStatus().isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
     }

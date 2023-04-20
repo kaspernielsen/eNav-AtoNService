@@ -17,20 +17,24 @@
 package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.services.secom.SecomSubscriptionService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
+import org.grad.secom.core.exceptions.SecomValidationException;
 import org.grad.secom.core.interfaces.SubscriptionSecomInterface;
 import org.grad.secom.core.models.SubscriptionRequestObject;
 import org.grad.secom.core.models.SubscriptionResponseObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import jakarta.validation.Valid;
-import jakarta.ws.rs.Path;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -58,6 +62,13 @@ public class SubscriptionSecomController implements SubscriptionSecomInterface {
     SecomSubscriptionService secomSubscriptionService;
 
     /**
+     * The Request Context.
+     */
+    @Autowired
+    @Lazy
+    Optional<HttpServletRequest> httpServletRequest;
+
+    /**
      * POST /api/secom/v1/subscription : Request subscription on information,
      * either specific information according to parameters, or the information
      * accessible upon decision by the information provider.
@@ -67,9 +78,16 @@ public class SubscriptionSecomController implements SubscriptionSecomInterface {
      */
     @Tag(name = "SECOM")
     public SubscriptionResponseObject subscription(@Valid SubscriptionRequestObject subscriptionRequestObject) {
+        // Try to access the request header if possible...
+        // These should have been forwarded by the API Gateway normally and
+        // contain the SSL client certificate and extra information.
+        final String mrn = this.httpServletRequest
+                .map(req -> req.getHeader(SecomRequestHeaders.MRN_HEADER))
+                .filter(StringUtils::isNotBlank)
+                .orElseThrow(() -> new SecomValidationException("Cannot raise new subscription requests without a provided client MRN"));
         final SubscriptionRequest subscriptionRequest = Optional.ofNullable(subscriptionRequestObject)
                 .map(dto -> this.subscriptionRequestDomainMapper.convertTo(dto, SubscriptionRequest.class))
-                .map(this.secomSubscriptionService::save)
+                .map(subReq -> this.secomSubscriptionService.save(mrn, subReq))
                 .filter(req -> Objects.nonNull(req.getUuid()))
                 .orElseThrow(() -> new SecomNotFoundException("UUID"));
 

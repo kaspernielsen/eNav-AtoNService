@@ -20,9 +20,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortedSetSortField;
@@ -56,7 +54,6 @@ import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
@@ -90,13 +87,6 @@ public class SecomSubscriptionService implements MessageHandler {
      */
     @Autowired
     EntityManagerFactory entityManagerFactory;
-
-    /**
-     * The Request Context.
-     */
-    @Autowired
-    @Lazy
-    Optional<HttpServletRequest> httpServletRequest;
 
     /**
      * The UN/LoCode Service.
@@ -274,13 +264,11 @@ public class SecomSubscriptionService implements MessageHandler {
      * @param subscriptionRequest the subscription request
      * @return the subscription request generated
      */
-    public SubscriptionRequest save(SubscriptionRequest subscriptionRequest) {
-        log.debug("Request to save SECOM subscription : {}", subscriptionRequest);
+    public SubscriptionRequest save(String mrn, SubscriptionRequest subscriptionRequest) {
+        log.debug("Request from MRN {} to save SECOM subscription : {}", mrn, subscriptionRequest);
 
-        // Get the subscription request MRN
-        final String mrn = this.httpServletRequest
-                .map(req -> req.getHeader("MRN"))
-                .filter(StringUtils::isNotBlank)
+        // Sanity Check
+        Optional.ofNullable(mrn)
                 .orElseThrow(() -> new SecomValidationException("Cannot raise new subscription requests without a provided client MRN"));
 
         // See if a duplicate subscription request already exists

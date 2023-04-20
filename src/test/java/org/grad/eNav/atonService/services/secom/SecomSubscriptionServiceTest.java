@@ -81,12 +81,6 @@ class SecomSubscriptionServiceTest {
     EntityManagerFactory entityManagerFactory;
 
     /**
-     * The Request Context mock.
-     */
-    @Mock
-    Optional<HttpServletRequest> httpServletRequest;
-
-    /**
      * The UN/LoCode Service mock.
      */
     @Mock
@@ -393,13 +387,11 @@ class SecomSubscriptionServiceTest {
     void testSave() {
         // Mock the HTTP servlet request
         final HttpServletRequest httpServletRequestMock = mock(HttpServletRequest.class);
-        doReturn("urn:mrn:org:test").when(httpServletRequestMock).getHeader(any());
-        this.secomSubscriptionService.httpServletRequest = Optional.of(httpServletRequestMock);
         doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionRepo).save(any());
 //        doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionService.entityManager).merge(any());
 
         // Perform the service call
-        SubscriptionRequest result = this.secomSubscriptionService.save(this.newSubscriptionRequest);
+        SubscriptionRequest result = this.secomSubscriptionService.save("urn:mrn:org:test", this.newSubscriptionRequest);
 
         // Make sure everything seems OK
         verify(this.secomSubscriptionRepo, never()).delete(any());
@@ -427,15 +419,13 @@ class SecomSubscriptionServiceTest {
     void testSaveWithExistingRequest() {
         // Mock the HTTP servlet request
         final HttpServletRequest httpServletRequestMock = mock(HttpServletRequest.class);
-        doReturn(this.existingSubscriptionRequest.getClientMrn()).when(httpServletRequestMock).getHeader(any());
-        this.secomSubscriptionService.httpServletRequest = Optional.of(httpServletRequestMock);
         doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findByClientMrn(eq(this.existingSubscriptionRequest.getClientMrn()));
         doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findById(this.existingSubscriptionRequest.getUuid());
         doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionRepo).save(any());
 //        doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionService.entityManager).merge(any());
 
         // Perform the service call
-        SubscriptionRequest result = this.secomSubscriptionService.save(this.newSubscriptionRequest);
+        SubscriptionRequest result = this.secomSubscriptionService.save(this.existingSubscriptionRequest.getClientMrn(), this.newSubscriptionRequest);
 
         // Make sure everything seems OK
         verify(this.secomSubscriptionRepo, times(1)).delete(any());
@@ -465,12 +455,8 @@ class SecomSubscriptionServiceTest {
      */
     @Test
     void testSaveBlankMrn() {
-        // Mock the HTTP servlet request
-        final HttpServletRequest httpServletRequestMock = mock(HttpServletRequest.class);
-        this.secomSubscriptionService.httpServletRequest = Optional.of(httpServletRequestMock);
-
         // Perform the service call
-        assertThrows(SecomValidationException.class, () -> this.secomSubscriptionService.save(this.newSubscriptionRequest));
+        assertThrows(SecomValidationException.class, () -> this.secomSubscriptionService.save(null, this.newSubscriptionRequest));
 
         // Make sure no subscription notifications were sent
         verify(this.secomSubscriptionNotificationService, never()).sendNotification(any(), any(), any());
