@@ -16,8 +16,8 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfRadioStation;
-import _int.iala_aism.s125.gml._0_0.S125Status;
+import _int.iala_aism.s125.gml._0_0.CategoryOfRadioStationType;
+import _int.iala_aism.s125.gml._0_0.StatusType;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,17 +32,17 @@ import jakarta.persistence.ManyToOne;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125RadioStationType
+ * @see _int.iala_aism.s125.gml._0_0.RadioStationType
  */
 @Entity
 public class RadioStation extends Equipment {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfRadioStation categoryOfRadioStation;
+    private CategoryOfRadioStationType categoryOfRadioStation;
 
     @Enumerated(EnumType.STRING)
-    private S125Status status;
+    private StatusType status;
 
     @ManyToOne
     private AISAidToNavigation broadcasts;
@@ -52,7 +52,7 @@ public class RadioStation extends Equipment {
      *
      * @return the category of radio station
      */
-    public S125CategoryOfRadioStation getCategoryOfRadioStation() {
+    public CategoryOfRadioStationType getCategoryOfRadioStation() {
         return categoryOfRadioStation;
     }
 
@@ -61,7 +61,7 @@ public class RadioStation extends Equipment {
      *
      * @param categoryOfRadioStation the category of radio station
      */
-    public void setCategoryOfRadioStation(S125CategoryOfRadioStation categoryOfRadioStation) {
+    public void setCategoryOfRadioStation(CategoryOfRadioStationType categoryOfRadioStation) {
         this.categoryOfRadioStation = categoryOfRadioStation;
     }
 
@@ -70,7 +70,7 @@ public class RadioStation extends Equipment {
      *
      * @return the status
      */
-    public S125Status getStatus() {
+    public StatusType getStatus() {
         return status;
     }
 
@@ -79,7 +79,7 @@ public class RadioStation extends Equipment {
      *
      * @param status the status
      */
-    public void setStatus(S125Status status) {
+    public void setStatus(StatusType status) {
         this.status = status;
     }
 

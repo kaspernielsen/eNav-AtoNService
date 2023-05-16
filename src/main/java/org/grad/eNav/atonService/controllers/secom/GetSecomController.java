@@ -26,7 +26,7 @@ import jakarta.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
@@ -149,7 +149,7 @@ public class GetSecomController implements GetSecomInterface {
                     // Retrieve all matching datasets
                     this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, pageable)
                             .stream()
-                            .map(S125DataSet::getDatasetContent)
+                            .map(S125Dataset::getDatasetContent)
                             .filter(Objects::nonNull)
                             .map(DatasetContent::getContent)
                             .map(String::getBytes)

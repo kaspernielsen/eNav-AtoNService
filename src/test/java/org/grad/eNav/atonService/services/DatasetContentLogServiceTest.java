@@ -19,7 +19,7 @@ package org.grad.eNav.atonService.services;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.domain.DatasetType;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +65,7 @@ class DatasetContentLogServiceTest {
     DatasetContentLogRepo datasetContentLogRepo;
 
     // Test Variables
-    private S125DataSet s125Dataset;
+    private S125Dataset s125Dataset;
     private DatasetContentLog newDatasetContentLog;
     private DatasetContentLog existingDatasetContentLog;
 
@@ -79,7 +79,7 @@ class DatasetContentLogServiceTest {
         GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
         // Create a Dataset with a UUID
-        this.s125Dataset = new S125DataSet("ExistingDataset");
+        this.s125Dataset = new S125Dataset("ExistingDataset");
         this.s125Dataset.setUuid(UUID.randomUUID());
         this.s125Dataset.setCreatedAt(LocalDateTime.now());
         this.s125Dataset.setLastUpdatedAt(LocalDateTime.now());

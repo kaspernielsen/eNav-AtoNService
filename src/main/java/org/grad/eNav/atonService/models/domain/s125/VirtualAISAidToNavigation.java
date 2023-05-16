@@ -16,10 +16,12 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfVirtualAISAidToNavigation;
-import _int.iala_aism.s125.gml._0_0.S125Status;
+import _int.iala_aism.s125.gml._0_0.StatusType;
+import _int.iala_aism.s125.gml._0_0.VirtualAISAidToNavigationTypeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 /**
@@ -30,21 +32,21 @@ import java.math.BigDecimal;
  * {@link AISAidToNavigation} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125VirtualAISAidToNavigationType
+ * @see _int.iala_aism.s125.gml._0_0.VirtualAISAidToNavigationType
  */
 @Entity
 public class VirtualAISAidToNavigation extends AISAidToNavigation {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfVirtualAISAidToNavigation virtualAISAidToNavigationType;
+    private VirtualAISAidToNavigationTypeType virtualAISAidToNavigationType;
 
     private String objectNameInNationalLanguage;
 
     private String objectName;
 
     @Enumerated(EnumType.STRING)
-    private S125Status status;
+    private StatusType status;
 
     private BigDecimal estimatedRangeOfTransmission;
 
@@ -55,7 +57,7 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      *
      * @return the virtual ais aid to navigation type
      */
-    public S125CategoryOfVirtualAISAidToNavigation getVirtualAISAidToNavigationType() {
+    public VirtualAISAidToNavigationTypeType getVirtualAISAidToNavigationType() {
         return virtualAISAidToNavigationType;
     }
 
@@ -64,7 +66,7 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      *
      * @param virtualAISAidToNavigationType the virtual ais aid to navigation type
      */
-    public void setVirtualAISAidToNavigationType(S125CategoryOfVirtualAISAidToNavigation virtualAISAidToNavigationType) {
+    public void setVirtualAISAidToNavigationType(VirtualAISAidToNavigationTypeType virtualAISAidToNavigationType) {
         this.virtualAISAidToNavigationType = virtualAISAidToNavigationType;
     }
 
@@ -109,7 +111,7 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      *
      * @return the status
      */
-    public S125Status getStatus() {
+    public StatusType getStatus() {
         return status;
     }
 
@@ -118,7 +120,7 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      *
      * @param status the status
      */
-    public void setStatus(S125Status status) {
+    public void setStatus(StatusType status) {
         this.status = status;
     }
 

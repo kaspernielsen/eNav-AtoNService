@@ -16,9 +16,9 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfRecommendedTrack;
-import _int.iala_aism.s125.gml._0_0.S125Status;
-import _int.iala_aism.s125.gml._0_0.S125TrafficFlow;
+import _int.iala_aism.s125.gml._0_0.CategoryOfRecommendedTrackType;
+import _int.iala_aism.s125.gml._0_0.StatusType;
+import _int.iala_aism.s125.gml._0_0.TrafficFlowType;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -32,14 +32,14 @@ import java.util.List;
  * {@link AidsToNavigation} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125RecommendedTrackType
+ * @see _int.iala_aism.s125.gml._0_0.RecommendedTrackType
  */
 @Entity
 public class RecommendedTrack extends AidsToNavigation {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    protected S125CategoryOfRecommendedTrack categoryOfRecommendedTrack;
+    protected CategoryOfRecommendedTrackType categoryOfRecommendedTrack;
 
     protected String objectNameInNationalLanguage;
 
@@ -51,14 +51,14 @@ public class RecommendedTrack extends AidsToNavigation {
      * The Statuses.
      */
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    protected List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    protected List<StatusType> statuses;
 
     /**
      * The Traffic flow.
      */
     @Enumerated(EnumType.STRING)
-    protected S125TrafficFlow trafficFlow;
+    protected TrafficFlowType trafficFlow;
 
     /**
      * The Navigation lines.
@@ -76,7 +76,7 @@ public class RecommendedTrack extends AidsToNavigation {
      *
      * @return the category of recommended track
      */
-    public S125CategoryOfRecommendedTrack getCategoryOfRecommendedTrack() {
+    public CategoryOfRecommendedTrackType getCategoryOfRecommendedTrack() {
         return categoryOfRecommendedTrack;
     }
 
@@ -85,7 +85,7 @@ public class RecommendedTrack extends AidsToNavigation {
      *
      * @param categoryOfRecommendedTrack the category of recommended track
      */
-    public void setCategoryOfRecommendedTrack(S125CategoryOfRecommendedTrack categoryOfRecommendedTrack) {
+    public void setCategoryOfRecommendedTrack(CategoryOfRecommendedTrackType categoryOfRecommendedTrack) {
         this.categoryOfRecommendedTrack = categoryOfRecommendedTrack;
     }
 
@@ -148,7 +148,7 @@ public class RecommendedTrack extends AidsToNavigation {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -157,7 +157,7 @@ public class RecommendedTrack extends AidsToNavigation {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 
@@ -166,7 +166,7 @@ public class RecommendedTrack extends AidsToNavigation {
      *
      * @return the traffic flow
      */
-    public S125TrafficFlow getTrafficFlow() {
+    public TrafficFlowType getTrafficFlow() {
         return trafficFlow;
     }
 
@@ -175,7 +175,7 @@ public class RecommendedTrack extends AidsToNavigation {
      *
      * @param trafficFlow the traffic flow
      */
-    public void setTrafficFlow(S125TrafficFlow trafficFlow) {
+    public void setTrafficFlow(TrafficFlowType trafficFlow) {
         this.trafficFlow = trafficFlow;
     }
 

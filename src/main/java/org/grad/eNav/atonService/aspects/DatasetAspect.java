@@ -21,7 +21,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.services.DatasetContentLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -71,16 +71,16 @@ public class DatasetAspect {
         Object proceed = joinPoint.proceed();
 
         // Handle if the object is an S-125 Dataset
-        if(Optional.ofNullable(proceed).filter(S125DataSet.class::isInstance).isPresent()) {
+        if(Optional.ofNullable(proceed).filter(S125Dataset.class::isInstance).isPresent()) {
             Optional.of(proceed)
-                    .map(S125DataSet.class::cast)
+                    .map(S125Dataset.class::cast)
                     .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
                     .ifPresent(this.datasetContentLogService::save);
         }
         // Handle if the object is an S-125 Dataset collection
-        else if(Optional.ofNullable(proceed).filter(p -> isObjectCollectionOfClass(p, S125DataSet.class)).isPresent()) {
+        else if(Optional.ofNullable(proceed).filter(p -> isObjectCollectionOfClass(p, S125Dataset.class)).isPresent()) {
             ((Collection<?>) proceed).stream()
-                    .map(S125DataSet.class::cast)
+                    .map(S125Dataset.class::cast)
                     .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
                     .forEach(this.datasetContentLogService::save);
         }

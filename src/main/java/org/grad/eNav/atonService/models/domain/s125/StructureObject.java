@@ -31,7 +31,7 @@ import java.util.List;
  * Each structure contains a list of equipment objects that is hosts.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125StructureObjectType
+ * @see _int.iala_aism.s125.gml._0_0.StructureObjectType
  */
 @Entity
 public abstract class StructureObject extends AidsToNavigation {

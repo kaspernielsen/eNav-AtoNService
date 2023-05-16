@@ -26,7 +26,7 @@ import jakarta.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
@@ -164,7 +164,7 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
                             summaryObject.setInfo_description(dataset.getDatasetIdentificationInformation().getDatasetAbstract());
                             summaryObject.setInfo_lastModifiedDate(dataset.getLastUpdatedAt());
                             summaryObject.setInfo_size(Optional.of(dataset)
-                                    .map(S125DataSet::getDatasetContent)
+                                    .map(S125Dataset::getDatasetContent)
                                     .map(DatasetContent::getContentLength)
                                     .map(BigInteger::longValue)
                                     .orElse(BigInteger.ZERO.longValue()));

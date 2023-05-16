@@ -16,10 +16,10 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfPile;
-import _int.iala_aism.s125.gml._0_0.S125Colour;
-import _int.iala_aism.s125.gml._0_0.S125ColourPattern;
-import _int.iala_aism.s125.gml._0_0.S125VisuallyConspicuous;
+import _int.iala_aism.s125.gml._0_0.CategoryOfPileType;
+import _int.iala_aism.s125.gml._0_0.ColourType;
+import _int.iala_aism.s125.gml._0_0.ColourPatternType;
+import _int.iala_aism.s125.gml._0_0.VisualProminenceType;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -36,25 +36,25 @@ import java.util.List;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125PileType
+ * @see _int.iala_aism.s125.gml._0_0.PileType
  */
 @Entity
 public class Pile extends StructureObject {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfPile categoryOfPile;
+    private CategoryOfPileType categoryOfPile;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Colour.class)
-    private List<S125Colour> colours;
+    @ElementCollection(targetClass = ColourType.class)
+    private List<ColourType> colours;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125ColourPattern.class)
-    private List<S125ColourPattern> colourPatterns;
+    @ElementCollection(targetClass = ColourPatternType.class)
+    private List<ColourPatternType> colourPatterns;
 
     @Enumerated(EnumType.STRING)
-    private S125VisuallyConspicuous visuallyConspicuous;
+    private VisualProminenceType visuallyConspicuous;
 
     private BigDecimal height;
 
@@ -63,7 +63,7 @@ public class Pile extends StructureObject {
      *
      * @return the category of pile
      */
-    public S125CategoryOfPile getCategoryOfPile() {
+    public CategoryOfPileType getCategoryOfPile() {
         return categoryOfPile;
     }
 
@@ -72,7 +72,7 @@ public class Pile extends StructureObject {
      *
      * @param categoryOfPile the category of pile
      */
-    public void setCategoryOfPile(S125CategoryOfPile categoryOfPile) {
+    public void setCategoryOfPile(CategoryOfPileType categoryOfPile) {
         this.categoryOfPile = categoryOfPile;
     }
 
@@ -81,7 +81,7 @@ public class Pile extends StructureObject {
      *
      * @return the colours
      */
-    public List<S125Colour> getColours() {
+    public List<ColourType> getColours() {
         return colours;
     }
 
@@ -90,7 +90,7 @@ public class Pile extends StructureObject {
      *
      * @param colours the colours
      */
-    public void setColours(List<S125Colour> colours) {
+    public void setColours(List<ColourType> colours) {
         this.colours = colours;
     }
 
@@ -99,7 +99,7 @@ public class Pile extends StructureObject {
      *
      * @return the colour patterns
      */
-    public List<S125ColourPattern> getColourPatterns() {
+    public List<ColourPatternType> getColourPatterns() {
         return colourPatterns;
     }
 
@@ -108,7 +108,7 @@ public class Pile extends StructureObject {
      *
      * @param colourPatterns the colour patterns
      */
-    public void setColourPatterns(List<S125ColourPattern> colourPatterns) {
+    public void setColourPatterns(List<ColourPatternType> colourPatterns) {
         this.colourPatterns = colourPatterns;
     }
 
@@ -117,7 +117,7 @@ public class Pile extends StructureObject {
      *
      * @return the visually conspicuous
      */
-    public S125VisuallyConspicuous getVisuallyConspicuous() {
+    public VisualProminenceType getVisuallyConspicuous() {
         return visuallyConspicuous;
     }
 
@@ -126,7 +126,7 @@ public class Pile extends StructureObject {
      *
      * @param visuallyConspicuous the visually conspicuous
      */
-    public void setVisuallyConspicuous(S125VisuallyConspicuous visuallyConspicuous) {
+    public void setVisuallyConspicuous(VisualProminenceType visuallyConspicuous) {
         this.visuallyConspicuous = visuallyConspicuous;
     }
 

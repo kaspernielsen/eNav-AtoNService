@@ -34,33 +34,33 @@ import java.util.List;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125LightType
+ * @see _int.iala_aism.s125.gml._0_0.LightType
  */
 @Entity
 public class Light extends Equipment {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125CategoryOfLight.class)
-    private List<S125CategoryOfLight> categoryOfLights;
+    @ElementCollection(targetClass = CategoryOfLightType.class)
+    private List<CategoryOfLightType> categoryOfLights;
 
     @Enumerated(EnumType.STRING)
-    private S125Colour colour;
+    private ColourType colour;
 
     @Enumerated(EnumType.STRING)
-    private S125ExhibitionConditionOfLight exhibitionConditionOfLight;
+    private ExhibitionConditionOfLightType exhibitionConditionOfLight;
 
     private BigDecimal height;
 
     @Enumerated(EnumType.STRING)
-    private S125LightCharacteristic lightCharacteristic;
+    private ExhibitionConditionOfLightType lightCharacteristic;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125LightVisibility.class)
-    private List<S125LightVisibility> lightVisibilities;
+    @ElementCollection(targetClass = LightVisibilityType.class)
+    private List<LightVisibilityType> lightVisibilities;
 
     @Enumerated(EnumType.STRING)
-    private S125MarksNavigationalSystemOf marksNavigationalSystemOf;
+    private MarksNavigationalSystemOfType marksNavigationalSystemOf;
 
     private BigInteger multiplicityOfLights;
 
@@ -81,8 +81,8 @@ public class Light extends Equipment {
     private String signalSequence;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     private BigDecimal valueOfNominalRange;
 
@@ -91,7 +91,7 @@ public class Light extends Equipment {
      *
      * @return the category of lights
      */
-    public List<S125CategoryOfLight> getCategoryOfLights() {
+    public List<CategoryOfLightType> getCategoryOfLights() {
         return categoryOfLights;
     }
 
@@ -100,7 +100,7 @@ public class Light extends Equipment {
      *
      * @param categoryOfLights the category of lights
      */
-    public void setCategoryOfLights(List<S125CategoryOfLight> categoryOfLights) {
+    public void setCategoryOfLights(List<CategoryOfLightType> categoryOfLights) {
         this.categoryOfLights = categoryOfLights;
     }
 
@@ -109,7 +109,7 @@ public class Light extends Equipment {
      *
      * @return the colour
      */
-    public S125Colour getColour() {
+    public ColourType getColour() {
         return colour;
     }
 
@@ -118,7 +118,7 @@ public class Light extends Equipment {
      *
      * @param colour the colour
      */
-    public void setColour(S125Colour colour) {
+    public void setColour(ColourType colour) {
         this.colour = colour;
     }
 
@@ -127,7 +127,7 @@ public class Light extends Equipment {
      *
      * @return the exhibition condition of light
      */
-    public S125ExhibitionConditionOfLight getExhibitionConditionOfLight() {
+    public ExhibitionConditionOfLightType getExhibitionConditionOfLight() {
         return exhibitionConditionOfLight;
     }
 
@@ -136,7 +136,7 @@ public class Light extends Equipment {
      *
      * @param exhibitionConditionOfLight the exhibition condition of light
      */
-    public void setExhibitionConditionOfLight(S125ExhibitionConditionOfLight exhibitionConditionOfLight) {
+    public void setExhibitionConditionOfLight(ExhibitionConditionOfLightType exhibitionConditionOfLight) {
         this.exhibitionConditionOfLight = exhibitionConditionOfLight;
     }
 
@@ -163,7 +163,7 @@ public class Light extends Equipment {
      *
      * @return the light characteristic
      */
-    public S125LightCharacteristic getLightCharacteristic() {
+    public ExhibitionConditionOfLightType getLightCharacteristic() {
         return lightCharacteristic;
     }
 
@@ -172,7 +172,7 @@ public class Light extends Equipment {
      *
      * @param lightCharacteristic the light characteristic
      */
-    public void setLightCharacteristic(S125LightCharacteristic lightCharacteristic) {
+    public void setLightCharacteristic(ExhibitionConditionOfLightType lightCharacteristic) {
         this.lightCharacteristic = lightCharacteristic;
     }
 
@@ -181,7 +181,7 @@ public class Light extends Equipment {
      *
      * @return the light visibilities
      */
-    public List<S125LightVisibility> getLightVisibilities() {
+    public List<LightVisibilityType> getLightVisibilities() {
         return lightVisibilities;
     }
 
@@ -190,7 +190,7 @@ public class Light extends Equipment {
      *
      * @param lightVisibilities the light visibilities
      */
-    public void setLightVisibilities(List<S125LightVisibility> lightVisibilities) {
+    public void setLightVisibilities(List<LightVisibilityType> lightVisibilities) {
         this.lightVisibilities = lightVisibilities;
     }
 
@@ -199,7 +199,7 @@ public class Light extends Equipment {
      *
      * @return the marks navigational system of
      */
-    public S125MarksNavigationalSystemOf getMarksNavigationalSystemOf() {
+    public MarksNavigationalSystemOfType getMarksNavigationalSystemOf() {
         return marksNavigationalSystemOf;
     }
 
@@ -208,7 +208,7 @@ public class Light extends Equipment {
      *
      * @param marksNavigationalSystemOf the marks navigational system of
      */
-    public void setMarksNavigationalSystemOf(S125MarksNavigationalSystemOf marksNavigationalSystemOf) {
+    public void setMarksNavigationalSystemOf(MarksNavigationalSystemOfType marksNavigationalSystemOf) {
         this.marksNavigationalSystemOf = marksNavigationalSystemOf;
     }
 
@@ -379,7 +379,7 @@ public class Light extends Equipment {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -388,7 +388,7 @@ public class Light extends Equipment {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 

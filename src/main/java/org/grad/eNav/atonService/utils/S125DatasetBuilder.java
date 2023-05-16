@@ -23,7 +23,7 @@ import _net.opengis.gml.profiles.Pos;
 import jakarta.xml.bind.JAXBElement;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -56,13 +56,13 @@ public class S125DatasetBuilder {
      * @param s125Dataset   The S-125 local dataset object
      * @param atons         The list of S-125 local AtoN object list
      */
-    public DataSet packageToDataset(S125DataSet s125Dataset, List<AidsToNavigation> atons) {
+    public Dataset packageToDataset(S125Dataset s125Dataset, List<AidsToNavigation> atons) {
         // Initialise the dataset
-        DataSet dataset = this.modelMapper.map(s125Dataset, DataSet.class);
+        Dataset dataset = this.modelMapper.map(s125Dataset, Dataset.class);
 
         // Always use a UUID as an ID
         if(Objects.isNull(dataset.getId())) {
-            dataset.setId(Optional.ofNullable(s125Dataset).map(S125DataSet::getUuid).orElse(UUID.randomUUID()).toString());
+            dataset.setId(Optional.ofNullable(s125Dataset).map(S125Dataset::getUuid).orElse(UUID.randomUUID()).toString());
         }
 
         //====================================================================//
@@ -159,70 +159,70 @@ public class S125DatasetBuilder {
      *
      * @return the generated JAXElement
      */
-    protected JAXBElement<? extends S125AidsToNavigationType> createJaxbElement(S125AidsToNavigationType s125AidsToNavigationType) {
+    protected JAXBElement<? extends AidsToNavigationType> createJaxbElement(AidsToNavigationType s125AidsToNavigationType) {
         switch(S125AtonTypes.fromS125Class(s125AidsToNavigationType.getClass())) {
             case CARDINAL_BEACON:
-                return this.s125GMLFactory.createS125BeaconCardinal((S125BeaconCardinalType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBeaconCardinal((BeaconCardinalType) s125AidsToNavigationType);
             case LATERAL_BEACON:
-                return this.s125GMLFactory.createS125BeaconLateral((S125BeaconLateralType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBeaconLateral((BeaconLateralType) s125AidsToNavigationType);
             case ISOLATED_DANGER_BEACON:
-                return this.s125GMLFactory.createS125BeaconIsolatedDanger((S125BeaconIsolatedDangerType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBeaconIsolatedDanger((BeaconIsolatedDangerType) s125AidsToNavigationType);
             case SAFE_WATER_BEACON:
-                return this.s125GMLFactory.createS125BeaconSafeWater((S125BeaconSafeWaterType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBeaconSafeWater((BeaconSafeWaterType) s125AidsToNavigationType);
             case SPECIAL_PURPOSE_BEACON:
-                return this.s125GMLFactory.createS125BeaconSpecialPurposeGeneral((S125BeaconSpecialPurposeGeneralType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBeaconSpecialPurposeGeneral((BeaconSpecialPurposeGeneralType) s125AidsToNavigationType);
             case CARDINAL_BUOY:
-                return this.s125GMLFactory.createS125BuoyCardinal((S125BuoyCardinalType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBuoyCardinal((BuoyCardinalType) s125AidsToNavigationType);
             case LATERAL_BUOY:
-                return this.s125GMLFactory.createS125BuoyLateral((S125BuoyLateralType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBuoyLateral((BuoyLateralType) s125AidsToNavigationType);
             case INSTALLATION_BUOY:
-                return this.s125GMLFactory.createS125BuoyInstallation((S125BuoyInstallationType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBuoyInstallation((BuoyInstallationType) s125AidsToNavigationType);
             case ISOLATED_DANGER_BUOY:
-                return this.s125GMLFactory.createS125BuoyIsolatedDanger((S125BuoyIsolatedDangerType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBuoyIsolatedDanger((BuoyIsolatedDangerType) s125AidsToNavigationType);
             case SAFE_WATER_BUOY:
-                return this.s125GMLFactory.createS125BuoySafeWater((S125BuoySafeWaterType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBuoySafeWater((BuoySafeWaterType) s125AidsToNavigationType);
             case SPECIAL_PURPOSE_BUOY:
-                return this.s125GMLFactory.createS125BuoySpecialPurposeGeneral((S125BuoySpecialPurposeGeneralType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createBuoySpecialPurposeGeneral((BuoySpecialPurposeGeneralType) s125AidsToNavigationType);
             case DAYMARK:
-                return this.s125GMLFactory.createS125Daymark((S125DaymarkType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createDaymark((DaymarkType) s125AidsToNavigationType);
             case FOG_SIGNAL:
-                return this.s125GMLFactory.createS125FogSignal((S125FogSignalType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createFogSignal((FogSignalType) s125AidsToNavigationType);
             case LIGHT:
-                return this.s125GMLFactory.createS125Light((S125LightType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createLight((LightType) s125AidsToNavigationType);
             case  LIGHT_FLOAT:
-                return this.s125GMLFactory.createS125LightFloat((S125LightFloatType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createLightFloat((LightFloatType) s125AidsToNavigationType);
             case LANDMARK:
-                return this.s125GMLFactory.createS125Landmark((S125LandmarkType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createLandmark((LandmarkType) s125AidsToNavigationType);
             case LIGHTHOUSE:
-                return this.s125GMLFactory.createS125Lighthouse((S125LighthouseType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createLighthouse((LighthouseType) s125AidsToNavigationType);
             case LIGHT_VESSEL:
-                return this.s125GMLFactory.createS125LightVessel((S125LightVesselType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createLightVessel((LightVesselType) s125AidsToNavigationType);
             case NAVIGATION_LINE:
-                return this.s125GMLFactory.createS125NavigationLine((S125NavigationLineType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createNavigationLine((NavigationLineType) s125AidsToNavigationType);
             case OFFSHORE_PLATFORM:
-                return this.s125GMLFactory.createS125OffshorePlatform((S125OffshorePlatformType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createOffshorePlatform((OffshorePlatformType) s125AidsToNavigationType);
             case PHYSICAL_AIS_ATON:
-                return this.s125GMLFactory.createS125PhysicalAISAidToNavigation((S125PhysicalAISAidToNavigationType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createPhysicalAISAidToNavigation((PhysicalAISAidToNavigationType) s125AidsToNavigationType);
             case PILE:
-                return this.s125GMLFactory.createS125Pile((S125PileType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createPile((PileType) s125AidsToNavigationType);
             case RADAR_REFLECTOR:
-                return this.s125GMLFactory.createS125RadarReflector((S125RadarReflectorType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createRadarReflector((RadarReflectorType) s125AidsToNavigationType);
             case RADIO_STATION:
-                return this.s125GMLFactory.createS125RadioStation((S125RadioStationType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createRadioStation((RadioStationType) s125AidsToNavigationType);
             case RECOMMENDED_TRACK:
-                return this.s125GMLFactory.createS125RecommendedTrack((S125RecommendedTrackType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createRecommendedTrack((RecommendedTrackType) s125AidsToNavigationType);
             case RETRO_REFLECTOR:
-                return this.s125GMLFactory.createS125RetroReflector((S125RetroReflectorType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createRetroReflector((RetroReflectorType) s125AidsToNavigationType);
             case SILO_TANK:
-                return this.s125GMLFactory.createS125SiloTank((S125SiloTankType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createSiloTank((SiloTankType) s125AidsToNavigationType);
             case SYNTHETIC_AIS_ATON:
-                return this.s125GMLFactory.createS125SyntheticAISAidToNavigation((S125SyntheticAISAidToNavigationType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createSyntheticAISAidToNavigation((SyntheticAISAidToNavigationType) s125AidsToNavigationType);
             case TOPMARK:
-                return this.s125GMLFactory.createS125Topmark((S125TopmarkType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createTopmark((TopmarkType) s125AidsToNavigationType);
             case VIRTUAL_AIS_ATON:
-                return this.s125GMLFactory.createS125VirtualAISAidToNavigation((S125VirtualAISAidToNavigationType) s125AidsToNavigationType);
+                return this.s125GMLFactory.createVirtualAISAidToNavigation((VirtualAISAidToNavigationType) s125AidsToNavigationType);
             default:
-                return this.s125GMLFactory.createS125AidsToNavigation(s125AidsToNavigationType);
+                return this.s125GMLFactory.createAidsToNavigation(s125AidsToNavigationType);
         }
     }
 

@@ -16,8 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfCardinalMark;
-
+import _int.iala_aism.s125.gml._0_0.CategoryOfCardinalMarkType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -30,21 +29,21 @@ import jakarta.persistence.Enumerated;
  * super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125BeaconCardinalType
+ * @see _int.iala_aism.s125.gml._0_0.BeaconCardinalType
  */
 @Entity
 public class BeaconCardinal extends GenericBeacon {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfCardinalMark categoryOfCardinalMark;
+    private CategoryOfCardinalMarkType categoryOfCardinalMark;
 
     /**
      * Gets category of cardinal mark.
      *
      * @return the category of cardinal mark
      */
-    public S125CategoryOfCardinalMark getCategoryOfCardinalMark() {
+    public CategoryOfCardinalMarkType getCategoryOfCardinalMark() {
         return categoryOfCardinalMark;
     }
 
@@ -53,7 +52,7 @@ public class BeaconCardinal extends GenericBeacon {
      *
      * @param categoryOfCardinalMark the category of cardinal mark
      */
-    public void setCategoryOfCardinalMark(S125CategoryOfCardinalMark categoryOfCardinalMark) {
+    public void setCategoryOfCardinalMark(CategoryOfCardinalMarkType categoryOfCardinalMark) {
         this.categoryOfCardinalMark = categoryOfCardinalMark;
     }
 }

@@ -33,52 +33,52 @@ import java.util.List;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125SiloTankType
+ * @see _int.iala_aism.s125.gml._0_0.SiloTankType
  */
 @Entity
 public class SiloTank extends StructureObject {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125BuildingShape buildingShape;
+    private BuildingShapeType buildingShape;
 
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfSiloTank categoryOfSiloTank;
+    private CategoryOfSiloTankType categoryOfSiloTank;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Colour.class)
-    private List<S125Colour> colours;
+    @ElementCollection(targetClass = ColourType.class)
+    private List<ColourType> colours;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125ColourPattern.class)
-    private List<S125ColourPattern> colourPatterns;
+    @ElementCollection(targetClass = ColourPatternType.class)
+    private List<ColourPatternType> colourPatterns;
 
     @Enumerated(EnumType.STRING)
-    private S125RadarConspicuous radarConspicuous;
+    private RadarConspicuousType radarConspicuous;
 
     @Enumerated(EnumType.STRING)
-    private S125VisuallyConspicuous visuallyConspicuous;
+    private VisualProminenceType visuallyConspicuous;
 
     private BigDecimal height;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125NatureOfConstruction> natureOfConstructions;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<NatureOfConstructionType> natureOfConstructions;
 
     private String objectNameInNationalLanguage;
 
     private String objectName;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     /**
      * Gets building shape.
      *
      * @return the building shape
      */
-    public S125BuildingShape getBuildingShape() {
+    public BuildingShapeType getBuildingShape() {
         return buildingShape;
     }
 
@@ -87,7 +87,7 @@ public class SiloTank extends StructureObject {
      *
      * @param buildingShape the building shape
      */
-    public void setBuildingShape(S125BuildingShape buildingShape) {
+    public void setBuildingShape(BuildingShapeType buildingShape) {
         this.buildingShape = buildingShape;
     }
 
@@ -96,7 +96,7 @@ public class SiloTank extends StructureObject {
      *
      * @return the category of silo tank
      */
-    public S125CategoryOfSiloTank getCategoryOfSiloTank() {
+    public CategoryOfSiloTankType getCategoryOfSiloTank() {
         return categoryOfSiloTank;
     }
 
@@ -105,7 +105,7 @@ public class SiloTank extends StructureObject {
      *
      * @param categoryOfSiloTank the category of silo tank
      */
-    public void setCategoryOfSiloTank(S125CategoryOfSiloTank categoryOfSiloTank) {
+    public void setCategoryOfSiloTank(CategoryOfSiloTankType categoryOfSiloTank) {
         this.categoryOfSiloTank = categoryOfSiloTank;
     }
 
@@ -114,7 +114,7 @@ public class SiloTank extends StructureObject {
      *
      * @return the colours
      */
-    public List<S125Colour> getColours() {
+    public List<ColourType> getColours() {
         return colours;
     }
 
@@ -123,7 +123,7 @@ public class SiloTank extends StructureObject {
      *
      * @param colours the colours
      */
-    public void setColours(List<S125Colour> colours) {
+    public void setColours(List<ColourType> colours) {
         this.colours = colours;
     }
 
@@ -132,7 +132,7 @@ public class SiloTank extends StructureObject {
      *
      * @return the colour patterns
      */
-    public List<S125ColourPattern> getColourPatterns() {
+    public List<ColourPatternType> getColourPatterns() {
         return colourPatterns;
     }
 
@@ -141,7 +141,7 @@ public class SiloTank extends StructureObject {
      *
      * @param colourPatterns the colour patterns
      */
-    public void setColourPatterns(List<S125ColourPattern> colourPatterns) {
+    public void setColourPatterns(List<ColourPatternType> colourPatterns) {
         this.colourPatterns = colourPatterns;
     }
 
@@ -150,7 +150,7 @@ public class SiloTank extends StructureObject {
      *
      * @return the radar conspicuous
      */
-    public S125RadarConspicuous getRadarConspicuous() {
+    public RadarConspicuousType getRadarConspicuous() {
         return radarConspicuous;
     }
 
@@ -159,7 +159,7 @@ public class SiloTank extends StructureObject {
      *
      * @param radarConspicuous the radar conspicuous
      */
-    public void setRadarConspicuous(S125RadarConspicuous radarConspicuous) {
+    public void setRadarConspicuous(RadarConspicuousType radarConspicuous) {
         this.radarConspicuous = radarConspicuous;
     }
 
@@ -168,7 +168,7 @@ public class SiloTank extends StructureObject {
      *
      * @return the visually conspicuous
      */
-    public S125VisuallyConspicuous getVisuallyConspicuous() {
+    public VisualProminenceType getVisuallyConspicuous() {
         return visuallyConspicuous;
     }
 
@@ -177,7 +177,7 @@ public class SiloTank extends StructureObject {
      *
      * @param visuallyConspicuous the visually conspicuous
      */
-    public void setVisuallyConspicuous(S125VisuallyConspicuous visuallyConspicuous) {
+    public void setVisuallyConspicuous(VisualProminenceType visuallyConspicuous) {
         this.visuallyConspicuous = visuallyConspicuous;
     }
 
@@ -204,7 +204,7 @@ public class SiloTank extends StructureObject {
      *
      * @return the nature of constructions
      */
-    public List<S125NatureOfConstruction> getNatureOfConstructions() {
+    public List<NatureOfConstructionType> getNatureOfConstructions() {
         return natureOfConstructions;
     }
 
@@ -213,7 +213,7 @@ public class SiloTank extends StructureObject {
      *
      * @param natureOfConstructions the nature of constructions
      */
-    public void setNatureOfConstructions(List<S125NatureOfConstruction> natureOfConstructions) {
+    public void setNatureOfConstructions(List<NatureOfConstructionType> natureOfConstructions) {
         this.natureOfConstructions = natureOfConstructions;
     }
 
@@ -258,7 +258,7 @@ public class SiloTank extends StructureObject {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -267,7 +267,7 @@ public class SiloTank extends StructureObject {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 }

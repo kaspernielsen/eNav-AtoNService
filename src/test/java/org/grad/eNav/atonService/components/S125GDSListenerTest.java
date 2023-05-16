@@ -28,7 +28,7 @@ import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.GeomesaS125;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
@@ -104,7 +104,7 @@ class S125GDSListenerTest {
     // Test Variables
     private Geometry geometry;
     private S125Node s125Node;
-    private S125DataSet s125DataSet;
+    private S125Dataset s125DataSet;
 
     // Geomesa Variables
     private GeometryFactory geometryFactory;
@@ -140,7 +140,7 @@ class S125GDSListenerTest {
         // Now create the S125 node object and populate the data
         this.s125Node = new S125Node("test_aton", point, xml);
         this.geomesaData = new GeomesaS125(this.geometry);
-        this.s125DataSet = new S125DataSet("test_aton_dataset");
+        this.s125DataSet = new S125Dataset("test_aton_dataset");
 
         // Also mock the GeoMesa DataStore data and consumer
         this.featureSource = mock(SimpleFeatureSource.class);

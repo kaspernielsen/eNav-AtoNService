@@ -33,35 +33,35 @@ import java.util.List;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125DaymarkType
+ * @see _int.iala_aism.s125.gml._0_0.DaymarkType
  */
 @Entity
 public class Daymark extends Equipment {
 
     // Class Variables
-    private S125CategoryOfSpecialPurposeMark categoryOfSpecialPurposeMark;
+    private CategoryOfSpecialPurposeMarkType categoryOfSpecialPurposeMark;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Colour.class)
-    private List<S125Colour> colours;
+    @ElementCollection(targetClass = ColourType.class)
+    private List<ColourType> colours;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125ColourPattern.class)
-    private List<S125ColourPattern> colourPatterns;
+    @ElementCollection(targetClass = ColourPatternType.class)
+    private List<ColourPatternType> colourPatterns;
 
     private BigDecimal height;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125NatureOfConstruction.class)
-    private List<S125NatureOfConstruction> natureOfConstructions;
+    @ElementCollection(targetClass = NatureOfConstructionType.class)
+    private List<NatureOfConstructionType> natureOfConstructions;
 
     private String objectNameInNationalLanguage;
 
     private String objectName;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     private String topmarkDaymarkShape;
 
@@ -70,7 +70,7 @@ public class Daymark extends Equipment {
      *
      * @return the category of special purpose mark
      */
-    public S125CategoryOfSpecialPurposeMark getCategoryOfSpecialPurposeMark() {
+    public CategoryOfSpecialPurposeMarkType getCategoryOfSpecialPurposeMark() {
         return categoryOfSpecialPurposeMark;
     }
 
@@ -79,7 +79,7 @@ public class Daymark extends Equipment {
      *
      * @param categoryOfSpecialPurposeMark the category of special purpose mark
      */
-    public void setCategoryOfSpecialPurposeMark(S125CategoryOfSpecialPurposeMark categoryOfSpecialPurposeMark) {
+    public void setCategoryOfSpecialPurposeMark(CategoryOfSpecialPurposeMarkType categoryOfSpecialPurposeMark) {
         this.categoryOfSpecialPurposeMark = categoryOfSpecialPurposeMark;
     }
 
@@ -88,7 +88,7 @@ public class Daymark extends Equipment {
      *
      * @return the colours
      */
-    public List<S125Colour> getColours() {
+    public List<ColourType> getColours() {
         return colours;
     }
 
@@ -97,7 +97,7 @@ public class Daymark extends Equipment {
      *
      * @param colours the colours
      */
-    public void setColours(List<S125Colour> colours) {
+    public void setColours(List<ColourType> colours) {
         this.colours = colours;
     }
 
@@ -106,7 +106,7 @@ public class Daymark extends Equipment {
      *
      * @return the colour patterns
      */
-    public List<S125ColourPattern> getColourPatterns() {
+    public List<ColourPatternType> getColourPatterns() {
         return colourPatterns;
     }
 
@@ -115,7 +115,7 @@ public class Daymark extends Equipment {
      *
      * @param colourPatterns the colour patterns
      */
-    public void setColourPatterns(List<S125ColourPattern> colourPatterns) {
+    public void setColourPatterns(List<ColourPatternType> colourPatterns) {
         this.colourPatterns = colourPatterns;
     }
 
@@ -142,7 +142,7 @@ public class Daymark extends Equipment {
      *
      * @return the nature of constructions
      */
-    public List<S125NatureOfConstruction> getNatureOfConstructions() {
+    public List<NatureOfConstructionType> getNatureOfConstructions() {
         return natureOfConstructions;
     }
 
@@ -151,7 +151,7 @@ public class Daymark extends Equipment {
      *
      * @param natureOfConstructions the nature of constructions
      */
-    public void setNatureOfConstructions(List<S125NatureOfConstruction> natureOfConstructions) {
+    public void setNatureOfConstructions(List<NatureOfConstructionType> natureOfConstructions) {
         this.natureOfConstructions = natureOfConstructions;
     }
 
@@ -196,7 +196,7 @@ public class Daymark extends Equipment {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -205,7 +205,7 @@ public class Daymark extends Equipment {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 

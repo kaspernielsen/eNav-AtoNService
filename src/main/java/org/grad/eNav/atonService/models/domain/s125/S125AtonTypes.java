@@ -32,40 +32,40 @@ import java.util.Arrays;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public enum S125AtonTypes {
-    CARDINAL_BEACON("Cardinal Beacon", S125BeaconCardinalType.class,  BeaconCardinal.class, false),
-    LATERAL_BEACON("Lateral Beacon", S125BeaconLateralType.class, BeaconLateral.class, false),
-    ISOLATED_DANGER_BEACON("Isolated Danger Beacon", S125BeaconIsolatedDangerType.class, BeaconIsolatedDanger.class, false),
-    SAFE_WATER_BEACON("Safe Water Beacon", S125BeaconSafeWaterType.class, BeaconSafeWater.class, false),
-    SPECIAL_PURPOSE_BEACON("Special Purpose Beacon", S125BeaconSpecialPurposeGeneralType.class, BeaconSpecialPurpose.class, false),
-    CARDINAL_BUOY("Cardinal Buoy", S125BuoyCardinalType.class, BuoyCardinal.class, false),
-    LATERAL_BUOY("Lateral Buoy", S125BuoyLateralType.class, BuoyLateral.class, false),
-    INSTALLATION_BUOY("Installation Buoy", S125BuoyInstallationType.class, BuoyInstallation.class, false),
-    ISOLATED_DANGER_BUOY("Isolated Danger Buoy", S125BuoyIsolatedDangerType.class, BuoyIsolatedDanger.class, false),
-    SAFE_WATER_BUOY("Safe Water Buoy", S125BuoySafeWaterType.class, BuoySafeWater.class, false),
-    SPECIAL_PURPOSE_BUOY("Special Purpose Beacon", S125BuoySpecialPurposeGeneralType.class, BuoySpecialPurpose.class, false),
-    DAYMARK("Daymark", S125DaymarkType.class, Daymark.class, false),
-    FOG_SIGNAL("Fog Signal", S125FogSignalType.class, FogSignal.class, true),
-    LIGHT("Light", S125LightType.class, Light.class, true),
-    LIGHT_FLOAT("Light Float", S125LightFloatType.class, LightFloat.class, false),
-    LANDMARK("Cardinal Beacon", S125LandmarkType.class, Landmark.class, false),
-    LIGHTHOUSE("Lighthouse", S125LighthouseType.class, Lighthouse.class, false),
-    LIGHT_VESSEL("Light Vessel", S125LightVesselType.class, LightVessel.class, false),
-    NAVIGATION_LINE("Navigation Line", S125NavigationLineType.class, NavigationLine.class, false),
-    OFFSHORE_PLATFORM("Offshore Platform", S125OffshorePlatformType.class, OffshorePlatform.class, false),
-    PHYSICAL_AIS_ATON("Physical AIS AtoN", S125PhysicalAISAidToNavigationType.class, PhysicalAISAidToNavigation.class, true),
-    PILE("Pile", S125PileType.class, Pile.class, false),
-    RADAR_REFLECTOR("Radar Reflector", S125RadarReflectorType.class, RadarReflector.class, true),
-    RADIO_STATION("Radio Station", S125RadioStationType.class, RadioStation.class, true),
-    RECOMMENDED_TRACK("Recommended Track", S125RecommendedTrackType.class, RecommendedTrack.class, false),
-    RETRO_REFLECTOR("Retro Reflector", S125RetroReflectorType.class, RetroReflector.class, true),
-    SILO_TANK("Silo Tank", S125SiloTankType.class, SiloTank.class, true),
-    SYNTHETIC_AIS_ATON("Virtual AtoN", S125SyntheticAISAidToNavigationType.class, SyntheticAISAidToNavigation.class, true),
-    TOPMARK("Topmark", S125TopmarkType.class, Topmark.class, true),
-    VIRTUAL_AIS_ATON("Virtual AtoN", S125VirtualAISAidToNavigationType.class, VirtualAISAidToNavigation.class, true),
-    UNKNOWN("Unknown", S125AidsToNavigationType.class, AidsToNavigation.class, false);
+    CARDINAL_BEACON("Cardinal Beacon", BeaconCardinalType.class,  BeaconCardinal.class, false),
+    LATERAL_BEACON("Lateral Beacon", BeaconLateralType.class, BeaconLateral.class, false),
+    ISOLATED_DANGER_BEACON("Isolated Danger Beacon", BeaconIsolatedDangerType.class, BeaconIsolatedDanger.class, false),
+    SAFE_WATER_BEACON("Safe Water Beacon", BeaconSafeWaterType.class, BeaconSafeWater.class, false),
+    SPECIAL_PURPOSE_BEACON("Special Purpose Beacon", BeaconSpecialPurposeGeneralType.class, BeaconSpecialPurpose.class, false),
+    CARDINAL_BUOY("Cardinal Buoy", BuoyCardinalType.class, BuoyCardinal.class, false),
+    LATERAL_BUOY("Lateral Buoy", BuoyLateralType.class, BuoyLateral.class, false),
+    INSTALLATION_BUOY("Installation Buoy", BuoyInstallationType.class, BuoyInstallation.class, false),
+    ISOLATED_DANGER_BUOY("Isolated Danger Buoy", BuoyIsolatedDangerType.class, BuoyIsolatedDanger.class, false),
+    SAFE_WATER_BUOY("Safe Water Buoy", BuoySafeWaterType.class, BuoySafeWater.class, false),
+    SPECIAL_PURPOSE_BUOY("Special Purpose Beacon", BuoySpecialPurposeGeneralType.class, BuoySpecialPurpose.class, false),
+    DAYMARK("Daymark", DaymarkType.class, Daymark.class, false),
+    FOG_SIGNAL("Fog Signal", FogSignalType.class, FogSignal.class, true),
+    LIGHT("Light", LightType.class, Light.class, true),
+    LIGHT_FLOAT("Light Float", LightFloatType.class, LightFloat.class, false),
+    LANDMARK("Cardinal Beacon", LandmarkType.class, Landmark.class, false),
+    LIGHTHOUSE("Lighthouse", LighthouseType.class, Lighthouse.class, false),
+    LIGHT_VESSEL("Light Vessel", LightVesselType.class, LightVessel.class, false),
+    NAVIGATION_LINE("Navigation Line", NavigationLineType.class, NavigationLine.class, false),
+    OFFSHORE_PLATFORM("Offshore Platform", OffshorePlatformType.class, OffshorePlatform.class, false),
+    PHYSICAL_AIS_ATON("Physical AIS AtoN", PhysicalAISAidToNavigationType.class, PhysicalAISAidToNavigation.class, true),
+    PILE("Pile", PileType.class, Pile.class, false),
+    RADAR_REFLECTOR("Radar Reflector", RadarReflectorType.class, RadarReflector.class, true),
+    RADIO_STATION("Radio Station", RadioStationType.class, RadioStation.class, true),
+    RECOMMENDED_TRACK("Recommended Track", RecommendedTrackType.class, RecommendedTrack.class, false),
+    RETRO_REFLECTOR("Retro Reflector", RetroReflectorType.class, RetroReflector.class, true),
+    SILO_TANK("Silo Tank", SiloTankType.class, SiloTank.class, true),
+    SYNTHETIC_AIS_ATON("Virtual AtoN", SyntheticAISAidToNavigationType.class, SyntheticAISAidToNavigation.class, true),
+    TOPMARK("Topmark", TopmarkType.class, Topmark.class, true),
+    VIRTUAL_AIS_ATON("Virtual AtoN", VirtualAISAidToNavigationType.class, VirtualAISAidToNavigation.class, true),
+    UNKNOWN("Unknown", AidsToNavigationType.class, AidsToNavigation.class, false);
 
     // Enum Variables
-    final Class<? extends S125AidsToNavigationType> s125Class;
+    final Class<? extends AidsToNavigationType> s125Class;
     final Class<? extends AidsToNavigation> localClass;
     final String description;
     final boolean equipment;
@@ -78,7 +78,7 @@ public enum S125AtonTypes {
      * @param localClass    The respective local persistence class
      * @param equipment     Whether this is an equipment entry or not
      */
-    S125AtonTypes(String description, Class<? extends S125AidsToNavigationType> s125Class, Class<? extends AidsToNavigation> localClass, boolean equipment) {
+    S125AtonTypes(String description, Class<? extends AidsToNavigationType> s125Class, Class<? extends AidsToNavigation> localClass, boolean equipment) {
         this.description = description;
         this.s125Class = s125Class;
         this.localClass = localClass;
@@ -90,7 +90,7 @@ public enum S125AtonTypes {
      *
      * @return the s 125 class
      */
-    public Class<? extends S125AidsToNavigationType> getS125Class() {
+    public Class<? extends AidsToNavigationType> getS125Class() {
         return s125Class;
     }
 
@@ -127,7 +127,7 @@ public enum S125AtonTypes {
      * @param s125Class     The S-125 class type
      * @return The respective S-125 AtoN Type enum entry
      */
-    public static <T extends S125AidsToNavigationType> S125AtonTypes fromS125Class(Class<T> s125Class) {
+    public static <T extends AidsToNavigationType> S125AtonTypes fromS125Class(Class<T> s125Class) {
         return Arrays.stream(S125AtonTypes.values())
                 .filter(t -> t.getS125Class().equals(s125Class))
                 .findFirst()

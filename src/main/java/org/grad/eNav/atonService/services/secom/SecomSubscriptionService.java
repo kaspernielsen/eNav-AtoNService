@@ -29,7 +29,7 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
@@ -186,7 +186,7 @@ public class SecomSubscriptionService implements MessageHandler {
         }
 
         // Handle only messages that seem valid
-        if(SECOM_DataProductType.S125.equals(contentType) && message.getPayload() instanceof S125DataSet s125Dataset) {
+        if(SECOM_DataProductType.S125.equals(contentType) && message.getPayload() instanceof S125Dataset s125Dataset) {
             // Get the payload of the incoming message
 
             // A simple debug message
@@ -331,7 +331,7 @@ public class SecomSubscriptionService implements MessageHandler {
      * @param subscriptionRequest   the subscription request
      * @param s125Dataset           the S125 dataset to be sent to the subscription
      */
-    protected void sendToSubscription(SubscriptionRequest subscriptionRequest, S125DataSet s125Dataset) {
+    protected void sendToSubscription(SubscriptionRequest subscriptionRequest, S125Dataset s125Dataset) {
         // Make sure we also have an MRN for the subscribed client
         if(Objects.isNull(subscriptionRequest.getClientMrn())) {
             log.warn("Subscription request found for S-125 dataset updates but no client MRN");

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ns5:DataSet xmlns:ns1="http://www.opengis.net/gml/3.2" xmlns:ns2="http://www.iho.int/s100gml/5.0" xmlns:ns3="http://www.w3.org/1999/xlink" xmlns:ns4="http://www.iala-aism.int/S125/gml/0.0.1Base" xmlns:ns5="http://www.iala-aism.int/S125/gml/0.0.1" ns1:id="Cork Hole Test Dataset">
+<ns5:Dataset xmlns:ns1="http://www.opengis.net/gml/3.2" xmlns:ns2="http://www.iho.int/s100gml/5.0" xmlns:ns3="http://www.w3.org/1999/xlink" xmlns:ns4="http://www.iala-aism.int/S125/gml/0.0.1Base" xmlns:ns5="http://www.iala-aism.int/S125/gml/0.0.1" ns1:id="Cork Hole Test Dataset">
     <ns1:boundedBy>
         <ns1:Envelope srsName="EPSG:4326">
             <ns1:lowerCorner>1.4233333 51.8916667</ns1:lowerCorner>
@@ -18,7 +18,7 @@
         <ns2:datasetAbstract>Test dataset for unit testing</ns2:datasetAbstract>
     </ns2:DatasetIdentificationInformation>
     <ns5:member>
-        <ns5:S125_VirtualAISAidToNavigation ns1:id="ID001">
+        <ns5:VirtualAISAidToNavigation ns1:id="ID001">
             <ns1:boundedBy>
                 <ns1:Envelope srsName="EPSG:4326">
                     <ns1:lowerCorner>1.4233333 51.8916667</ns1:lowerCorner>
@@ -29,7 +29,7 @@
             <ns5:idCode>001</ns5:idCode>
             <ns5:textualDescription>Test AtoN for Cork Hole</ns5:textualDescription>
             <ns5:textualDescriptionInNationalLanguage>Description of Test AtoN for Cork Hole</ns5:textualDescriptionInNationalLanguage>
-            <ns5:virtualAISAidToNavigationType>special purpose</ns5:virtualAISAidToNavigationType>
+            <ns5:virtualAISAidToNavigationType>Special Purpose</ns5:virtualAISAidToNavigationType>
             <ns5:objectNameInNationalLanguage>Cork Hole Test</ns5:objectNameInNationalLanguage>
             <ns5:objectName>Cork Hole Test</ns5:objectName>
             <ns5:status>confirmed</ns5:status>
@@ -42,6 +42,6 @@
                     </ns2:Point>
                 </ns2:pointProperty>
             </ns5:geometry>
-        </ns5:S125_VirtualAISAidToNavigation>
+        </ns5:VirtualAISAidToNavigation>
     </ns5:member>
-</ns5:DataSet>
+</ns5:Dataset>

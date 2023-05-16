@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.models.dtos.s125.S125DataSetDto;
 import org.grad.eNav.atonService.services.DatasetService;
@@ -82,10 +82,10 @@ class DatasetControllerTest {
     DatasetService datasetService;
 
     // Test Variables
-    private List<S125DataSet> datasetList;
+    private List<S125Dataset> datasetList;
     private Pageable pageable;
-    private S125DataSet newDataset;
-    private S125DataSet existingDataset;
+    private S125Dataset newDataset;
+    private S125Dataset existingDataset;
     private GeometryFactory factory;
 
     /**
@@ -103,7 +103,7 @@ class DatasetControllerTest {
         // Initialise the station nodes list
         this.datasetList = new ArrayList<>();
         for(long i=0; i<10; i++) {
-            S125DataSet dataset = new S125DataSet(String.format("Dataset{}", i));
+            S125Dataset dataset = new S125Dataset(String.format("Dataset{}", i));
             dataset.setGeometry(this.factory.createPoint(new Coordinate(i, i)));
             this.datasetList.add(dataset);
         }
@@ -112,11 +112,11 @@ class DatasetControllerTest {
         this.pageable = PageRequest.of(0, 5);
 
         // Create a Dataset without an ID
-        this.newDataset = new S125DataSet("NewDataset");
+        this.newDataset = new S125Dataset("NewDataset");
         this.newDataset.setGeometry(this.factory.createPoint(new Coordinate(51.98, 1.28)));
 
         // Create a Dataset with an ID
-        this.existingDataset = new S125DataSet("ExistingDataset");
+        this.existingDataset = new S125Dataset("ExistingDataset");
         this.existingDataset.setUuid(UUID.randomUUID());
         this.existingDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));
     }
@@ -128,7 +128,7 @@ class DatasetControllerTest {
     @Test
     void testGetDatasets() throws Exception {
         // Created a result page to be returned by the mocked service
-        Page<S125DataSet> page = new PageImpl<>(this.datasetList.subList(0, 5), this.pageable, this.datasetList.size());
+        Page<S125Dataset> page = new PageImpl<>(this.datasetList.subList(0, 5), this.pageable, this.datasetList.size());
         doReturn(page).when(this.datasetService).findAll(any(), any(), any(), any(), any());
 
         // Perform the MVC request
@@ -180,7 +180,7 @@ class DatasetControllerTest {
         dtPagingRequest.setColumns(Collections.singletonList(dtColumn));
 
         // Created a result page to be returned by the mocked service
-        Page<S125DataSet> page = new PageImpl<>(this.datasetList.subList(0, 5), this.pageable, this.datasetList.size());
+        Page<S125Dataset> page = new PageImpl<>(this.datasetList.subList(0, 5), this.pageable, this.datasetList.size());
         doReturn(page).when(this.datasetService).handleDatatablesPagingRequest(any());
 
         // Perform the MVC request

@@ -51,7 +51,7 @@ import java.util.UUID;
 @Cacheable
 @Indexed
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class S125DataSet {
+public class S125Dataset {
 
     // Class Variables
     @Id
@@ -73,7 +73,7 @@ public class S125DataSet {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "dataset_identification_id", referencedColumnName = "id")
     @IndexedEmbedded(includeEmbeddedObjectId = false)
-    private S125DataSetIdentification datasetIdentificationInformation;
+    private S125DatasetIdentification datasetIdentificationInformation;
 
     @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     private Geometry geometry;
@@ -86,7 +86,7 @@ public class S125DataSet {
     @LastModifiedDate
     private LocalDateTime lastUpdatedAt;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY, optional = true)
     @JoinTable(name = "s125_dataset_content_xref",
             joinColumns =
                     { @JoinColumn(name = "dataset_uuid", referencedColumnName = "uuid", unique = true) },
@@ -97,7 +97,7 @@ public class S125DataSet {
     /**
      * Instantiates a new Dataset.
      */
-    public S125DataSet() {
+    public S125Dataset() {
         this("auto_generated_s_125_dataset" + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     }
 
@@ -106,8 +106,8 @@ public class S125DataSet {
      *
      * @param datasetFileIdentifier the dataset file identifier
      */
-    public S125DataSet(String datasetFileIdentifier) {
-        this.datasetIdentificationInformation = new S125DataSetIdentification(datasetFileIdentifier);
+    public S125Dataset(String datasetFileIdentifier) {
+        this.datasetIdentificationInformation = new S125DatasetIdentification(datasetFileIdentifier);
     }
 
     /**
@@ -133,7 +133,7 @@ public class S125DataSet {
      *
      * @return the dataset identification information
      */
-    public S125DataSetIdentification getDatasetIdentificationInformation() {
+    public S125DatasetIdentification getDatasetIdentificationInformation() {
         return datasetIdentificationInformation;
     }
 
@@ -142,7 +142,7 @@ public class S125DataSet {
      *
      * @param datasetIdentificationInformation the dataset identification information
      */
-    public void setDatasetIdentificationInformation(S125DataSetIdentification datasetIdentificationInformation) {
+    public void setDatasetIdentificationInformation(S125DatasetIdentification datasetIdentificationInformation) {
         this.datasetIdentificationInformation = datasetIdentificationInformation;
     }
 

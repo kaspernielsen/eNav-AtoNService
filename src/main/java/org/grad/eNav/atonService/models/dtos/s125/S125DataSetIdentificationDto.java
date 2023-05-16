@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import org.grad.eNav.atonService.models.domain.s125.S125DatasetIdentification;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -33,7 +34,7 @@ import java.time.LocalDate;
  * and it does contain all the fields of the locally persisted class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see org.grad.eNav.atonService.models.domain.s125.S125DataSetIdentification
+ * @see S125DatasetIdentification
  */
 public class S125DataSetIdentificationDto {
 

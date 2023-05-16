@@ -16,13 +16,12 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfSpecialPurposeMark;
-import _int.iala_aism.s125.gml._0_0.S125Status;
-
+import _int.iala_aism.s125.gml._0_0.CategoryOfSpecialPurposeMarkType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+
 import java.util.List;
 
 /**
@@ -33,22 +32,22 @@ import java.util.List;
  * {@link GenericBuoy} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125BuoySpecialPurposeGeneralType
+ * @see _int.iala_aism.s125.gml._0_0.BuoySpecialPurposeGeneralType
  */
 @Entity
 public class BuoySpecialPurpose extends GenericBuoy {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125CategoryOfSpecialPurposeMark> categoryOfSpecialPurposeMarks;
+    @ElementCollection(targetClass = CategoryOfSpecialPurposeMarkType.class)
+    private List<CategoryOfSpecialPurposeMarkType> categoryOfSpecialPurposeMarks;
 
     /**
      * Gets category of special purpose marks.
      *
      * @return the category of special purpose marks
      */
-    public List<S125CategoryOfSpecialPurposeMark> getCategoryOfSpecialPurposeMarks() {
+    public List<CategoryOfSpecialPurposeMarkType> getCategoryOfSpecialPurposeMarks() {
         return categoryOfSpecialPurposeMarks;
     }
 
@@ -57,7 +56,7 @@ public class BuoySpecialPurpose extends GenericBuoy {
      *
      * @param categoryOfSpecialPurposeMarks the category of special purpose marks
      */
-    public void setCategoryOfSpecialPurposeMarks(List<S125CategoryOfSpecialPurposeMark> categoryOfSpecialPurposeMarks) {
+    public void setCategoryOfSpecialPurposeMarks(List<CategoryOfSpecialPurposeMarkType> categoryOfSpecialPurposeMarks) {
         this.categoryOfSpecialPurposeMarks = categoryOfSpecialPurposeMarks;
     }
 }

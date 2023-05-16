@@ -26,7 +26,7 @@ import jakarta.persistence.Entity;
  * {@link GenericBeacon} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125BeaconIsolatedDangerType
+ * @see _int.iala_aism.s125.gml._0_0.BeaconIsolatedDangerType
  */
 @Entity
 public class BeaconIsolatedDanger extends GenericBeacon {

@@ -30,9 +30,9 @@ import java.util.List;
  * one.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125PhysicalAISAidToNavigationType
- * @see _int.iala_aism.s125.gml._0_0.S125VirtualAISAidToNavigationType
- * @see _int.iala_aism.s125.gml._0_0.S125SyntheticAISAidToNavigationType
+ * @see _int.iala_aism.s125.gml._0_0.PhysicalAISAidToNavigationType
+ * @see _int.iala_aism.s125.gml._0_0.VirtualAISAidToNavigationType
+ * @see _int.iala_aism.s125.gml._0_0.SyntheticAISAidToNavigationType
  */
 @Entity
 public abstract class AISAidToNavigation extends Equipment {

@@ -43,7 +43,7 @@ import java.util.Locale;
 @Cacheable
 @Indexed
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class S125DataSetIdentification {
+public class S125DatasetIdentification {
 
     // Class Variables
     @Id
@@ -53,7 +53,7 @@ public class S125DataSetIdentification {
     private BigInteger id;
 
     @OneToOne(mappedBy = "datasetIdentificationInformation")
-    private S125DataSet s125Dataset;
+    private S125Dataset s125Dataset;
 
     @KeywordField(sortable = Sortable.YES)
     private String encodingSpecification;
@@ -93,7 +93,7 @@ public class S125DataSetIdentification {
     /**
      * Instantiates a new Data set identification.
      */
-    public S125DataSetIdentification() {
+    public S125DatasetIdentification() {
 
     }
 
@@ -102,7 +102,7 @@ public class S125DataSetIdentification {
      *
      * @param datasetFileIdentifier the dataset file identifier
      */
-    public S125DataSetIdentification(String datasetFileIdentifier) {
+    public S125DatasetIdentification(String datasetFileIdentifier) {
         this.encodingSpecification = "S100 Part 10b";
         this.encodingSpecificationEdition = "1.0";
         this.productIdentifier = "S-125";

@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.repos;
 
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
@@ -26,6 +26,6 @@ import java.util.UUID;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface DatasetRepo extends JpaRepository<S125DataSet, UUID> {
+public interface DatasetRepo extends JpaRepository<S125Dataset, UUID> {
 
 }
