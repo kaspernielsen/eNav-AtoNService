@@ -19,8 +19,8 @@ package org.grad.eNav.atonService.components;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSetIdentification;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.domain.s125.S125DatasetIdentification;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.massindexing.MassIndexer;
@@ -65,8 +65,8 @@ public class HibernateSearchInit implements ApplicationListener<ApplicationReady
 
         // Create a mass indexer
         MassIndexer indexer = searchSession.massIndexer(
-                        S125DataSet.class,
-                        S125DataSetIdentification.class,
+                        S125Dataset.class,
+                        S125DatasetIdentification.class,
                         AidsToNavigation.class,
                         SubscriptionRequest.class)
                 .threadsToLoadObjects( 7 );

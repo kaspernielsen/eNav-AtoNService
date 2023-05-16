@@ -16,9 +16,9 @@
 
 package org.grad.eNav.atonService.components;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
+import _int.iala_aism.s125.gml._0_0.Dataset;
 import _int.iala_aism.s125.gml._0_0.MemberType;
-import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
+import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
 import _net.opengis.gml.profiles.AbstractFeatureMemberType;
 import jakarta.annotation.PreDestroy;
 import jakarta.xml.bind.JAXBElement;
@@ -243,7 +243,7 @@ public class S125GDSListener implements FeatureListener {
                         return null;
                     }
                 })
-                .map(DataSet::getImembersAndMembers)
+                .map(Dataset::getImembersAndMembers)
                 .filter(((Predicate<List<AbstractFeatureMemberType>>) List::isEmpty).negate())
                 .orElse(Collections.emptyList())
                 .stream()
@@ -251,8 +251,8 @@ public class S125GDSListener implements FeatureListener {
                 .map(MemberType.class::cast)
                 .map(MemberType::getAbstractFeature)
                 .map(JAXBElement::getValue)
-                .filter(S125AidsToNavigationType.class::isInstance)
-                .map(S125AidsToNavigationType.class::cast)
+                .filter(AidsToNavigationType.class::isInstance)
+                .map(AidsToNavigationType.class::cast)
                 .map(s125Aton -> this.modelMapper.map(s125Aton, S125AtonTypes.fromS125Class(s125Aton.getClass()).getLocalClass()))
                 .filter(Objects::nonNull);
     }

@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.controllers.secom;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
+import _int.iala_aism.s125.gml._0_0.Dataset;
 import jakarta.xml.bind.DatatypeConverter;
 import jakarta.xml.bind.JAXBException;
 import org.grad.eNav.atonService.TestFeignSecurityConfig;
@@ -24,7 +24,7 @@ import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.components.SecomCertificateProviderImpl;
 import org.grad.eNav.atonService.components.SecomSignatureProviderImpl;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
@@ -51,7 +51,6 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;
@@ -154,7 +153,7 @@ class SecomControllerTest {
     private LocalDateTime queryValidTo;
     private Integer queryPage;
     private Integer queryPageSize;
-    private S125DataSet s125DataSet;
+    private S125Dataset s125DataSet;
     private String s125DataSetAsXml;
     private DatasetContent datasetContent;
     private SubscriptionRequest subscriptionRequest;
@@ -188,7 +187,7 @@ class SecomControllerTest {
         this.queryPageSize = Integer.MAX_VALUE;
 
         // Construct a test S-125 Dataset
-        this.s125DataSet = new S125DataSet("125Dataset");
+        this.s125DataSet = new S125Dataset("125Dataset");
         this.s125DataSet.setUuid(this.queryDataReference);
         this.s125DataSet.setGeometry(geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(-180, -90),
@@ -200,7 +199,7 @@ class SecomControllerTest {
 
         // Marshal the dataset content
         final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-        final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, Collections.emptyList());
+        final Dataset dataset = s125DatasetBuilder.packageToDataset(s125DataSet, Collections.emptyList());
         this.s125DataSetAsXml = S125Utils.marshalS125(dataset, Boolean.FALSE);
         this.datasetContent = new DatasetContent();
         this.datasetContent.setId(BigInteger.ONE);
@@ -443,7 +442,7 @@ class SecomControllerTest {
                     // Try to parse the incoming data
                     String s125Xml = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().get(0).getData()));
                     try {
-                        DataSet result = S125Utils.unmarshallS125(s125Xml);
+                        Dataset result = S125Utils.unmarshallS125(s125Xml);
                         assertNotNull(result);
                         assertNotNull(result.getDatasetIdentificationInformation());
                         assertNotNull(result.getId());

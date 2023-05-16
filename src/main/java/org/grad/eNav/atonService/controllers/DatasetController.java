@@ -19,7 +19,7 @@ package org.grad.eNav.atonService.controllers;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPage;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.models.dtos.s125.S125DataSetDto;
@@ -55,13 +55,13 @@ public class DatasetController {
      * Object Mapper from Domain to DTO.
      */
     @Autowired
-    DomainDtoMapper<S125DataSet, S125DataSetDto> datasetDtoMapper;
+    DomainDtoMapper<S125Dataset, S125DataSetDto> datasetDtoMapper;
 
     /**
      * Object Mapper from DTO to Domain.
      */
     @Autowired
-    DomainDtoMapper<S125DataSetDto, S125DataSet> datasetDomainMapper;
+    DomainDtoMapper<S125DataSetDto, S125Dataset> datasetDomainMapper;
 
     /**
      * GET /api/dataset : Returns a paged list of all current datasets.
@@ -78,7 +78,7 @@ public class DatasetController {
         this.log.debug("REST request to get page of Dataset");
         uuid.ifPresent(v -> this.log.debug("Dataset UUID specified as: {}", uuid.toString()));
         geometry.ifPresent(v -> this.log.debug("Dataset geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
-        Page<S125DataSet> datasetPage = this.datasetService.findAll(
+        Page<S125Dataset> datasetPage = this.datasetService.findAll(
                 uuid.orElse(null),
                 geometry.orElse(null),
                 null,
@@ -121,7 +121,7 @@ public class DatasetController {
         }
         // Save the station
         try {
-            S125DataSet s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class));
+            S125Dataset s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125Dataset.class));
             return ResponseEntity.created(new URI(String.format("/api/dataset/%s", s125DataSet.getUuid())))
                     .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
         } catch (Exception e) {
@@ -146,7 +146,7 @@ public class DatasetController {
         dataSetDto.setUuid(uuid);
         // Save the station
         try {
-            S125DataSet s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125DataSet.class));
+            S125Dataset s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125Dataset.class));
             return ResponseEntity.ok()
                     .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
         } catch (Exception e) {

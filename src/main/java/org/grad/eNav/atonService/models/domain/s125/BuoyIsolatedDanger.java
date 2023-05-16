@@ -26,7 +26,7 @@ import jakarta.persistence.Entity;
  * super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125BuoyIsolatedDangerType
+ * @see _int.iala_aism.s125.gml._0_0.BuoyIsolatedDangerType
  */
 @Entity
 public class BuoyIsolatedDanger extends GenericBuoy {

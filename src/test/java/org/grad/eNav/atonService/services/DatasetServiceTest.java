@@ -22,7 +22,7 @@ import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.repos.DatasetRepo;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -103,10 +103,10 @@ class DatasetServiceTest {
 
     // Test Variables
     private List<AidsToNavigation> aidsToNavigationList;
-    private List<S125DataSet> datasetList;
+    private List<S125Dataset> datasetList;
     private Pageable pageable;
-    private S125DataSet newDataset;
-    private S125DataSet existingDataset;
+    private S125Dataset newDataset;
+    private S125Dataset existingDataset;
     private DatasetContent newDatasetContent;
     private DatasetContent existingDatasetContent;
     private GeometryFactory factory;
@@ -135,7 +135,7 @@ class DatasetServiceTest {
         // Initialise the dataset nodes list
         this.datasetList = new ArrayList<>();
         for(long i=0; i<10; i++) {
-            S125DataSet dataset = new S125DataSet(String.format("Dataset{}", i));
+            S125Dataset dataset = new S125Dataset(String.format("Dataset{}", i));
             dataset.setGeometry(this.factory.createPoint(new Coordinate(i, i)));
             this.datasetList.add(dataset);
         }
@@ -144,7 +144,7 @@ class DatasetServiceTest {
         this.pageable = PageRequest.of(0, 5);
 
         // Create a Dataset without a UUID
-        this.newDataset = new S125DataSet("NewDataset");
+        this.newDataset = new S125Dataset("NewDataset");
         this.newDataset.setGeometry(this.factory.createPoint(new Coordinate(51.98, 1.28)));
         this.newDatasetContent = new DatasetContent();
         this.newDatasetContent.setId(BigInteger.ONE);
@@ -154,7 +154,7 @@ class DatasetServiceTest {
         this.newDataset.setDatasetContent(this.newDatasetContent);
 
         // Create a Dataset with a UUID
-        this.existingDataset = new S125DataSet("ExistingDataset");
+        this.existingDataset = new S125Dataset("ExistingDataset");
         this.existingDataset.setUuid(UUID.randomUUID());
         this.existingDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));
         this.existingDatasetContent = new DatasetContent();
@@ -173,7 +173,7 @@ class DatasetServiceTest {
         doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(this.existingDataset.getUuid());
 
         // Perform the service call
-        S125DataSet result = this.datasetService.findOne(this.existingDataset.getUuid());
+        S125Dataset result = this.datasetService.findOne(this.existingDataset.getUuid());
 
         // Test the result
         assertNotNull(result);
@@ -221,7 +221,7 @@ class DatasetServiceTest {
         doReturn(mockedQuery).when(this.datasetService).getDatasetSearchQuery(any(), any(), any(), any(), any());
 
         // Perform the service call
-        Page<S125DataSet> result = this.datasetService.findAll(UUID.randomUUID(), null, null, null, pageable);
+        Page<S125Dataset> result = this.datasetService.findAll(UUID.randomUUID(), null, null, null, pageable);
 
         // Test the result
         assertNotNull(result);
@@ -284,7 +284,7 @@ class DatasetServiceTest {
         doReturn(mockedQuery).when(this.datasetService).getDatasetSearchQueryByText(any(), any());
 
         // Perform the service call
-        Page<S125DataSet> result = this.datasetService.handleDatatablesPagingRequest(dtPagingRequest);
+        Page<S125Dataset> result = this.datasetService.handleDatatablesPagingRequest(dtPagingRequest);
 
         // Validate the result
         assertNotNull(result);
@@ -317,7 +317,7 @@ class DatasetServiceTest {
         doReturn(this.newDataset).when(this.entityManager).merge(any());
 
         // Perform the service call
-        S125DataSet result = this.datasetService.save(new S125DataSet());
+        S125Dataset result = this.datasetService.save(new S125Dataset());
 
         // Test the result
         assertNotNull(result);

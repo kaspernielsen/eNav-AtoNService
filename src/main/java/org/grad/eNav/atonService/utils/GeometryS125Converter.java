@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
+import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
 import _int.iho.s100.gml.base._5_0.CurveProperty;
 import _int.iho.s100.gml.base._5_0.PointProperty;
 import _int.iho.s100.gml.base._5_0.S100SpatialAttributeType;
@@ -40,11 +40,11 @@ public class GeometryS125Converter {
     /**
      * Convert an S-125 Aids to Navigation entry to the JTS Geometry.
      *
-     * @param s125AidsToNavigationType the S-125 Aids to Navigation
+     * @param aidsToNavigationType the S-125 Aids to Navigation
      * @return the respective JTS geometry object
      */
-    public Geometry convertToGeometry(S125AidsToNavigationType s125AidsToNavigationType) {
-        return Optional.ofNullable(s125AidsToNavigationType)
+    public Geometry convertToGeometry(AidsToNavigationType aidsToNavigationType) {
+        return Optional.ofNullable(aidsToNavigationType)
                 .map(S125Utils::getS125AidsToNavigationTypeGeometriesList)
                 .map(this::s125PointCurveSurfaceToGeometry)
                 .orElse(null);

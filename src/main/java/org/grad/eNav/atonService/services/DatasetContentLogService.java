@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.domain.DatasetType;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -119,7 +119,7 @@ public class DatasetContentLogService {
      * @param s125DataSet the UUID of the dataset
      * @return
      */
-    public DatasetContentLog generateDatasetContentLog(@NotNull S125DataSet s125DataSet, @NotNull String operation) {
+    public DatasetContentLog generateDatasetContentLog(@NotNull S125Dataset s125DataSet, @NotNull String operation) {
         log.debug("Request to retrieve the content for Dataset with UUID : {}", s125DataSet.getUuid());
 
         // If everything is OK up to now start building the dataset content
@@ -133,11 +133,11 @@ public class DatasetContentLogService {
                         Objects.equals(s125DataSet.getCreatedAt(), s125DataSet.getLastUpdatedAt()) ?
                         "CREATED" : "UPDATED"));
         datasetContentLog.setGeneratedAt(Optional.of(s125DataSet)
-                .map(S125DataSet::getDatasetContent)
+                .map(S125Dataset::getDatasetContent)
                 .map(DatasetContent::getGeneratedAt)
                 .orElse(LocalDateTime.now()));
         datasetContentLog.setContent(Optional.of(s125DataSet)
-                .map(S125DataSet::getDatasetContent)
+                .map(S125Dataset::getDatasetContent)
                 .map(DatasetContent::getContent)
                 .orElse(null));
 

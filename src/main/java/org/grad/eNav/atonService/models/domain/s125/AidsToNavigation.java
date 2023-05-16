@@ -41,7 +41,7 @@ import java.util.List;
  * abstract so that we can extend this for each Aids to Navigation type.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType
+ * @see _int.iala_aism.s125.gml._0_0.AidsToNavigationType
  */
 @Entity
 @Cacheable

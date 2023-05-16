@@ -16,8 +16,8 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfNavigationLine;
-import _int.iala_aism.s125.gml._0_0.S125Status;
+import _int.iala_aism.s125.gml._0_0.CategoryOfNavigationLineType;
+import _int.iala_aism.s125.gml._0_0.StatusType;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -31,20 +31,20 @@ import java.util.List;
  * super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125NavigationLineType
+ * @see _int.iala_aism.s125.gml._0_0.NavigationLineType
  */
 @Entity
 public class NavigationLine extends AidsToNavigation {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfNavigationLine categoryOfNavigationLine;
+    private CategoryOfNavigationLineType categoryOfNavigationLine;
 
     private BigDecimal orientation;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     @ManyToMany(mappedBy = "navigationLines")
     private List<RecommendedTrack> navigableTracks;
@@ -54,7 +54,7 @@ public class NavigationLine extends AidsToNavigation {
      *
      * @return the category of navigation line
      */
-    public S125CategoryOfNavigationLine getCategoryOfNavigationLine() {
+    public CategoryOfNavigationLineType getCategoryOfNavigationLine() {
         return categoryOfNavigationLine;
     }
 
@@ -63,7 +63,7 @@ public class NavigationLine extends AidsToNavigation {
      *
      * @param categoryOfNavigationLine the category of navigation line
      */
-    public void setCategoryOfNavigationLine(S125CategoryOfNavigationLine categoryOfNavigationLine) {
+    public void setCategoryOfNavigationLine(CategoryOfNavigationLineType categoryOfNavigationLine) {
         this.categoryOfNavigationLine = categoryOfNavigationLine;
     }
 
@@ -90,7 +90,7 @@ public class NavigationLine extends AidsToNavigation {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -99,7 +99,7 @@ public class NavigationLine extends AidsToNavigation {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 

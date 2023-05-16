@@ -17,7 +17,7 @@
 package org.grad.eNav.atonService.services;
 
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
+import _int.iala_aism.s125.gml._0_0.Dataset;
 import _int.iho.s100.gml.base._5_0.MDTopicCategoryCode;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
@@ -34,8 +34,8 @@ import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSetIdentification;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.domain.s125.S125DatasetIdentification;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.DatasetRepo;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
@@ -140,7 +140,7 @@ public class DatasetService {
      * @return the dataset
      */
     @Transactional(readOnly = true)
-    public S125DataSet findOne(UUID uuid) {
+    public S125Dataset findOne(UUID uuid) {
         return this.datasetRepo.findById(uuid)
                 .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
     }
@@ -156,14 +156,14 @@ public class DatasetService {
      * @return The matching datasets in a paged response
      */
     @Transactional(readOnly = true)
-    public Page<S125DataSet> findAll(UUID uuid,
+    public Page<S125Dataset> findAll(UUID uuid,
                                      Geometry geometry,
                                      LocalDateTime fromTime,
                                      LocalDateTime toTime,
                                      Pageable pageable) {
         log.debug("Request to get S-125 Datasets in a pageable search");
         // Create the search query - always sort by name
-        SearchQuery<S125DataSet> searchQuery = this.getDatasetSearchQuery(
+        SearchQuery<S125Dataset> searchQuery = this.getDatasetSearchQuery(
                 uuid,
                 geometry,
                 fromTime,
@@ -186,10 +186,10 @@ public class DatasetService {
      * @return the Datatables paged response
      */
     @Transactional(readOnly = true)
-    public Page<S125DataSet> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+    public Page<S125Dataset> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         log.debug("Request to get S-125 Datasets in a Datatables pageable search");
         // Create the search query
-        SearchQuery<S125DataSet> searchQuery = this.getDatasetSearchQueryByText(
+        SearchQuery<S125Dataset> searchQuery = this.getDatasetSearchQueryByText(
                 dtPagingRequest.getSearch().getValue(),
                 dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort))
         );
@@ -210,7 +210,7 @@ public class DatasetService {
      */
     @LogDataset
     @Transactional
-    public S125DataSet save(@NotNull S125DataSet dataset) {
+    public S125Dataset save(@NotNull S125Dataset dataset) {
         log.debug("Request to save Dataset : {}", dataset);
 
         // Instantiate the dataset UUID if it does not exist
@@ -220,8 +220,8 @@ public class DatasetService {
 
         // Set the dataset ISO 19115-1 topic category if not defined
         if(Optional.of(dataset)
-                .map(S125DataSet::getDatasetIdentificationInformation)
-                .map(S125DataSetIdentification::getDatasetTopicCategories)
+                .map(S125Dataset::getDatasetIdentificationInformation)
+                .map(S125DatasetIdentification::getDatasetTopicCategories)
                 .filter(not(List::isEmpty))
                 .isEmpty()) {
             dataset.getDatasetIdentificationInformation().setDatasetTopicCategories(Collections.singletonList(MDTopicCategoryCode.OCEANS));
@@ -231,8 +231,8 @@ public class DatasetService {
         dataset.setDatasetContent(this.generateDatasetContent(dataset));
 
         // Now save the dataset - Merge to pick up all the latest changes
-        final S125DataSet result = this.datasetRepo.save(dataset);
-        final S125DataSet merged = this.entityManager.merge(result);
+        final S125Dataset result = this.datasetRepo.save(dataset);
+        final S125Dataset merged = this.entityManager.merge(result);
 
         // Publish the updated dataset to the publication channel
         this.s125PublicationChannel.send(MessageBuilder.withPayload(merged)
@@ -251,11 +251,11 @@ public class DatasetService {
      */
     @LogDataset(operation = "DELETE")
     @Transactional
-    public S125DataSet delete(UUID uuid) {
+    public S125Dataset delete(UUID uuid) {
         log.debug("Request to delete Dataset with UUID : {}", uuid);
 
         // Make sure the dataset exists
-        final S125DataSet result = this.datasetRepo.findById(uuid)
+        final S125Dataset result = this.datasetRepo.findById(uuid)
                 .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
 
         // Now delete the dataset
@@ -281,9 +281,9 @@ public class DatasetService {
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<S125DataSet> getDatasetSearchQueryByText(String searchText, Sort sort) {
+    protected SearchQuery<S125Dataset> getDatasetSearchQueryByText(String searchText, Sort sort) {
         SearchSession searchSession = Search.session( this.entityManager );
-        SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
+        SearchScope<S125Dataset> scope = searchSession.scope( S125Dataset.class );
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
                 .where(f -> f.wildcard()
@@ -308,14 +308,14 @@ public class DatasetService {
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<S125DataSet> getDatasetSearchQuery(UUID uuid,
+    protected SearchQuery<S125Dataset> getDatasetSearchQuery(UUID uuid,
                                                              Geometry geometry,
                                                              LocalDateTime fromTime,
                                                              LocalDateTime toTime,
                                                              Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( this.entityManager );
-        SearchScope<S125DataSet> scope = searchSession.scope( S125DataSet.class );
+        SearchScope<S125Dataset> scope = searchSession.scope( S125Dataset.class );
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
                             b.must(f.matchAll());
@@ -367,7 +367,7 @@ public class DatasetService {
      * @param s125DataSet the UUID of the dataset
      * @return the generated dataset content object
      */
-    public DatasetContent generateDatasetContent(@NotNull S125DataSet s125DataSet) {
+    public DatasetContent generateDatasetContent(@NotNull S125Dataset s125DataSet) {
         log.debug("Request to retrieve the content for Dataset with UUID : {}", s125DataSet.getUuid());
 
         // Get all the matching Aids to Navigation
@@ -387,7 +387,7 @@ public class DatasetService {
         // Now try to marshal the dataset into an XML string
         try {
             final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-            final DataSet dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
+            final Dataset dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
             datasetContent.setContent(S125Utils.marshalS125(dataset, Boolean.FALSE));
             datasetContent.setContentLength(BigInteger.valueOf(datasetContent.getContent().length()));
         } catch (Exception ex) {

@@ -16,7 +16,6 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125LandmarkType;
 import jakarta.persistence.Entity;
 
 /**
@@ -26,7 +25,7 @@ import jakarta.persistence.Entity;
  * It is modelled as an entity that extends the {@link Landmark} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see S125LandmarkType
+ * @see _int.iala_aism.s125.gml._0_0.LighthouseType
  */
 @Entity
 public class Lighthouse extends Landmark {

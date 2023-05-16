@@ -16,8 +16,8 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfFogSignal;
-import _int.iala_aism.s125.gml._0_0.S125Status;
+import _int.iala_aism.s125.gml._0_0.CategoryOfFogSignalType;
+import _int.iala_aism.s125.gml._0_0.StatusType;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -33,27 +33,27 @@ import java.util.List;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125FogSignalType
+ * @see _int.iala_aism.s125.gml._0_0.FogSignalsType
  */
 @Entity
 public class FogSignal extends Equipment {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfFogSignal categoryOfFogSignal;
+    private CategoryOfFogSignalType categoryOfFogSignal;
 
     private String signalSequence;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     /**
      * Gets category of fog signal.
      *
      * @return the category of fog signal
      */
-    public S125CategoryOfFogSignal getCategoryOfFogSignal() {
+    public CategoryOfFogSignalType getCategoryOfFogSignal() {
         return categoryOfFogSignal;
     }
 
@@ -62,7 +62,7 @@ public class FogSignal extends Equipment {
      *
      * @param categoryOfFogSignal the category of fog signal
      */
-    public void setCategoryOfFogSignal(S125CategoryOfFogSignal categoryOfFogSignal) {
+    public void setCategoryOfFogSignal(CategoryOfFogSignalType categoryOfFogSignal) {
         this.categoryOfFogSignal = categoryOfFogSignal;
     }
 
@@ -89,7 +89,7 @@ public class FogSignal extends Equipment {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -98,7 +98,7 @@ public class FogSignal extends Equipment {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 }

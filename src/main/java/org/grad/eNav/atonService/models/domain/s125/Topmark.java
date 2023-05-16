@@ -16,10 +16,10 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125Colour;
-import _int.iala_aism.s125.gml._0_0.S125ColourPattern;
-import _int.iala_aism.s125.gml._0_0.S125MarksNavigationalSystemOf;
-import _int.iala_aism.s125.gml._0_0.S125Status;
+import _int.iala_aism.s125.gml._0_0.ColourType;
+import _int.iala_aism.s125.gml._0_0.ColourPatternType;
+import _int.iala_aism.s125.gml._0_0.MarksNavigationalSystemOfType;
+import _int.iala_aism.s125.gml._0_0.StatusType;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -35,26 +35,26 @@ import java.util.List;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125TopmarkType
+ * @see _int.iala_aism.s125.gml._0_0.TopmarkType
  */
 @Entity
 public class Topmark extends Equipment {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Colour.class)
-    private List<S125Colour> colours;
+    @ElementCollection(targetClass = ColourType.class)
+    private List<ColourType> colours;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125ColourPattern.class)
-    private List<S125ColourPattern> colourPatterns;
+    @ElementCollection(targetClass = ColourPatternType.class)
+    private List<ColourPatternType> colourPatterns;
 
     @Enumerated(EnumType.STRING)
-    private S125MarksNavigationalSystemOf marksNavigationalSystemOf;
+    private MarksNavigationalSystemOfType marksNavigationalSystemOf;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     private String topmarkDaymarkShape;
 
@@ -63,7 +63,7 @@ public class Topmark extends Equipment {
      *
      * @return the colours
      */
-    public List<S125Colour> getColours() {
+    public List<ColourType> getColours() {
         return colours;
     }
 
@@ -72,7 +72,7 @@ public class Topmark extends Equipment {
      *
      * @param colours the colours
      */
-    public void setColours(List<S125Colour> colours) {
+    public void setColours(List<ColourType> colours) {
         this.colours = colours;
     }
 
@@ -81,7 +81,7 @@ public class Topmark extends Equipment {
      *
      * @return the colour patterns
      */
-    public List<S125ColourPattern> getColourPatterns() {
+    public List<ColourPatternType> getColourPatterns() {
         return colourPatterns;
     }
 
@@ -90,7 +90,7 @@ public class Topmark extends Equipment {
      *
      * @param colourPatterns the colour patterns
      */
-    public void setColourPatterns(List<S125ColourPattern> colourPatterns) {
+    public void setColourPatterns(List<ColourPatternType> colourPatterns) {
         this.colourPatterns = colourPatterns;
     }
 
@@ -99,7 +99,7 @@ public class Topmark extends Equipment {
      *
      * @return the marks navigational system of
      */
-    public S125MarksNavigationalSystemOf getMarksNavigationalSystemOf() {
+    public MarksNavigationalSystemOfType getMarksNavigationalSystemOf() {
         return marksNavigationalSystemOf;
     }
 
@@ -108,7 +108,7 @@ public class Topmark extends Equipment {
      *
      * @param marksNavigationalSystemOf the marks navigational system of
      */
-    public void setMarksNavigationalSystemOf(S125MarksNavigationalSystemOf marksNavigationalSystemOf) {
+    public void setMarksNavigationalSystemOf(MarksNavigationalSystemOfType marksNavigationalSystemOf) {
         this.marksNavigationalSystemOf = marksNavigationalSystemOf;
     }
 
@@ -117,7 +117,7 @@ public class Topmark extends Equipment {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -126,7 +126,7 @@ public class Topmark extends Equipment {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 

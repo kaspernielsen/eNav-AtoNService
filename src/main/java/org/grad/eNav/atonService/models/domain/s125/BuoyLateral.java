@@ -16,8 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfLateralMark;
-
+import _int.iala_aism.s125.gml._0_0.CategoryOfLateralMarkType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -30,21 +29,21 @@ import jakarta.persistence.Enumerated;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125BuoyLateralType
+ * @see _int.iala_aism.s125.gml._0_0.BuoyLateralType
  */
 @Entity
 public class BuoyLateral extends GenericBuoy {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfLateralMark categoryOfLateralMark;
+    private CategoryOfLateralMarkType categoryOfLateralMark;
 
     /**
      * Gets category of lateral mark.
      *
      * @return the category of lateral mark
      */
-    public S125CategoryOfLateralMark getCategoryOfLateralMark() {
+    public CategoryOfLateralMarkType getCategoryOfLateralMark() {
         return categoryOfLateralMark;
     }
 
@@ -53,7 +52,7 @@ public class BuoyLateral extends GenericBuoy {
      *
      * @param categoryOfLateralMark the category of lateral mark
      */
-    public void setCategoryOfLateralMark(S125CategoryOfLateralMark categoryOfLateralMark) {
+    public void setCategoryOfLateralMark(CategoryOfLateralMarkType categoryOfLateralMark) {
         this.categoryOfLateralMark = categoryOfLateralMark;
     }
 }

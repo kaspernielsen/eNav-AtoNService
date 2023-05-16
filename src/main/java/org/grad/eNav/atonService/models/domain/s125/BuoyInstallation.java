@@ -16,8 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125CategoryOfInstallationBuoy;
-
+import _int.iala_aism.s125.gml._0_0.CategoryOfInstallationBuoyType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -30,21 +29,21 @@ import jakarta.persistence.Enumerated;
  * {@link GenericBuoy} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125BuoyInstallationType
+ * @see _int.iala_aism.s125.gml._0_0.BuoyInstallationType
  */
 @Entity
 public class BuoyInstallation extends GenericBuoy {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125CategoryOfInstallationBuoy categoryOfInstallationBuoy;
+    private CategoryOfInstallationBuoyType categoryOfInstallationBuoy;
 
     /**
      * Gets category of installation buoy.
      *
      * @return the category of installation buoy
      */
-    public S125CategoryOfInstallationBuoy getCategoryOfInstallationBuoy() {
+    public CategoryOfInstallationBuoyType getCategoryOfInstallationBuoy() {
         return categoryOfInstallationBuoy;
     }
 
@@ -53,7 +52,7 @@ public class BuoyInstallation extends GenericBuoy {
      *
      * @param categoryOfInstallationBuoy the category of installation buoy
      */
-    public void setCategoryOfInstallationBuoy(S125CategoryOfInstallationBuoy categoryOfInstallationBuoy) {
+    public void setCategoryOfInstallationBuoy(CategoryOfInstallationBuoyType categoryOfInstallationBuoy) {
         this.categoryOfInstallationBuoy = categoryOfInstallationBuoy;
     }
 }

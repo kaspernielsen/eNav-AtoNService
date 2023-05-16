@@ -16,9 +16,9 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
+import _int.iala_aism.s125.gml._0_0.Dataset;
 import _int.iala_aism.s125.gml._0_0.MemberType;
-import _int.iala_aism.s125.gml._0_0.S125VirtualAISAidToNavigationType;
+import _int.iala_aism.s125.gml._0_0.VirtualAISAidToNavigationType;
 import _int.iho.s100.gml.base._5_0.CurveProperty;
 import _int.iho.s100.gml.base._5_0.PointProperty;
 import _int.iho.s100.gml.base._5_0.S100SpatialAttributeType;
@@ -71,12 +71,12 @@ class GeometryS125ConverterTest {
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
 
         // Unmarshall it to a G1128 service instance object
-        DataSet dataset = S125Utils.unmarshallS125(xml);
+        Dataset dataset = S125Utils.unmarshallS125(xml);
 
         // Assert the S-125 AidsToNavigation feature information is populated
         assertNotNull(dataset.getImembersAndMembers());
         assertEquals(1, dataset.getImembersAndMembers().size());
-        S125VirtualAISAidToNavigationType resultMember = (S125VirtualAISAidToNavigationType) ((MemberType) dataset.getImembersAndMembers().get(0)).getAbstractFeature().getValue();
+        VirtualAISAidToNavigationType resultMember = (VirtualAISAidToNavigationType) ((MemberType) dataset.getImembersAndMembers().get(0)).getAbstractFeature().getValue();
 
         // Convert to JTS geometry
         Geometry result = this.geometryS125Converter.convertToGeometry(resultMember);
@@ -109,10 +109,10 @@ class GeometryS125ConverterTest {
         // Make sure the result looks OK
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertTrue(result.get(0) instanceof S125VirtualAISAidToNavigationType.Geometry);
+        assertTrue(result.get(0) instanceof VirtualAISAidToNavigationType.Geometry);
 
         // Make sure the point property looks OK
-        PointProperty pointProperty = ((S125VirtualAISAidToNavigationType.Geometry) result.get(0)).getPointProperty();
+        PointProperty pointProperty = ((VirtualAISAidToNavigationType.Geometry) result.get(0)).getPointProperty();
         assertNotNull(pointProperty.getPoint());
         assertNotNull(pointProperty.getPoint().getPos());
         assertNotNull(pointProperty.getPoint().getPos().getValue());

@@ -20,7 +20,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
@@ -120,7 +120,7 @@ class SecomSubscriptionServiceTest {
     private SubscriptionRequest newSubscriptionRequest;
     private SubscriptionRequest existingSubscriptionRequest;
     private RemoveSubscription removeSubscription;
-    private S125DataSet s125Dataset;
+    private S125Dataset s125Dataset;
     private DatasetContent datasetContent;
 
     /**
@@ -154,7 +154,7 @@ class SecomSubscriptionServiceTest {
         this.removeSubscription.setSubscriptionIdentifier(this.existingSubscriptionRequest.getUuid());
 
         // Create a new AtoN message
-        this.s125Dataset = new S125DataSet("S-125 Dataset");
+        this.s125Dataset = new S125Dataset("S-125 Dataset");
         this.s125Dataset.setUuid(UUID.randomUUID());
         this.s125Dataset.setGeometry(factory.createPoint(new Coordinate(52.98, 1.28)));
         this.s125Dataset.setCreatedAt(LocalDateTime.now());
@@ -210,7 +210,7 @@ class SecomSubscriptionServiceTest {
         doNothing().when(this.secomSubscriptionService).sendToSubscription(any(), any());
 
         // Create a message to be handled
-        Message<S125DataSet> message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
+        Message<S125Dataset> message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                 .map(builder -> builder.setHeader("deletion", false))
                 .map(MessageBuilder::build)
@@ -250,7 +250,7 @@ class SecomSubscriptionServiceTest {
 
         // Verify that we try to update the registered clients
         ArgumentCaptor<SubscriptionRequest> subscriptionRequestArgument = ArgumentCaptor.forClass(SubscriptionRequest.class);
-        ArgumentCaptor<S125DataSet> s125DatasetArgument = ArgumentCaptor.forClass(S125DataSet.class);
+        ArgumentCaptor<S125Dataset> s125DatasetArgument = ArgumentCaptor.forClass(S125Dataset.class);
         verify(this.secomSubscriptionService, times(1)).sendToSubscription(subscriptionRequestArgument.capture(), s125DatasetArgument.capture());
 
         // Verify the arguments
@@ -273,7 +273,7 @@ class SecomSubscriptionServiceTest {
         doReturn(this.existingSubscriptionRequest.getUuid()).when(this.secomSubscriptionService).delete(any());
 
         // Create a message to be handled
-        Message<S125DataSet> message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
+        Message<S125Dataset> message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                 .map(builder -> builder.setHeader("deletion", true))
                 .map(MessageBuilder::build)

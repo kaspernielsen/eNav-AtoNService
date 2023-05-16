@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.models.dtos.s125;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
 import org.grad.eNav.atonService.utils.GeometryJSONSerializer;
 import org.locationtech.jts.geom.Geometry;
@@ -33,7 +34,7 @@ import java.util.UUID;
  * all the fields of the locally persisted class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see org.grad.eNav.atonService.models.domain.s125.S125DataSet
+ * @see S125Dataset
  */
 public class S125DataSetDto {
 

@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.S125Status;
+import _int.iala_aism.s125.gml._0_0.StatusType;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,7 +31,7 @@ import java.math.BigDecimal;
  * {@link AISAidToNavigation} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125PhysicalAISAidToNavigationType
+ * @see _int.iala_aism.s125.gml._0_0.PhysicalAISAidToNavigationType
  */
 @Entity
 public class PhysicalAISAidToNavigation extends AISAidToNavigation {
@@ -42,7 +42,7 @@ public class PhysicalAISAidToNavigation extends AISAidToNavigation {
     private String objectName;
 
     @Enumerated(EnumType.STRING)
-    private S125Status status;
+    private StatusType status;
 
     private BigDecimal estimatedRangeOfTransmission;
 
@@ -92,7 +92,7 @@ public class PhysicalAISAidToNavigation extends AISAidToNavigation {
      *
      * @return the status
      */
-    public S125Status getStatus() {
+    public StatusType getStatus() {
         return status;
     }
 
@@ -101,7 +101,7 @@ public class PhysicalAISAidToNavigation extends AISAidToNavigation {
      *
      * @param status the status
      */
-    public void setStatus(S125Status status) {
+    public void setStatus(StatusType status) {
         this.status = status;
     }
 

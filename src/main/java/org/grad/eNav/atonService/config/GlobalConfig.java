@@ -16,18 +16,14 @@
 
 package org.grad.eNav.atonService.config;
 
-import _int.iala_aism.s125.gml._0_0.DataSet;
-import _int.iala_aism.s125.gml._0_0.S125AidsToNavigationType;
-import _int.iho.s100.gml.base._5_0.CurveProperty;
-import _int.iho.s100.gml.base._5_0.PointProperty;
-import _int.iho.s100.gml.base._5_0.S100SpatialAttributeType;
-import _int.iho.s100.gml.base._5_0.SurfaceProperty;
+import _int.iala_aism.s125.gml._0_0.Dataset;
+import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
-import org.grad.eNav.atonService.models.domain.s125.S125DataSet;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
@@ -46,11 +42,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -126,13 +118,13 @@ public class GlobalConfig {
                     .implicitMappings()
                     .addMappings(mapper -> {
                         mapper.skip(AidsToNavigation::setId); // We don't know if the ID is correct so skip it
-                        mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((S125AidsToNavigationType) ctx.getSource())))
+                        mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((AidsToNavigationType) ctx.getSource())))
                                 .map(src-> src, AidsToNavigation::setGeometry);
                     });
             modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
                     .implicitMappings()
                     .addMappings(mapper -> {
-                        mapper.map(AidsToNavigation::getId, S125AidsToNavigationType::setId);
+                        mapper.map(AidsToNavigation::getId, AidsToNavigationType::setId);
                         mapper.using(ctx -> new GeometryS125Converter().convertFromGeometry((AidsToNavigation) ctx.getSource()))
                                 .map(src -> src, (dest, val) -> {
                                     try {
@@ -193,8 +185,8 @@ public class GlobalConfig {
         final String datasetTitle = CaseUtils.toCamelCase("AtoN Dataset for " + atons.stream()
                 .map(AidsToNavigation::getAtonNumber)
                 .collect(Collectors.joining(" ")), true, ' ');
-        final S125DataSet s125Dataset = new S125DataSet(datasetTitle);
-        final DataSet dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atons);
+        final S125Dataset s125Dataset = new S125Dataset(datasetTitle);
+        final Dataset dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atons);
         try {
             return S125Utils.marshalS125(dataset);
         } catch (JAXBException ex) {

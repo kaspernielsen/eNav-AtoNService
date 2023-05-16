@@ -32,50 +32,50 @@ import java.util.List;
  * {@link StructureObject} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125OffshorePlatformType
+ * @see _int.iala_aism.s125.gml._0_0.OffshorePlatformType
  */
 @Entity
 public class OffshorePlatform extends StructureObject {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125CategoryOfOffshorePlatform.class)
-    private List<S125CategoryOfOffshorePlatform> categoryOfOffshorePlatforms;
+    @ElementCollection(targetClass = CategoryOfOffshorePlatformType.class)
+    private List<CategoryOfOffshorePlatformType> categoryOfOffshorePlatforms;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Colour.class)
-    private List<S125Colour> colours;
+    @ElementCollection(targetClass = ColourType.class)
+    private List<ColourType> colours;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125ColourPattern.class)
-    private List<S125ColourPattern> colourPatterns;
+    @ElementCollection(targetClass = ColourPatternType.class)
+    private List<ColourPatternType> colourPatterns;
 
     @Enumerated(EnumType.STRING)
-    private S125Condition condition;
+    private ConditionType condition;
 
     @Enumerated(EnumType.STRING)
-    private S125RadarConspicuous radarConspicuous;
+    private RadarConspicuousType radarConspicuous;
 
-    private S125VisuallyConspicuous visuallyConspicuous;
+    private VisualProminenceType visuallyConspicuous;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125NatureOfConstruction.class)
-    private List<S125NatureOfConstruction> natureOfConstructions;
+    @ElementCollection(targetClass = NatureOfConstructionType.class)
+    private List<NatureOfConstructionType> natureOfConstructions;
 
     private String objectNameInNationalLanguage;
 
     private String objectName;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     /**
      * Gets category of offshore platforms.
      *
      * @return the category of offshore platforms
      */
-    public List<S125CategoryOfOffshorePlatform> getCategoryOfOffshorePlatforms() {
+    public List<CategoryOfOffshorePlatformType> getCategoryOfOffshorePlatforms() {
         return categoryOfOffshorePlatforms;
     }
 
@@ -84,7 +84,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @param categoryOfOffshorePlatforms the category of offshore platforms
      */
-    public void setCategoryOfOffshorePlatforms(List<S125CategoryOfOffshorePlatform> categoryOfOffshorePlatforms) {
+    public void setCategoryOfOffshorePlatforms(List<CategoryOfOffshorePlatformType> categoryOfOffshorePlatforms) {
         this.categoryOfOffshorePlatforms = categoryOfOffshorePlatforms;
     }
 
@@ -93,7 +93,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @return the colours
      */
-    public List<S125Colour> getColours() {
+    public List<ColourType> getColours() {
         return colours;
     }
 
@@ -102,7 +102,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @param colours the colours
      */
-    public void setColours(List<S125Colour> colours) {
+    public void setColours(List<ColourType> colours) {
         this.colours = colours;
     }
 
@@ -111,7 +111,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @return the colour patterns
      */
-    public List<S125ColourPattern> getColourPatterns() {
+    public List<ColourPatternType> getColourPatterns() {
         return colourPatterns;
     }
 
@@ -120,7 +120,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @param colourPatterns the colour patterns
      */
-    public void setColourPatterns(List<S125ColourPattern> colourPatterns) {
+    public void setColourPatterns(List<ColourPatternType> colourPatterns) {
         this.colourPatterns = colourPatterns;
     }
 
@@ -129,7 +129,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @return the condition
      */
-    public S125Condition getCondition() {
+    public ConditionType getCondition() {
         return condition;
     }
 
@@ -138,7 +138,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @param condition the condition
      */
-    public void setCondition(S125Condition condition) {
+    public void setCondition(ConditionType condition) {
         this.condition = condition;
     }
 
@@ -147,7 +147,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @return the radar conspicuous
      */
-    public S125RadarConspicuous getRadarConspicuous() {
+    public RadarConspicuousType getRadarConspicuous() {
         return radarConspicuous;
     }
 
@@ -156,7 +156,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @param radarConspicuous the radar conspicuous
      */
-    public void setRadarConspicuous(S125RadarConspicuous radarConspicuous) {
+    public void setRadarConspicuous(RadarConspicuousType radarConspicuous) {
         this.radarConspicuous = radarConspicuous;
     }
 
@@ -165,7 +165,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @return the visually conspicuous
      */
-    public S125VisuallyConspicuous getVisuallyConspicuous() {
+    public VisualProminenceType getVisuallyConspicuous() {
         return visuallyConspicuous;
     }
 
@@ -174,7 +174,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @param visuallyConspicuous the visually conspicuous
      */
-    public void setVisuallyConspicuous(S125VisuallyConspicuous visuallyConspicuous) {
+    public void setVisuallyConspicuous(VisualProminenceType visuallyConspicuous) {
         this.visuallyConspicuous = visuallyConspicuous;
     }
 
@@ -183,7 +183,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @return the nature of constructions
      */
-    public List<S125NatureOfConstruction> getNatureOfConstructions() {
+    public List<NatureOfConstructionType> getNatureOfConstructions() {
         return natureOfConstructions;
     }
 
@@ -192,7 +192,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @param natureOfConstructions the nature of constructions
      */
-    public void setNatureOfConstructions(List<S125NatureOfConstruction> natureOfConstructions) {
+    public void setNatureOfConstructions(List<NatureOfConstructionType> natureOfConstructions) {
         this.natureOfConstructions = natureOfConstructions;
     }
 
@@ -237,7 +237,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -246,7 +246,7 @@ public class OffshorePlatform extends StructureObject {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 }

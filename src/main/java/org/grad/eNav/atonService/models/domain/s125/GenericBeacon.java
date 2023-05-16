@@ -33,37 +33,37 @@ import java.util.List;
  * that we can extend this for each Beacon type.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.S125GenericBeaconType
+ * @see _int.iala_aism.s125.gml._0_0.GenericBeaconType
  */
 @Entity
 public abstract class GenericBeacon extends StructureObject {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private S125BeaconShape beaconShape;
+    private BeaconShapeType beaconShape;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Colour.class)
-    private List<S125Colour> colours;
+    @ElementCollection(targetClass = ColourType.class)
+    private List<ColourType> colours;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125ColourPattern.class)
-    private List<S125ColourPattern> colourPatterns;
+    @ElementCollection(targetClass = ColourPatternType.class)
+    private List<ColourPatternType> colourPatterns;
 
     @Enumerated(EnumType.STRING)
-    private S125RadarConspicuous radarConspicuous;
+    private RadarConspicuousType radarConspicuous;
 
     @Enumerated(EnumType.STRING)
-    private S125VisuallyConspicuous visuallyConspicuous;
+    private VisualProminenceType visuallyConspicuous;
 
     private BigDecimal height;
 
     @Enumerated(EnumType.STRING)
-    private S125MarksNavigationalSystemOf marksNavigationalSystemOf;
+    private MarksNavigationalSystemOfType marksNavigationalSystemOf;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125NatureOfConstruction.class)
-    private List<S125NatureOfConstruction> natureOfConstructions;
+    @ElementCollection(targetClass = NatureOfConstructionType.class)
+    private List<NatureOfConstructionType> natureOfConstructions;
 
     private BigDecimal verticalLength;
 
@@ -72,15 +72,15 @@ public abstract class GenericBeacon extends StructureObject {
     private String objectName;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = S125Status.class)
-    private List<S125Status> statuses;
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     /**
      * Gets beacon shape.
      *
      * @return the beacon shape
      */
-    public S125BeaconShape getBeaconShape() {
+    public BeaconShapeType getBeaconShape() {
         return beaconShape;
     }
 
@@ -89,7 +89,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @param beaconShape the beacon shape
      */
-    public void setBeaconShape(S125BeaconShape beaconShape) {
+    public void setBeaconShape(BeaconShapeType beaconShape) {
         this.beaconShape = beaconShape;
     }
 
@@ -98,7 +98,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @return the colours
      */
-    public List<S125Colour> getColours() {
+    public List<ColourType> getColours() {
         return colours;
     }
 
@@ -107,7 +107,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @param colours the colours
      */
-    public void setColours(List<S125Colour> colours) {
+    public void setColours(List<ColourType> colours) {
         this.colours = colours;
     }
 
@@ -116,7 +116,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @return the colour patterns
      */
-    public List<S125ColourPattern> getColourPatterns() {
+    public List<ColourPatternType> getColourPatterns() {
         return colourPatterns;
     }
 
@@ -125,7 +125,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @param colourPatterns the colour patterns
      */
-    public void setColourPatterns(List<S125ColourPattern> colourPatterns) {
+    public void setColourPatterns(List<ColourPatternType> colourPatterns) {
         this.colourPatterns = colourPatterns;
     }
 
@@ -134,7 +134,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @return the radar conspicuous
      */
-    public S125RadarConspicuous getRadarConspicuous() {
+    public RadarConspicuousType getRadarConspicuous() {
         return radarConspicuous;
     }
 
@@ -143,7 +143,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @param radarConspicuous the radar conspicuous
      */
-    public void setRadarConspicuous(S125RadarConspicuous radarConspicuous) {
+    public void setRadarConspicuous(RadarConspicuousType radarConspicuous) {
         this.radarConspicuous = radarConspicuous;
     }
 
@@ -152,7 +152,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @return the visually conspicuous
      */
-    public S125VisuallyConspicuous getVisuallyConspicuous() {
+    public VisualProminenceType getVisuallyConspicuous() {
         return visuallyConspicuous;
     }
 
@@ -161,7 +161,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @param visuallyConspicuous the visually conspicuous
      */
-    public void setVisuallyConspicuous(S125VisuallyConspicuous visuallyConspicuous) {
+    public void setVisuallyConspicuous(VisualProminenceType visuallyConspicuous) {
         this.visuallyConspicuous = visuallyConspicuous;
     }
 
@@ -188,7 +188,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @return the marks navigational system of
      */
-    public S125MarksNavigationalSystemOf getMarksNavigationalSystemOf() {
+    public MarksNavigationalSystemOfType getMarksNavigationalSystemOf() {
         return marksNavigationalSystemOf;
     }
 
@@ -197,7 +197,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @param marksNavigationalSystemOf the marks navigational system of
      */
-    public void setMarksNavigationalSystemOf(S125MarksNavigationalSystemOf marksNavigationalSystemOf) {
+    public void setMarksNavigationalSystemOf(MarksNavigationalSystemOfType marksNavigationalSystemOf) {
         this.marksNavigationalSystemOf = marksNavigationalSystemOf;
     }
 
@@ -206,7 +206,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @return the nature of constructions
      */
-    public List<S125NatureOfConstruction> getNatureOfConstructions() {
+    public List<NatureOfConstructionType> getNatureOfConstructions() {
         return natureOfConstructions;
     }
 
@@ -215,7 +215,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @param natureOfConstructions the nature of constructions
      */
-    public void setNatureOfConstructions(List<S125NatureOfConstruction> natureOfConstructions) {
+    public void setNatureOfConstructions(List<NatureOfConstructionType> natureOfConstructions) {
         this.natureOfConstructions = natureOfConstructions;
     }
 
@@ -278,7 +278,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @return the statuses
      */
-    public List<S125Status> getStatuses() {
+    public List<StatusType> getStatuses() {
         return statuses;
     }
 
@@ -287,7 +287,7 @@ public abstract class GenericBeacon extends StructureObject {
      *
      * @param statuses the statuses
      */
-    public void setStatuses(List<S125Status> statuses) {
+    public void setStatuses(List<StatusType> statuses) {
         this.statuses = statuses;
     }
 
