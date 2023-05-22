@@ -35,7 +35,7 @@ import java.util.List;
  * @see _int.iala_aism.s125.gml._0_0.LightFloatType
  */
 @Entity
-public class LightFloat extends AidsToNavigation {
+public class LightFloat extends StructureObject {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
