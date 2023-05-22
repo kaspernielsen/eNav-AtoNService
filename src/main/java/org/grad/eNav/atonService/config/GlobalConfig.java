@@ -16,14 +16,12 @@
 
 package org.grad.eNav.atonService.config;
 
-import _int.iala_aism.s125.gml._0_0.Dataset;
 import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
+import _int.iala_aism.s125.gml._0_0.Dataset;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
-import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
@@ -43,7 +41,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.beans.PropertyDescriptor;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -114,6 +114,7 @@ public class GlobalConfig {
             if(atonType == S125AtonTypes.UNKNOWN) {
                 continue;
             }
+
             modelMapper.createTypeMap(atonType.getS125Class(), atonType.getLocalClass())
                     .implicitMappings()
                     .addMappings(mapper -> {
@@ -121,6 +122,23 @@ public class GlobalConfig {
                         mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((AidsToNavigationType) ctx.getSource())))
                                 .map(src-> src, AidsToNavigation::setGeometry);
                     });
+
+            // For structures, don't map the children
+            if(atonType.isStructure()) {
+                modelMapper.typeMap(atonType.getS125Class(), atonType.getLocalStructureClass())
+                        .addMappings(mapper -> {
+                            mapper.skip(StructureObject::setChildren);
+                        });
+            }
+
+            // For equipment, don't map the parent
+            if(atonType.isEquipment()) {
+                modelMapper.typeMap(atonType.getS125Class(), atonType.getLocalEquipmentClass())
+                        .addMappings(mapper -> {
+                            mapper.skip(Equipment::setParent);
+                        });
+            }
+
             modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
                     .implicitMappings()
                     .addMappings(mapper -> {
