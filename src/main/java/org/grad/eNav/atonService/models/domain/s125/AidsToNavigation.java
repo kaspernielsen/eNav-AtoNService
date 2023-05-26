@@ -110,21 +110,6 @@ public abstract class AidsToNavigation implements Serializable {
     private Set<Association> associations;
 
     /**
-     * This function takes place in before removing this entity from the
-     * database. It basically removes this now owning side from the relevant
-     * links.
-     */
-    @PreRemove
-    private void removeAidsToNavigationLinks() {
-        for (Aggregation aggregation: this.getAggregations()) {
-            aggregation.getPeers().remove(this);
-        }
-        for (Association association: this.getAssociations()) {
-            association.getPeers().remove(this);
-        }
-    }
-
-    /**
      * Gets id.
      *
      * @return the id

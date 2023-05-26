@@ -29,7 +29,9 @@ import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.models.domain.s125.Aggregation;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.Association;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.AidsToNavigationRepo;
 import org.hibernate.search.backend.lucene.LuceneExtension;
@@ -215,7 +217,7 @@ public class AidsToNavigationService {
      */
     @Transactional
     public AidsToNavigation save(AidsToNavigation aidsToNavigation) {
-        log.debug("Request to save Aids to Navigation : {}", aidsToNavigation);
+        log.debug("Request to save Aid to Navigation : {}", aidsToNavigation);
 
         // Update the entity ID if the Code ID was found
         this.aidsToNavigationRepo.findByAtonNumber(aidsToNavigation.getAtonNumber())
@@ -224,7 +226,7 @@ public class AidsToNavigationService {
         // Now save for each type
         final AidsToNavigation saved = this.aidsToNavigationRepo.save(aidsToNavigation);
 
-        // Update the associations and aggregations
+        // Update the associations and aggregations links
         saved.setAggregations(this.aggregationService.updateAidsToNavigationAggregations(saved.getAtonNumber(), aidsToNavigation.getAggregations()));
         saved.setAssociations(this.associationService.updateAidsToNavigationAssociations(saved.getAtonNumber(), aidsToNavigation.getAssociations()));
 
@@ -243,9 +245,21 @@ public class AidsToNavigationService {
 
         // Make sure the station node exists
         final AidsToNavigation aidsToNavigation = this.aidsToNavigationRepo.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(String.format("No Aids to Navigation found for the provided ID: %d", id)));
+                .orElseThrow(() -> new DataNotFoundException(String.format("No Aid to Navigation found for the provided ID: %d", id)));
 
-        // Now delete the station node
+        // Update the associations and aggregations links and clean up
+        aidsToNavigation.getAggregations().stream()
+                .peek(aggr -> aggr.getPeers().remove(aidsToNavigation))
+                .filter(aggr -> aggr.getPeers().isEmpty())
+                .map(Aggregation::getId)
+                .forEach(this.aggregationService::delete);
+        aidsToNavigation.getAssociations().stream()
+                .peek(asso -> asso.getPeers().remove(aidsToNavigation))
+                .filter(asso -> asso.getPeers().isEmpty())
+                .map(Association::getId)
+                .forEach(this.associationService::delete);
+
+        // Now delete the aid to navigation
         this.aidsToNavigationRepo.delete(aidsToNavigation);
 
         // And return the object for AOP
@@ -260,11 +274,11 @@ public class AidsToNavigationService {
     @LogDataset
     @Transactional
     public AidsToNavigation deleteByAtonNumber(String atonNumber) throws DataNotFoundException {
-        log.debug("Request to delete ids to Navigation with AtoN number : {}", atonNumber);
+        log.debug("Request to delete Aid to Navigation with AtoN number : {}", atonNumber);
         BigInteger id = this.aidsToNavigationRepo.findByAtonNumber(atonNumber)
                 .map(AidsToNavigation::getId)
                 .orElseThrow(() ->
-                        new DataNotFoundException(String.format("No Aids to Navigation found for the provided AtoN number: %s", atonNumber))
+                        new DataNotFoundException(String.format("No Aid to Navigation found for the provided AtoN number: %s", atonNumber))
                 );
         return this.delete(id);
     }
