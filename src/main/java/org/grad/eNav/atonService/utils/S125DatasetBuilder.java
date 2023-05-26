@@ -91,12 +91,37 @@ public class S125DatasetBuilder {
         //====================================================================//
         //                      DATASET MEMBERS SECTION                       //
         //====================================================================//
+        // Add the AtoN members
         Optional.ofNullable(atons)
                 .orElse(Collections.emptyList())
                 .stream()
                 .map(aton -> this.modelMapper.map(aton, S125AtonTypes.fromLocalClass(aton.getClass()).getS125Class()))
                 //.map(aton -> this.s125GMLFactory.createS125AidsToNavigation(aton)) // Causes problems by introducing "xsi:type"
                 .map(this::createJaxbElement)
+                .map(jaxb -> { MemberType m = new MemberType(); m.setAbstractFeature(jaxb); return m; })
+                .forEach(dataset.getImembersAndMembers()::add);
+
+        // Append the aggregations
+        Optional.ofNullable(atons)
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(AidsToNavigation::getAggregations)
+                .flatMap(Set::stream)
+                .distinct()
+                .map(agg -> this.modelMapper.map(agg, AggregationType.class))
+                .map(this.s125GMLFactory::createAggregation)
+                .map(jaxb -> { MemberType m = new MemberType(); m.setAbstractFeature(jaxb); return m; })
+                .forEach(dataset.getImembersAndMembers()::add);
+
+        // Append the associations
+        Optional.ofNullable(atons)
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(AidsToNavigation::getAssociations)
+                .flatMap(Set::stream)
+                .distinct()
+                .map(ass -> this.modelMapper.map(ass, AssociationType.class))
+                .map(this.s125GMLFactory::createAssociation)
                 .map(jaxb -> { MemberType m = new MemberType(); m.setAbstractFeature(jaxb); return m; })
                 .forEach(dataset.getImembersAndMembers()::add);
 

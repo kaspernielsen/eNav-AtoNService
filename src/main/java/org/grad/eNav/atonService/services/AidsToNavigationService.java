@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.services;
 
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -48,7 +49,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -71,6 +71,18 @@ public class AidsToNavigationService {
      */
     @Autowired
     EntityManager entityManager;
+
+    /**
+     * The Aggregation Service.
+     */
+    @Autowired
+    AggregationService aggregationService;
+
+    /**
+     * The Association Service.
+     */
+    @Autowired
+    AssociationService associationService;
 
     /**
      * The Generic Aids to Navigation Repo.
@@ -210,7 +222,14 @@ public class AidsToNavigationService {
                 .ifPresent(aton -> aidsToNavigation.setId(aton.getId()));
 
         // Now save for each type
-        return this.aidsToNavigationRepo.save(aidsToNavigation);
+        final AidsToNavigation saved = this.aidsToNavigationRepo.save(aidsToNavigation);
+
+        // Update the associations and aggregations
+        saved.setAggregations(this.aggregationService.updateAidsToNavigationAggregations(saved.getAtonNumber(), aidsToNavigation.getAggregations()));
+        saved.setAssociations(this.associationService.updateAidsToNavigationAssociations(saved.getAtonNumber(), aidsToNavigation.getAssociations()));
+
+        // Return the saved entry
+        return saved;
     }
 
     /**

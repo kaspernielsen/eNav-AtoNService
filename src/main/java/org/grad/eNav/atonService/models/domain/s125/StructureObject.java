@@ -16,9 +16,12 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,7 +40,8 @@ import java.util.List;
 public abstract class StructureObject extends AidsToNavigation {
 
     //Class Variables
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
+    @JsonManagedReference
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Equipment> children;
 
     /**
@@ -46,6 +50,9 @@ public abstract class StructureObject extends AidsToNavigation {
      * @return the children
      */
     public List<Equipment> getChildren() {
+        if (children == null) {
+            children = new ArrayList<>();
+        }
         return children;
     }
 
@@ -55,6 +62,9 @@ public abstract class StructureObject extends AidsToNavigation {
      * @param children the children
      */
     public void setChildren(List<Equipment> children) {
-        this.children = children;
+        this.children = null;
+        if (children!= null) {
+            this.getChildren().addAll(children);
+        }
     }
 }

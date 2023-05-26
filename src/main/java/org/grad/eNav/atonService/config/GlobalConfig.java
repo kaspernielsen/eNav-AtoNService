@@ -16,15 +16,16 @@
 
 package org.grad.eNav.atonService.config;
 
-import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
-import _int.iala_aism.s125.gml._0_0.Dataset;
+import _int.iala_aism.s125.gml._0_0.*;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
+import org.grad.eNav.atonService.models.enums.ReferenceTypeRole;
 import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
+import org.grad.eNav.atonService.utils.ReferenceTypeS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.WKTUtil;
 import org.grad.eNav.s125.utils.S125Utils;
@@ -142,7 +143,8 @@ public class GlobalConfig {
             modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
                     .implicitMappings()
                     .addMappings(mapper -> {
-                        mapper.map(AidsToNavigation::getId, AidsToNavigationType::setId);
+                        mapper.using(ctx -> "ID-ATON-" + ((AidsToNavigation) ctx.getSource()).getId())
+                                .map(src -> src, AidsToNavigationType::setId);
                         mapper.using(ctx -> new GeometryS125Converter().convertFromGeometry((AidsToNavigation) ctx.getSource()))
                                 .map(src -> src, (dest, val) -> {
                                     try {
@@ -152,7 +154,55 @@ public class GlobalConfig {
                                     }
                                 });
                     });
+
+            // For structures, map the children to reference types
+            if(atonType.isStructure()) {
+                modelMapper.typeMap(atonType.getLocalStructureClass(), atonType.getS125StructureClass())
+                        .addMappings(mapper -> {
+                            mapper.using(ctx -> new ReferenceTypeS125Converter().convertToReferenceTypes(((StructureObject)ctx.getSource()).getChildren(), ReferenceTypeRole.CHILD))
+                                    .map(src-> src, StructureObjectType::setchildren);
+                        });
+            }
+
+            // For equipment, map the parent to single reference type
+            if(atonType.isEquipment()) {
+                modelMapper.typeMap(atonType.getLocalEquipmentClass(), atonType.getS125EquipmentClass())
+                        .addMappings(mapper -> {
+                            mapper.using(ctx -> new ReferenceTypeS125Converter().convertToReferenceType(((Equipment) ctx.getSource()).getParent(), ReferenceTypeRole.PARENT))
+                                    .map(src-> src, EquipmentType::setParent);
+                        });
+            }
         }
+
+        // Create the Aggregation/Association type maps
+        modelMapper.createTypeMap(AggregationType.class, Aggregation.class)
+                .implicitMappings()
+                .addMappings(mapper -> {
+                    mapper.skip(Aggregation::setId); // We don't know if the ID is correct so skip it
+                    mapper.skip(Aggregation::setPeers);
+                });
+        modelMapper.createTypeMap(AssociationType.class, Association.class)
+                .implicitMappings()
+                .addMappings(mapper -> {
+                    mapper.skip(Association::setId); // We don't know if the ID is correct so skip it
+                    mapper.skip(Association::setPeers);
+                });
+        modelMapper.createTypeMap(Aggregation.class, AggregationType.class)
+                .implicitMappings()
+                .addMappings(mapper -> {
+                    mapper.using(ctx -> "ID-AGGR-" + ((Aggregation) ctx.getSource()).getId())
+                            .map(src -> src, AggregationType::setId);
+                    mapper.using(ctx -> new ReferenceTypeS125Converter().convertToReferenceTypes(((Aggregation) ctx.getSource()).getPeers(), ReferenceTypeRole.AGGREGATION))
+                            .map(src-> src, AggregationType::setPeers);
+                });
+        modelMapper.createTypeMap(Association.class, AssociationType.class)
+                .implicitMappings()
+                .addMappings(mapper -> {
+                    mapper.using(ctx -> "ID-ASSO-" + ((Association) ctx.getSource()).getId())
+                            .map(src -> src, AssociationType::setId);
+                    mapper.using(ctx -> new ReferenceTypeS125Converter().convertToReferenceTypes(((Association) ctx.getSource()).getPeers(), ReferenceTypeRole.ASSOCIATION))
+                            .map(src-> src, AssociationType::setPeers);
+                });
 
         // Create the Base Aids to Navigation type map for the DTOs
         modelMapper.createTypeMap(AidsToNavigation.class, AidsToNavigationDto.class)

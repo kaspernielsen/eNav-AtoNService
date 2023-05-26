@@ -75,7 +75,7 @@ class GeometryS125ConverterTest {
 
         // Assert the S-125 AidsToNavigation feature information is populated
         assertNotNull(dataset.getImembersAndMembers());
-        assertEquals(1, dataset.getImembersAndMembers().size());
+        assertEquals(3, dataset.getImembersAndMembers().size());
         VirtualAISAidToNavigationType resultMember = (VirtualAISAidToNavigationType) ((MemberType) dataset.getImembersAndMembers().get(0)).getAbstractFeature().getValue();
 
         // Convert to JTS geometry

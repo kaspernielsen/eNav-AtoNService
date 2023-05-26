@@ -26,9 +26,7 @@ import org.geotools.filter.FidFilterImpl;
 import org.geotools.filter.text.cql2.CQLException;
 import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.GeomesaS125;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
-import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
@@ -204,6 +202,9 @@ class S125GDSListenerTest {
         // Translate our S125Node to a feature list
         List<SimpleFeature> simpleFeatureList = this.geomesaData.getFeatureData(Collections.singletonList(this.s125Node));
 
+        // Mock the service calls
+        doAnswer((inv) -> inv.getArgument(0)).when(this.aidsToNavigationService).save(any());
+
         // Mock a new event
         KafkaFeatureEvent.KafkaFeatureChanged featureEvent = mock(KafkaFeatureEvent.KafkaFeatureChanged.class);
         doReturn(FeatureEvent.Type.CHANGED).when(featureEvent).getType();
@@ -274,6 +275,7 @@ class S125GDSListenerTest {
         AidsToNavigation aidsToNavigation = new BeaconCardinal();
         aidsToNavigation.setGeometry(this.geometryFactory.createPoint(new Coordinate(0, 0)));
         doReturn(Optional.of(aidsToNavigation)).when(this.aidsToNavigationService).findByAtonNumber(any());
+        doReturn(aidsToNavigation).when(this.aidsToNavigationService).delete(any());
 
         // Mock a new event
         FidFilterImpl filter = mock(FidFilterImpl.class);
@@ -296,4 +298,34 @@ class S125GDSListenerTest {
         verify(this.datasetService, times(1)).save(eq(this.s125DataSet));
     }
 
+    /**
+     * Test that we can correctly parse the S-125 datasets including aggregation
+     * and association links.
+     */
+    @Test
+    void testParseS125Dataset() throws IOException {
+        // Init and perform the component call
+        this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry);
+        this.s125GDSListener.modelMapper = new GlobalConfig().modelMapper();
+
+        // Parse the S-125 dataset
+        List<? extends AidsToNavigation> aidsToNavigation = this.s125GDSListener.parseS125Dataset(this.s125Node)
+                .toList();
+
+        // Make sure it looks fine
+        assertNotNull(aidsToNavigation);
+        assertFalse(aidsToNavigation.isEmpty());
+        assertEquals(1, aidsToNavigation.size());
+        assertEquals(VirtualAISAidToNavigation.class, aidsToNavigation.get(0).getClass());
+        assertNotNull(aidsToNavigation.get(0).getAggregations());
+        assertFalse(aidsToNavigation.get(0).getAggregations().isEmpty());
+        assertEquals(1, aidsToNavigation.get(0).getAggregations().size());
+        assertNotNull(aidsToNavigation.get(0).getAggregations().stream().findFirst().map(Aggregation::getPeers).orElse(null));
+        assertEquals(1, aidsToNavigation.get(0).getAggregations().stream().findFirst().map(Aggregation::getPeers).stream().count());
+        assertNotNull(aidsToNavigation.get(0).getAssociations());
+        assertFalse(aidsToNavigation.get(0).getAggregations().isEmpty());
+        assertEquals(1, aidsToNavigation.get(0).getAggregations().size());
+        assertNotNull(aidsToNavigation.get(0).getAggregations().stream().findFirst().map(Aggregation::getPeers).orElse(null));
+        assertEquals(1, aidsToNavigation.get(0).getAggregations().stream().findFirst().map(Aggregation::getPeers).stream().count());
+    }
 }

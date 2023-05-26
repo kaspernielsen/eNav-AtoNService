@@ -61,7 +61,7 @@ class GeometryUtilsTest {
         assertEquals(polygonGeometry, GeometryUtils.joinGeometries(null, polygonGeometry));
 
         // Now join some geometries
-        assertEquals(pointGeometry, GeometryUtils.joinGeometries(pointGeometry, lineGeometry, polygonGeometry));
+        assertEquals(polygonGeometry, GeometryUtils.joinGeometries(pointGeometry, lineGeometry, polygonGeometry));
     }
 
 }

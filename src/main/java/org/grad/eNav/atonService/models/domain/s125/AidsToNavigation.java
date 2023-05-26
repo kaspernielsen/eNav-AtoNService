@@ -16,8 +16,10 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
@@ -28,10 +30,12 @@ import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.locationtech.jts.geom.Geometry;
 
-import jakarta.persistence.*;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The S-125 Aids to Navigation Entity Class.
@@ -47,7 +51,7 @@ import java.util.List;
 @Cacheable
 @Indexed
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public abstract class AidsToNavigation {
+public abstract class AidsToNavigation implements Serializable {
 
     // Class Variables
     @Id
@@ -88,9 +92,6 @@ public abstract class AidsToNavigation {
 
     private String textualDescriptionInNationalLanguage;
 
-    @ElementCollection
-    private List<String> seasonalActionRequireds;
-
     private BigInteger scaleMinimum;
 
     private String pictorialRepresentation;
@@ -99,6 +100,29 @@ public abstract class AidsToNavigation {
     @JsonDeserialize(using = GeometryJSONDeserializer.class)
     @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     private Geometry geometry;
+
+    @JsonManagedReference
+    @ManyToMany(mappedBy = "peers")
+    private Set<Aggregation> aggregations;
+
+    @JsonManagedReference
+    @ManyToMany(mappedBy = "peers")
+    private Set<Association> associations;
+
+    /**
+     * This function takes place in before removing this entity from the
+     * database. It basically removes this now owning side from the relevant
+     * links.
+     */
+    @PreRemove
+    private void removeAidsToNavigationLinks() {
+        for (Aggregation aggregation: this.getAggregations()) {
+            aggregation.getPeers().remove(this);
+        }
+        for (Association association: this.getAssociations()) {
+            association.getPeers().remove(this);
+        }
+    }
 
     /**
      * Gets id.
@@ -299,24 +323,6 @@ public abstract class AidsToNavigation {
     }
 
     /**
-     * Gets seasonal action requireds.
-     *
-     * @return the seasonal action requireds
-     */
-    public List<String> getSeasonalActionRequireds() {
-        return seasonalActionRequireds;
-    }
-
-    /**
-     * Sets seasonal action requireds.
-     *
-     * @param seasonalActionRequireds the seasonal action requireds
-     */
-    public void setSeasonalActionRequireds(List<String> seasonalActionRequireds) {
-        this.seasonalActionRequireds = seasonalActionRequireds;
-    }
-
-    /**
      * Gets scale minimum.
      *
      * @return the scale minimum
@@ -368,5 +374,53 @@ public abstract class AidsToNavigation {
      */
     public void setGeometry(Geometry geometry) {
         this.geometry = geometry;
+    }
+
+    /**
+     * Gets aggregations.
+     *
+     * @return the aggregations
+     */
+    public Set<Aggregation> getAggregations() {
+        if (aggregations == null) {
+            aggregations = new HashSet<>();
+        }
+        return aggregations;
+    }
+
+    /**
+     * Sets aggregations.
+     *
+     * @param aggregations the aggregations
+     */
+    public void setAggregations(Set<Aggregation> aggregations) {
+        this.aggregations = null;
+        if (aggregations!= null) {
+            this.getAggregations().addAll(aggregations);
+        }
+    }
+
+    /**
+     * Gets associations.
+     *
+     * @return the associations
+     */
+    public Set<Association> getAssociations() {
+        if (associations == null) {
+            associations = new HashSet<>();
+        }
+        return associations;
+    }
+
+    /**
+     * Sets associations.
+     *
+     * @param associations the associations
+     */
+    public void setAssociations(Set<Association> associations) {
+        this.associations = null;
+        if (associations!= null) {
+            this.getAssociations().addAll(associations);
+        }
     }
 }

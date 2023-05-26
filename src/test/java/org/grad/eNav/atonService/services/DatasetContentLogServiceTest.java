@@ -18,7 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
-import org.grad.eNav.atonService.models.domain.DatasetType;
+import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.junit.jupiter.api.BeforeEach;

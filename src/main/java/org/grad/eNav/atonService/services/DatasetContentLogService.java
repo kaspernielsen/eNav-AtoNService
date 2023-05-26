@@ -20,7 +20,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
-import org.grad.eNav.atonService.models.domain.DatasetType;
+import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.springframework.beans.factory.annotation.Autowired;

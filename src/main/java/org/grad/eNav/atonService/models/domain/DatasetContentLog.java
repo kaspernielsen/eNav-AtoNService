@@ -17,6 +17,7 @@
 package org.grad.eNav.atonService.models.domain;
 
 import jakarta.persistence.*;
+import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.annotation.CreatedDate;

@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 
@@ -35,6 +36,7 @@ import jakarta.persistence.ManyToOne;
 public abstract class Equipment extends AidsToNavigation {
 
     // Class Variables
+    @JsonBackReference
     @ManyToOne
     private StructureObject parent;
 
