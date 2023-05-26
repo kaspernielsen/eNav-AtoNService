@@ -45,7 +45,7 @@ public class GeometryUtils {
             } else if(result == null || geometry == null) {
                 result = Optional.ofNullable(result).orElse(geometry);
             } else {
-                return result.intersection(geometry);
+                result = result.union(geometry);
             }
         }
         return result;

@@ -93,6 +93,32 @@ public enum S125AtonTypes {
     }
 
     /**
+     * Gets local equipment class.
+     *
+     * @return the local equipment class
+     */
+    @SuppressWarnings("unchecked")
+    public Class<? extends EquipmentType> getS125EquipmentClass() {
+        return (Class<? extends EquipmentType>) Optional.of(this)
+                .filter(S125AtonTypes::isEquipment)
+                .map(S125AtonTypes::getS125Class)
+                .orElse(null);
+    }
+
+    /**
+     * Gets local structure class.
+     *
+     * @return the local structure class
+     */
+    @SuppressWarnings("unchecked")
+    public Class<? extends StructureObjectType> getS125StructureClass() {
+        return (Class<? extends StructureObjectType>) Optional.of(this)
+                .filter(S125AtonTypes::isStructure)
+                .map(S125AtonTypes::getS125Class)
+                .orElse(null);
+    }
+
+    /**
      * Gets local class.
      *
      * @return the local class

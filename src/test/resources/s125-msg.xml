@@ -44,4 +44,16 @@
             </ns5:geometry>
         </ns5:VirtualAISAidToNavigation>
     </ns5:member>
+    <ns5:member>
+        <ns5:Aggregation ns1:id="ID002">
+            <ns5:categoryOfAggregation>range system</ns5:categoryOfAggregation>
+            <ns5:peer ns3:arcrole="urn:IALA:S125:roles:aggregation" ns3:href="#ID001" ns3:role="aggregation" ns3:title="urn:mrn:grad:aton:test:corkhole"/>
+        </ns5:Aggregation>
+    </ns5:member>
+    <ns5:member>
+        <ns5:Association ns1:id="ID003">
+            <ns5:categoryOfAssociation>channel markings</ns5:categoryOfAssociation>
+            <ns5:peer ns3:arcrole="urn:IALA:S125:roles:association" ns3:href="#ID001" ns3:role="association" ns3:title="urn:mrn:grad:aton:test:corkhole"/>
+        </ns5:Association>
+    </ns5:member>
 </ns5:Dataset>

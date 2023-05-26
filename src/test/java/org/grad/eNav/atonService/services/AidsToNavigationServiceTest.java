@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.services;
 
+import jakarta.persistence.EntityManager;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
@@ -38,7 +39,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import jakarta.persistence.EntityManager;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,6 +59,18 @@ class AidsToNavigationServiceTest {
     @InjectMocks
     @Spy
     AidsToNavigationService aidsToNavigationService;
+
+    /**
+     * The Aggregation Service mock.
+     */
+    @Mock
+    AggregationService aggregationService;
+
+    /**
+     * The Association Service mock.
+     */
+    @Mock
+    AssociationService associationService;
 
     /**
      * The Entity Manager mock.
@@ -249,6 +261,8 @@ class AidsToNavigationServiceTest {
 
         // Also, that a saving call took place in the repository
         verify(this.aidsToNavigationRepo, times(1)).save(this.newAidsToNavigation);
+        verify(this.aggregationService, times(1)).updateAidsToNavigationAggregations(eq(this.newAidsToNavigation.getAtonNumber()), eq(Collections.emptySet()));
+        verify(this.associationService, times(1)).updateAidsToNavigationAssociations(eq(this.newAidsToNavigation.getAtonNumber()), eq(Collections.emptySet()));
     }
 
     /**

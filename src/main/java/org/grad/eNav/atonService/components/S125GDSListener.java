@@ -16,10 +16,10 @@
 
 package org.grad.eNav.atonService.components;
 
-import _int.iala_aism.s125.gml._0_0.Dataset;
-import _int.iala_aism.s125.gml._0_0.MemberType;
-import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
+import _int.iala_aism.s125.gml._0_0.*;
 import _net.opengis.gml.profiles.AbstractFeatureMemberType;
+import _net.opengis.gml.profiles.AbstractFeatureType;
+import _net.opengis.gml.profiles.ReferenceType;
 import jakarta.annotation.PreDestroy;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
@@ -31,8 +31,7 @@ import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.filter.FidFilterImpl;
 import org.grad.eNav.atonService.models.GeomesaData;
 import org.grad.eNav.atonService.models.GeomesaS125;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
+import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.dtos.S100AbstractNode;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
@@ -52,18 +51,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.function.Predicate.not;
 
 /**
  * The AtoN Geomesa Data Store Listener Class
@@ -167,24 +165,32 @@ public class S125GDSListener implements FeatureListener {
 
         // For feature additions/changes
         if (featureEvent.getType() == FeatureEvent.Type.CHANGED) {
-            // Extract the S-125 message and send it
-            affectedGeometry = Optional.of(featureEvent)
+            // Extract the S-125 information
+            final List<S125Node> s125Nodes = Optional.of(featureEvent)
                     .filter(KafkaFeatureEvent.KafkaFeatureChanged.class::isInstance)
                     .map(KafkaFeatureEvent.KafkaFeatureChanged.class::cast)
                     .map(KafkaFeatureEvent.KafkaFeatureChanged::feature)
                     .filter(this.geomesaData.getSubsetFilter()::evaluate)
                     .map(Collections::singletonList)
                     .map(sl -> new GeomesaS125().retrieveData(sl))
-                    .orElseGet(Collections::emptyList)
-                    .stream()
+                    .orElseGet(Collections::emptyList);
+
+            // Parse the S-125 AtoN entries
+            final List<? extends AidsToNavigation> listOfAtons = s125Nodes.stream()
                     .flatMap(this::parseS125Dataset)
+                    .map(this.aidsToNavigationService::save)
+                    .toList();
+
+            // Extract the S-125 message and send it
+            listOfAtons.stream()
                     .map(MessageBuilder::withPayload)
                     .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                     .map(builder -> builder.setHeader("deletion", false))
                     .map(MessageBuilder::build)
-                    .peek(msg -> this.aidsToNavigationService.save(msg.getPayload()))
-                    .peek(msg -> this.atonPublicationChannel.send(msg))
-                    .map(Message::getPayload)
+                    .forEach(msg -> this.atonPublicationChannel.send(msg));
+
+            // And now calculate the affected geometry of the changes
+            affectedGeometry = listOfAtons.stream()
                     .map(AidsToNavigation::getGeometry)
                     .filter(Objects::nonNull)
                     .reduce(GeometryUtils::joinGeometries)
@@ -192,26 +198,35 @@ public class S125GDSListener implements FeatureListener {
         }
         // For feature deletions,
         else if (featureEvent.getType() == FeatureEvent.Type.REMOVED) {
-            // Extract the S-125 message UID and use it to delete all referencing nodes
-            affectedGeometry = Optional.of(featureEvent)
+            /// Extract the S-125 message UIDs and use it to delete all referencing nodes
+            final Set<String> atonNumbers = Optional.of(featureEvent)
                     .filter(KafkaFeatureEvent.KafkaFeatureRemoved.class::isInstance)
                     .map(KafkaFeatureEvent.KafkaFeatureRemoved.class::cast)
                     .map(KafkaFeatureEvent.KafkaFeatureRemoved::getFilter)
                     .filter(FidFilterImpl.class::isInstance)
                     .map(FidFilterImpl.class::cast)
                     .map(FidFilterImpl::getFidsSet)
-                    .orElse(Collections.emptySet())
-                    .stream()
+                    .orElse(Collections.emptySet());
+
+            // Now delete the selected AtoNs and collect the output
+            final List<? extends AidsToNavigation> listOfAtons = atonNumbers.stream()
                     .map(this.aidsToNavigationService::findByAtonNumber)
-                    .map(aton -> aton.orElse(null))
-                    .filter(Objects::nonNull)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .map(AidsToNavigation::getId)
+                    .map(this.aidsToNavigationService::delete)
+                    .toList();
+
+            // Now delete the selected AtoNs
+            listOfAtons.stream()
                     .map(MessageBuilder::withPayload)
                     .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                     .map(builder -> builder.setHeader("deletion", true))
                     .map(MessageBuilder::build)
-                    .peek(msg -> this.aidsToNavigationService.delete(msg.getPayload().getId()))
-                    .peek(msg -> this.atonDeletionChannel.send(msg))
-                    .map(Message::getPayload)
+                    .forEach(msg -> this.atonDeletionChannel.send(msg));
+
+            // And now calculate the affected geometry of the changes
+            affectedGeometry = listOfAtons.stream()
                     .map(AidsToNavigation::getGeometry)
                     .filter(Objects::nonNull)
                     .reduce(GeometryUtils::joinGeometries)
@@ -233,8 +248,9 @@ public class S125GDSListener implements FeatureListener {
      * @param s125Node  the S-125 dataset node to be processed
      * @return the contained list of Aids to Navigation entries
      */
-    protected Stream<? extends AidsToNavigation> parseS125Dataset(S125Node s125Node){
-        return Optional.of(s125Node)
+    protected Stream<? extends AidsToNavigation> parseS125Dataset(S125Node s125Node) {
+        // Get the S125 node members
+        final List<? extends AbstractFeatureType> members = Optional.of(s125Node)
                 .map(S100AbstractNode::getContent)
                 .map(xml -> {
                     try {
@@ -251,10 +267,150 @@ public class S125GDSListener implements FeatureListener {
                 .map(MemberType.class::cast)
                 .map(MemberType::getAbstractFeature)
                 .map(JAXBElement::getValue)
+                .filter(Objects::nonNull)
+                .filter(obj -> Objects.nonNull(obj.getId()))
+                .toList();
+
+        // Map the individual types to local objects but with the original ID
+        final Map<String, ? extends StructureObject> structureObjectTypeMap = members.stream()
+                .filter(StructureObjectType.class::isInstance)
+                .map(StructureObjectType.class::cast)
+                .collect(Collectors.toMap(
+                        StructureObjectType::getId,
+                        aton -> (StructureObject) this.modelMapper.map(aton, S125AtonTypes.fromS125Class(aton.getClass()).getLocalClass())
+                ));
+        final Map<String, ? extends Equipment> equipmentTypeMap = members.stream()
+                .filter(EquipmentType.class::isInstance)
+                .map(EquipmentType.class::cast)
+                .collect(Collectors.toMap(
+                        EquipmentType::getId,
+                        aton -> (Equipment) this.modelMapper.map(aton, S125AtonTypes.fromS125Class(aton.getClass()).getLocalClass())
+                ));
+        final Map<String, ? extends AidsToNavigation> otherAidsToNavigationMap = members.stream()
                 .filter(AidsToNavigationType.class::isInstance)
                 .map(AidsToNavigationType.class::cast)
-                .map(s125Aton -> this.modelMapper.map(s125Aton, S125AtonTypes.fromS125Class(s125Aton.getClass()).getLocalClass()))
-                .filter(Objects::nonNull);
+                .filter(not(StructureObjectType.class::isInstance))
+                .filter(not(EquipmentType.class::isInstance))
+                .collect(Collectors.toMap(
+                        AidsToNavigationType::getId,
+                        aton -> this.modelMapper.map(aton, S125AtonTypes.fromS125Class(aton.getClass()).getLocalClass())
+                ));
+
+        // Combine all elements to a single map
+        final Map<String, AidsToNavigation> combinedAidsToNavigationMap = new HashMap<>();
+        combinedAidsToNavigationMap.putAll(structureObjectTypeMap);
+        combinedAidsToNavigationMap.putAll(equipmentTypeMap);
+        combinedAidsToNavigationMap.putAll(otherAidsToNavigationMap);
+
+        // Now start building the links to the remaining objects (e.g. aggregations/associations)
+        final Map<String, Aggregation> aggregationsMap = members.stream()
+                .filter(AggregationType.class::isInstance)
+                .map(AggregationType.class::cast)
+                .collect(Collectors.toMap(
+                        AggregationType::getId,
+                        aggr -> {
+                            Aggregation result = this.modelMapper.map(aggr, Aggregation.class);
+                            result.setPeers(aggr.getPeers()
+                                    .stream()
+                                    .map(this::getInternalReference)
+                                    .filter(combinedAidsToNavigationMap::containsKey)
+                                    .map(combinedAidsToNavigationMap::get)
+                                    .collect(Collectors.toSet()));
+                            return result;
+                        }
+                ));
+        final Map<String, Association> associationsMap = members.stream()
+                .filter(AssociationType.class::isInstance)
+                .map(AssociationType.class::cast)
+                .collect(Collectors.toMap(
+                        AssociationType::getId,
+                        asso -> {
+                            Association result = this.modelMapper.map(asso, Association.class);
+                            result.setPeers(asso.getPeers()
+                                    .stream()
+                                    .map(this::getInternalReference)
+                                    .filter(combinedAidsToNavigationMap::containsKey)
+                                    .map(combinedAidsToNavigationMap::get)
+                                    .collect(Collectors.toSet()));
+                            return result;
+                        }
+                ));
+
+        // Now map the S-125 structure objects and add all the associated information
+        try {
+            for (AbstractFeatureType member : members) {
+                //Sanity Check
+                if(Objects.isNull(member)) {
+                    continue;
+                }
+                // Handle structure members
+                if (member instanceof StructureObjectType structure) {
+                    Optional.of(structure)
+                            .map(StructureObjectType::getchildren)
+                            .orElse(Collections.emptyList())
+                            .stream()
+                            .map(this::getInternalReference)
+                            .filter(equipmentTypeMap::containsKey)
+                            .map(equipmentTypeMap::get)
+                            .forEach(e -> e.setParent(structureObjectTypeMap.get(structure.getId())));
+                }
+                // Handle equipment members
+                if (member instanceof EquipmentType equipment) {
+                    Optional.of(equipment)
+                            .map(EquipmentType::getParent)
+                            .map(this::getInternalReference)
+                            .filter(structureObjectTypeMap::containsKey)
+                            .map(structureObjectTypeMap::get)
+                            .map(StructureObject::getChildren)
+                            .ifPresent(l -> l.add(equipmentTypeMap.get(equipment.getId())));
+                }
+                // Handle aggregation members
+                if (member instanceof AggregationType aggregation) {
+                    aggregation.getPeers()
+                            .stream()
+                            .map(this::getInternalReference)
+                            .filter(combinedAidsToNavigationMap::containsKey)
+                            .map(combinedAidsToNavigationMap::get)
+                            .map(AidsToNavigation::getAggregations)
+                            .forEach(aggregations -> aggregations.add(aggregationsMap.get(aggregation.getId())));
+                }
+                // Handle association members
+                if (member instanceof  AssociationType association) {
+                    association.getPeers()
+                            .stream()
+                            .map(this::getInternalReference)
+                            .filter(combinedAidsToNavigationMap::containsKey)
+                            .map(combinedAidsToNavigationMap::get)
+                            .map(AidsToNavigation::getAssociations)
+                            .forEach(associations -> associations.add(associationsMap.get(association.getId())));
+                }
+            }
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+        }
+
+        // And now return the combined populated data
+        return Stream.of(
+                structureObjectTypeMap.values().stream(),
+                equipmentTypeMap.values().stream(),
+                otherAidsToNavigationMap.values().stream()
+        ).flatMap(i -> i);
+    }
+
+    /**
+     * Internal references in S-100 datasets points to an included feature
+     * using its ID with a hash ('#') prefix. This prefix should be removed
+     * to get the actual ID value. This small utility function performs this
+     * exact operation.
+     *
+     * @param referenceType     The reference type object
+     * @return the href of the reference without the hash ('#') prefix
+     */
+    protected String getInternalReference(ReferenceType referenceType) {
+        return Optional.ofNullable(referenceType)
+                .map(ReferenceType::getHref)
+                .map(r -> r.replaceFirst("#",""))
+                .orElse(null);
     }
 
 }

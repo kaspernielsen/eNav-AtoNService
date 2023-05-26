@@ -71,7 +71,7 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
 
         // Get the signature certificate from cKeeper
         final SignatureCertificateDto response = this.cKeeperClient.getSignatureCertificate(
-                this.appName,
+                "aton-service",
                 null,
                 McpEntityType.SERVICE.getValue());
 
