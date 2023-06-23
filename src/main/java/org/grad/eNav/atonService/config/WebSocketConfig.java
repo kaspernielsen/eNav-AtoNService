@@ -21,6 +21,7 @@ import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 /**
  * The WebSocketConfig Class
@@ -62,6 +63,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/"+ this.prefix);
         config.setApplicationDestinationPrefixes("/"+ this.atonDataEndpoint);
+    }
+
+    /**
+     * Increase the limits of the socket transport both in terms of size
+     * and time.
+     *
+     * param registry   The web socket transport registration
+     */
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registry)
+    {
+        registry.setMessageSizeLimit(1000000);
+        registry.setSendBufferSizeLimit(1000000);
+        registry.setSendTimeLimit(100000);
     }
 
     /**
