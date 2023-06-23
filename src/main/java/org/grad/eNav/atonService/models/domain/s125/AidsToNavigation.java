@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -103,11 +104,11 @@ public abstract class AidsToNavigation implements Serializable {
 
     @JsonManagedReference
     @ManyToMany(mappedBy = "peers")
-    private Set<Aggregation> aggregations;
+    private Set<Aggregation> aggregations = new HashSet<>();
 
     @JsonManagedReference
     @ManyToMany(mappedBy = "peers")
-    private Set<Association> associations;
+    private Set<Association> associations = new HashSet<>();
 
     /**
      * Gets id.
@@ -367,9 +368,6 @@ public abstract class AidsToNavigation implements Serializable {
      * @return the aggregations
      */
     public Set<Aggregation> getAggregations() {
-        if (aggregations == null) {
-            aggregations = new HashSet<>();
-        }
         return aggregations;
     }
 
@@ -378,10 +376,11 @@ public abstract class AidsToNavigation implements Serializable {
      *
      * @param aggregations the aggregations
      */
+    @JsonIgnore
     public void setAggregations(Set<Aggregation> aggregations) {
-        this.aggregations = null;
-        if (aggregations!= null) {
-            this.getAggregations().addAll(aggregations);
+        this.aggregations.clear();
+        if (aggregations != null) {
+            this.aggregations.addAll(aggregations);
         }
     }
 
@@ -391,9 +390,6 @@ public abstract class AidsToNavigation implements Serializable {
      * @return the associations
      */
     public Set<Association> getAssociations() {
-        if (associations == null) {
-            associations = new HashSet<>();
-        }
         return associations;
     }
 
@@ -402,10 +398,11 @@ public abstract class AidsToNavigation implements Serializable {
      *
      * @param associations the associations
      */
+    @JsonIgnore
     public void setAssociations(Set<Association> associations) {
-        this.associations = null;
-        if (associations!= null) {
-            this.getAssociations().addAll(associations);
+        this.associations.clear();
+        if (associations != null) {
+            this.associations.addAll(associations);
         }
     }
 }

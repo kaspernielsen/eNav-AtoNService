@@ -16,6 +16,10 @@
 
 package org.grad.eNav.atonService.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
@@ -30,9 +34,6 @@ import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-
 /**
  * The S125 Web-Socket Service Class
  *
@@ -45,6 +46,9 @@ import jakarta.annotation.PreDestroy;
 @Service
 @Slf4j
 public class S125WebSocketService implements MessageHandler {
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     /**
      * The General Destination Prefix
@@ -137,7 +141,12 @@ public class S125WebSocketService implements MessageHandler {
      * @param payload               The payload to be pushed
      */
     private void publishMessage(SimpMessagingTemplate messagingTemplate, String topic, Object payload) {
-        messagingTemplate.convertAndSend(topic, payload);
+        try {
+            String json = this.objectMapper.writeValueAsString(payload);
+            messagingTemplate.convertAndSend(topic, json);
+        } catch (JsonProcessingException ex) {
+            log.error(ex.getMessage());
+        }
     }
 
 }

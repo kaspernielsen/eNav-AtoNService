@@ -21,8 +21,8 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The S-125 Structure Object Entity Class.
@@ -42,17 +42,14 @@ public abstract class StructureObject extends AidsToNavigation {
     //Class Variables
     @JsonManagedReference
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<Equipment> children;
+    private Set<Equipment> children = new HashSet<>();
 
     /**
      * Gets children.
      *
      * @return the children
      */
-    public List<Equipment> getChildren() {
-        if (children == null) {
-            children = new ArrayList<>();
-        }
+    public Set<Equipment> getChildren() {
         return children;
     }
 
@@ -61,10 +58,10 @@ public abstract class StructureObject extends AidsToNavigation {
      *
      * @param children the children
      */
-    public void setChildren(List<Equipment> children) {
-        this.children = null;
+    public void setChildren(Set<Equipment> children) {
+        this.children.clear();
         if (children!= null) {
-            this.getChildren().addAll(children);
+            this.children.addAll(children);
         }
     }
 }
