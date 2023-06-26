@@ -16,7 +16,6 @@
 
 package org.grad.eNav.atonService.services;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
@@ -40,7 +39,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.LinkedHashMap;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -135,21 +133,19 @@ class S125WebSocketServiceTest {
         // Perform the service call
         this.s125WebSocketService.handleMessage(message);
 
-        // Verify that we publish a web-socket message, but only one
+        // Verify that we send a packet to the web-socket and get that message
         ArgumentCaptor<String> topicArgument = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> payLoadArgument = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<AidsToNavigation> payLoadArgument = ArgumentCaptor.forClass(AidsToNavigation.class);
         verify(this.webSocket, times(1)).convertAndSend(topicArgument.capture(), payLoadArgument.capture());
 
         // Verify the message
         assertEquals("/topic/S125", topicArgument.getValue());
         assertNotNull(payLoadArgument.getValue());
-        LinkedHashMap typeReference = this.s125WebSocketService.objectMapper.readValue(payLoadArgument.getValue(), new TypeReference<>() {});
-        assertNotNull(typeReference);
-        assertEquals(this.aidsToNavigation.getId().intValue(), typeReference.get("id"));
-        assertEquals(this.aidsToNavigation.getAtonNumber(), typeReference.get("atonNumber"));
-        assertEquals(this.aidsToNavigation.getIdCode(), typeReference.get("idCode"));
-        assertEquals(this.aidsToNavigation.getTextualDescription(), typeReference.get("textualDescription"));
-        assertEquals(this.aidsToNavigation.getTextualDescriptionInNationalLanguage(), typeReference.get("textualDescriptionInNationalLanguage"));
+        assertEquals(this.aidsToNavigation.getId(), payLoadArgument.getValue().getId());
+        assertEquals(this.aidsToNavigation.getAtonNumber(), payLoadArgument.getValue().getAtonNumber());
+        assertEquals(this.aidsToNavigation.getIdCode(), payLoadArgument.getValue().getIdCode());
+        assertEquals(this.aidsToNavigation.getTextualDescription(), payLoadArgument.getValue().getTextualDescription());
+        assertEquals(this.aidsToNavigation.getTextualDescriptionInNationalLanguage(), payLoadArgument.getValue().getTextualDescriptionInNationalLanguage());
     }
 
     /**
@@ -170,19 +166,17 @@ class S125WebSocketServiceTest {
 
         // Verify that we send a packet to the VDES port and get that packet
         ArgumentCaptor<String> topicArgument = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> payLoadArgument = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<AidsToNavigation> payLoadArgument = ArgumentCaptor.forClass(AidsToNavigation.class);
         verify(this.webSocket, times(1)).convertAndSend(topicArgument.capture(), payLoadArgument.capture());
 
         // Verify the packet
         assertEquals("/topic/deletions/S125", topicArgument.getValue());
         assertNotNull(payLoadArgument.getValue());
-        LinkedHashMap typeReference = this.s125WebSocketService.objectMapper.readValue(payLoadArgument.getValue(), new TypeReference<>() {});
-        assertNotNull(typeReference);
-        assertEquals(this.aidsToNavigation.getId().intValue(), typeReference.get("id"));
-        assertEquals(this.aidsToNavigation.getAtonNumber(), typeReference.get("atonNumber"));
-        assertEquals(this.aidsToNavigation.getIdCode(), typeReference.get("idCode"));
-        assertEquals(this.aidsToNavigation.getTextualDescription(), typeReference.get("textualDescription"));
-        assertEquals(this.aidsToNavigation.getTextualDescriptionInNationalLanguage(), typeReference.get("textualDescriptionInNationalLanguage"));
+        assertEquals(this.aidsToNavigation.getId(), payLoadArgument.getValue().getId());
+        assertEquals(this.aidsToNavigation.getAtonNumber(), payLoadArgument.getValue().getAtonNumber());
+        assertEquals(this.aidsToNavigation.getIdCode(), payLoadArgument.getValue().getIdCode());
+        assertEquals(this.aidsToNavigation.getTextualDescription(), payLoadArgument.getValue().getTextualDescription());
+        assertEquals(this.aidsToNavigation.getTextualDescriptionInNationalLanguage(), payLoadArgument.getValue().getTextualDescriptionInNationalLanguage());
     }
 
     /**
