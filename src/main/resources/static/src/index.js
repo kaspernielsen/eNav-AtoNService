@@ -3,7 +3,7 @@
  */
 var stompClient = null;
 var noOfMessages = 0;
-var maxNoOfMessages = 10;
+var maxNoOfMessages = 100;
 
 /**
  * This function initialises the served page when the web-socket client gets

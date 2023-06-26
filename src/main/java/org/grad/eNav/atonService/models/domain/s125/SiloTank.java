@@ -62,7 +62,7 @@ public class SiloTank extends StructureObject {
     private BigDecimal height;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = StatusType.class)
+    @ElementCollection(targetClass = NatureOfConstructionType.class)
     private List<NatureOfConstructionType> natureOfConstructions;
 
     private String objectNameInNationalLanguage;
