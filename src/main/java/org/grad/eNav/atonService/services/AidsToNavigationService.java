@@ -230,6 +230,12 @@ public class AidsToNavigationService {
         saved.setAggregations(this.aggregationService.updateAidsToNavigationAggregations(saved.getAtonNumber(), aidsToNavigation.getAggregations()));
         saved.setAssociations(this.associationService.updateAidsToNavigationAssociations(saved.getAtonNumber(), aidsToNavigation.getAssociations()));
 
+        // DO NOT REMOVE: Perform a log, which also handles lazy loading!
+        log.debug(String.format("Saved Aid to Navigation %s with %d aggregations and %d associations.",
+                saved.getAtonNumber(),
+                saved.getAggregations().size(),
+                saved.getAssociations().size()));
+
         // Return the saved entry
         return saved;
     }

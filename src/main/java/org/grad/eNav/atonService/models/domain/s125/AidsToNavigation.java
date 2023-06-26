@@ -16,7 +16,6 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -104,11 +103,11 @@ public abstract class AidsToNavigation implements Serializable {
 
     @JsonManagedReference
     @ManyToMany(mappedBy = "peers")
-    private Set<Aggregation> aggregations = new HashSet<>();
+    final private Set<Aggregation> aggregations = new HashSet<>();
 
     @JsonManagedReference
     @ManyToMany(mappedBy = "peers")
-    private Set<Association> associations = new HashSet<>();
+    final private Set<Association> associations = new HashSet<>();
 
     /**
      * Gets id.
@@ -376,7 +375,6 @@ public abstract class AidsToNavigation implements Serializable {
      *
      * @param aggregations the aggregations
      */
-    @JsonIgnore
     public void setAggregations(Set<Aggregation> aggregations) {
         this.aggregations.clear();
         if (aggregations != null) {
@@ -398,7 +396,6 @@ public abstract class AidsToNavigation implements Serializable {
      *
      * @param associations the associations
      */
-    @JsonIgnore
     public void setAssociations(Set<Association> associations) {
         this.associations.clear();
         if (associations != null) {

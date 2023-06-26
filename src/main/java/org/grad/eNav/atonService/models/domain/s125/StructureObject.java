@@ -42,7 +42,7 @@ public abstract class StructureObject extends AidsToNavigation {
     //Class Variables
     @JsonManagedReference
     @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private Set<Equipment> children = new HashSet<>();
+    final private Set<Equipment> children = new HashSet<>();
 
     /**
      * Gets children.

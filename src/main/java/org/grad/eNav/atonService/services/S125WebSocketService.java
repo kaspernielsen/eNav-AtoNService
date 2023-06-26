@@ -16,7 +16,6 @@
 
 package org.grad.eNav.atonService.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -141,12 +140,7 @@ public class S125WebSocketService implements MessageHandler {
      * @param payload               The payload to be pushed
      */
     private void publishMessage(SimpMessagingTemplate messagingTemplate, String topic, Object payload) {
-        try {
-            String json = this.objectMapper.writeValueAsString(payload);
-            messagingTemplate.convertAndSend(topic, json);
-        } catch (JsonProcessingException ex) {
-            log.error(ex.getMessage());
-        }
+        messagingTemplate.convertAndSend(topic, payload);
     }
 
 }

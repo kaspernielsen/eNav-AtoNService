@@ -54,7 +54,7 @@ public class Association implements Serializable {
             joinColumns = { @JoinColumn(name = "association_id") },
             inverseJoinColumns = { @JoinColumn(name = "aton_id") }
     )
-    private Set<AidsToNavigation> peers;
+    final private Set<AidsToNavigation> peers = new HashSet<>();
 
     /**
      * Gets id.
@@ -98,9 +98,6 @@ public class Association implements Serializable {
      * @return the peers
      */
     public Set<AidsToNavigation> getPeers() {
-        if (peers == null) {
-            peers = new HashSet<>();
-        }
         return peers;
     }
 
@@ -110,7 +107,7 @@ public class Association implements Serializable {
      * @param peers the peers
      */
     public void setPeers(Set<AidsToNavigation> peers) {
-        this.peers = null;
+        this.peers.clear();
         if (peers!= null) {
             this.getPeers().addAll(peers);
         }

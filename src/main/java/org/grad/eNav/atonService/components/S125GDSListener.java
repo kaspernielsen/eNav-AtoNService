@@ -52,7 +52,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Component;;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
