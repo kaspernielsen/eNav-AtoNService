@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.config;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
 import org.springframework.beans.factory.annotation.Value;
@@ -70,6 +71,7 @@ public class GSDataStoreConfig {
         params.put("kafka.brokers", kafkaBrokers);
         params.put("kafka.zookeepers", kafkaZookeepers);
         params.put("kafka.consumer.count", Objects.toString(noKafkaConsumers));
+        params.put("kafka.consumer.config." + ConsumerConfig.FETCH_MAX_BYTES_CONFIG, "10485760");
 
         // And construct the data store
         try {
