@@ -53,7 +53,7 @@ public class LightVessel extends StructureObject {
     private VisualProminenceType visuallyConspicuous;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = ColourPatternType.class)
+    @ElementCollection(targetClass = NatureOfConstructionType.class)
     private List<NatureOfConstructionType> natureOfConstructions;
 
     private String objectNameInNationalLanguage;
@@ -61,7 +61,7 @@ public class LightVessel extends StructureObject {
     private String objectName;
 
     @Enumerated(EnumType.STRING)
-    @ElementCollection(targetClass = ColourPatternType.class)
+    @ElementCollection(targetClass = StatusType.class)
     private List<StatusType> statuses;
 
     /**
