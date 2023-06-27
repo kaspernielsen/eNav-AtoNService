@@ -371,8 +371,11 @@ function loadDatasetContent(event, table, button, config) {
                     log.warn("Decryption not supported yet!!!");
                     processed = processed; // Not supported yet
                 }
-                // To XML string
-                var xml  = formatXml(String.fromCharCode.apply(null, processed));
+                // To XML string - For large files, split the process into chunks
+                var xml = "";
+                while(processed.length > 0) {
+                    xml += formatXml(String.fromCharCode.apply(null, processed.splice(0, 100000)));
+                }
                 // And finally display
                 $('#datasetContentTextArea').val(xml);
             } else {
