@@ -56,6 +56,7 @@ public enum S125AtonTypes {
     PHYSICAL_AIS_ATON("Physical AIS AtoN", PhysicalAISAidToNavigationType.class, PhysicalAISAidToNavigation.class),
     PILE("Pile", PileType.class, Pile.class),
     RADAR_REFLECTOR("Radar Reflector", RadarReflectorType.class, RadarReflector.class),
+    RADAR_TRANSPONDER_BEACON("Radar Transponder Beacon", RadarTransponderBeaconType.class, RadarTransponderBeacon.class),
     RADIO_STATION("Radio Station", RadioStationType.class, RadioStation.class),
     RECOMMENDED_TRACK("Recommended Track", RecommendedTrackType.class, RecommendedTrack.class),
     RETRO_REFLECTOR("Retro Reflector", RetroReflectorType.class, RetroReflector.class),
