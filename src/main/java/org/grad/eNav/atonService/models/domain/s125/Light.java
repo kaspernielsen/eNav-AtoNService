@@ -53,7 +53,7 @@ public class Light extends Equipment {
     private BigDecimal height;
 
     @Enumerated(EnumType.STRING)
-    private ExhibitionConditionOfLightType lightCharacteristic;
+    private LightCharacteristicType lightCharacteristic;
 
     @Enumerated(EnumType.STRING)
     @ElementCollection(targetClass = LightVisibilityType.class)
@@ -163,7 +163,7 @@ public class Light extends Equipment {
      *
      * @return the light characteristic
      */
-    public ExhibitionConditionOfLightType getLightCharacteristic() {
+    public LightCharacteristicType getLightCharacteristic() {
         return lightCharacteristic;
     }
 
@@ -172,7 +172,7 @@ public class Light extends Equipment {
      *
      * @param lightCharacteristic the light characteristic
      */
-    public void setLightCharacteristic(ExhibitionConditionOfLightType lightCharacteristic) {
+    public void setLightCharacteristic(LightCharacteristicType lightCharacteristic) {
         this.lightCharacteristic = lightCharacteristic;
     }
 
