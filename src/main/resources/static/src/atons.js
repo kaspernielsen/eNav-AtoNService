@@ -71,9 +71,6 @@ $(function () {
     // And re-initialise it
     atonMessagesTable = $('#atons_table').DataTable({
         processing: true,
-        language: {
-            processing: '<i class="fa-solid fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
-        },
         serverSide: true,
         ajax: {
             type: "POST",
