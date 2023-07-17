@@ -15,17 +15,6 @@
         <then>
             <property name="SECOM_REQ_LOG_FILE" value="${secomReqLogFile}"/>
             <appender name="SECOMREQFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-                <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-                    <evaluator>
-                        <matcher>
-                            <Name>parameter</Name>
-                            <regex>Executing query</regex>
-                        </matcher>
-                        <expression>logger.equals("org.grad.secom.springboot3.config.SecomRequestLoggingFilterConfig$1")</expression>
-                    </evaluator>
-                    <OnMismatch>DENY</OnMismatch>
-                    <OnMatch>ACCEPT</OnMatch>
-                </filter>
                 <encoder>
                     <pattern>${FILE_LOG_PATTERN}</pattern>
                     <charset>${FILE_LOG_CHARSET}</charset>
@@ -39,11 +28,9 @@
                     <totalSizeCap>${secomReqRollingLogTotalSizeCap:-0}</totalSizeCap>
                 </rollingPolicy>
             </appender>
-            <root level="INFO">
-                <appender-ref ref="CONSOLE" />
-                <appender-ref ref="FILE" />
+            <logger name="org.grad.secom.springboot3.config.SecomRequestLoggingFilterConfig$1" additivity="false" level="info">
                 <appender-ref ref="SECOMREQFILE"/>
-            </root>
+            </logger>
         </then>
     </if>
 
