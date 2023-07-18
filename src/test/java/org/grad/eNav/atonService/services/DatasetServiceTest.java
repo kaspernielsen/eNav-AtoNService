@@ -314,7 +314,7 @@ class DatasetServiceTest {
     @Test
     void testSave() {
         doReturn(this.newDataset).when(this.datasetRepo).save(any());
-        doReturn(this.newDataset).when(this.entityManager).merge(any());
+        //doReturn(this.newDataset).when(this.entityManager).merge(any());
 
         // Perform the service call
         S125Dataset result = this.datasetService.save(new S125Dataset());
