@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.CategoryOfLandmarkType;
+import _int.iala_aism.s125.gml._0_0.CategoryOfLateralMarkType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -36,14 +36,14 @@ public class BeaconLateral extends GenericBeacon {
 
     // Class Variables
     @Enumerated(EnumType.STRING)
-    private CategoryOfLandmarkType categoryOfLateralMark;
+    private CategoryOfLateralMarkType categoryOfLateralMark;
 
     /**
      * Gets category of lateral mark.
      *
      * @return the category of lateral mark
      */
-    public CategoryOfLandmarkType getCategoryOfLateralMark() {
+    public CategoryOfLateralMarkType getCategoryOfLateralMark() {
         return categoryOfLateralMark;
     }
 
@@ -52,7 +52,7 @@ public class BeaconLateral extends GenericBeacon {
      *
      * @param categoryOfLateralMark the category of lateral mark
      */
-    public void setCategoryOfLateralMark(CategoryOfLandmarkType categoryOfLateralMark) {
+    public void setCategoryOfLateralMark(CategoryOfLateralMarkType categoryOfLateralMark) {
         this.categoryOfLateralMark = categoryOfLateralMark;
     }
 }
