@@ -232,16 +232,15 @@ public class DatasetService {
 
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset result = this.datasetRepo.save(dataset);
-        final S125Dataset merged = this.entityManager.merge(result);
 
         // Publish the updated dataset to the publication channel
-        this.s125PublicationChannel.send(MessageBuilder.withPayload(merged)
+        this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
                 .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
                 .setHeader("deletion", false)
                 .build());
 
         // And return the object for AOP
-        return merged;
+        return result;
     }
 
     /**
@@ -370,14 +369,17 @@ public class DatasetService {
     public DatasetContent generateDatasetContent(@NotNull S125Dataset s125DataSet) {
         log.debug("Request to retrieve the content for Dataset with UUID : {}", s125DataSet.getUuid());
 
-        // Get all the matching Aids to Navigation
-        final Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
-                null,
-                s125DataSet.getGeometry(),
-                null,
-                null,
-                Pageable.unpaged()
-        );
+        // Get all the matching Aids to Navigation - if we have a geometry at least
+        final Page<AidsToNavigation> atonPage = Optional.of(s125DataSet)
+                .map(S125Dataset::getGeometry)
+                .map(g -> this.aidsToNavigationService.findAll(
+                        null,
+                        s125DataSet.getGeometry(),
+                        null,
+                        null,
+                        Pageable.unpaged()
+                ))
+                .orElseGet(Page::empty);
 
         // If everything is OK up to now start building the dataset content
         final DatasetContent datasetContent = new DatasetContent();
