@@ -178,6 +178,7 @@ public class S125GDSListener implements FeatureListener {
             // Parse the S-125 AtoN entries
             final List<? extends AidsToNavigation> listOfAtons = s125Nodes.stream()
                     .flatMap(this::parseS125Dataset)
+                    .parallel()
                     .map(this.aidsToNavigationService::save)
                     .toList();
 
