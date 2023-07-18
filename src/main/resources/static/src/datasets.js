@@ -278,7 +278,7 @@ $(function () {
             polygon: true,
             rectangle: true,
             circle: true,
-            circlemarker: true,
+            circlemarker: false,
         },
         edit: {
             featureGroup: drawnItems,
@@ -421,7 +421,7 @@ function saveGeometry() {
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
             data: JSON.stringify(dataset),
-            success: () => {console.log("success")},
+            success: () => {console.log("success"); datasetTable.ajax.reload();},
             error: () => {console.error("error")}
         });
     }

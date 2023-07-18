@@ -232,7 +232,10 @@ public class DatasetService {
 
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset result = this.datasetRepo.save(dataset);
-        //final S125Dataset merged = this.entityManager.merge(result);
+
+        // Refresh the savedDataset object to fetch the updated values
+        this.entityManager.flush();
+        this.entityManager.refresh(result);
 
         // Publish the updated dataset to the publication channel
         this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
@@ -322,12 +325,6 @@ public class DatasetService {
                             Optional.ofNullable(uuid).ifPresent(v -> b.must(f.match()
                                     .field("uuid")
                                     .matching(v)));
-//                            Optional.ofNullable(fromTime).ifPresent(v -> b.must(f.range()
-//                                    .field("createdAt")
-//                                    .atLeast(fromTime)));
-//                            Optional.ofNullable(toTime).ifPresent(v -> b.must(f.range()
-//                                    .field("createdAt")
-//                                    .atMost(toTime)));
                             Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
                         })
