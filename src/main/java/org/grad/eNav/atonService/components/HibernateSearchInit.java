@@ -75,7 +75,7 @@ public class HibernateSearchInit implements ApplicationListener<ApplicationReady
         try {
             indexer.startAndWait();
         } catch (InterruptedException | SearchException e) {
-            this.log.error(e.getMessage());
+            log.error(e.getMessage());
         }
     }
 

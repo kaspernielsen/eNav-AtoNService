@@ -81,7 +81,7 @@ public class SecomService {
                     try {
                         return new URL(url);
                     } catch (MalformedURLException ex) {
-                        this.log.error("Invalid SECOM discovery service URL provided...", ex);
+                        log.error("Invalid SECOM discovery service URL provided...", ex);
                         return null;
                     }
                 })
@@ -89,7 +89,7 @@ public class SecomService {
                     try {
                         return new SecomClient(url, this.secomConfigProperties);
                     } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException ex) {
-                        this.log.error("Unable to initialise the SSL context for the SECOM discovery service...", ex);
+                        log.error("Unable to initialise the SSL context for the SECOM discovery service...", ex);
                         return null;
                     }
                 })
@@ -147,7 +147,7 @@ public class SecomService {
         try {
             return new SecomClient(new URL(instance.getEndpointUri()), this.secomConfigProperties);
         } catch (IOException | KeyStoreException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException ex) {
-            this.log.error(ex.getMessage(), ex);
+            log.error(ex.getMessage(), ex);
             throw new SecomValidationException(ex.getMessage());
         }
     }
