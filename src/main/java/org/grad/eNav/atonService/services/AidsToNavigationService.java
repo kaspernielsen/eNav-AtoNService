@@ -27,7 +27,6 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
-import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.s125.Aggregation;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
@@ -277,7 +276,6 @@ public class AidsToNavigationService {
      *
      * @param atonNumber the AtoN number of the Aids to Navigation
      */
-    @LogDataset
     @Transactional
     public AidsToNavigation deleteByAtonNumber(String atonNumber) throws DataNotFoundException {
         log.debug("Request to delete Aid to Navigation with AtoN number : {}", atonNumber);

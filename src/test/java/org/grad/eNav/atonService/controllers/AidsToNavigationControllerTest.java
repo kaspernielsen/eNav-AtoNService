@@ -26,6 +26,7 @@ import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
+import org.grad.eNav.atonService.services.DatasetService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
@@ -51,12 +52,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -81,6 +81,12 @@ class AidsToNavigationControllerTest {
      */
     @MockBean
     AidsToNavigationService aidsToNavigationService;
+
+    /**
+     * The Dataset Service mock.
+     */
+    @MockBean
+    DatasetService datasetService;
 
     // Test Variables
     private List<AidsToNavigation> aidsToNavigationList;
@@ -208,6 +214,9 @@ class AidsToNavigationControllerTest {
      */
     @Test
     void testDeleteAidsToNavigation() throws Exception {
+        doReturn(this.existingAidsToNavigation).when(this.aidsToNavigationService).delete(any());
+        doReturn(Page.empty()).when(this.datasetService).findAll(any(), any(), any(), any(), any());
+
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/atons/{id}", this.existingAidsToNavigation.getId())
                         .contentType(MediaType.APPLICATION_JSON_VALUE))

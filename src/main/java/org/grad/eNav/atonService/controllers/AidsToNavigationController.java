@@ -23,6 +23,7 @@ import org.grad.eNav.atonService.models.dtos.datatables.DtPage;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
+import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
 import org.grad.eNav.atonService.utils.HeaderUtil;
 import org.locationtech.jts.geom.Geometry;
@@ -54,6 +55,12 @@ public class AidsToNavigationController {
     AidsToNavigationService aidsToNavigationService;
 
     /**
+     * The Dataset Service.
+     */
+    @Autowired
+    DatasetService datasetService;
+
+    /**
      * Object Mapper from Domain to DTO.
      */
     @Autowired
@@ -75,11 +82,11 @@ public class AidsToNavigationController {
                                                                          @RequestParam("startDate") Optional<LocalDateTime> startDate,
                                                                          @RequestParam("endDate") Optional<LocalDateTime> endDate,
                                                                          Pageable pageable) {
-        this.log.debug("REST request to get page of Aids to Navigation");
-        atonNumber.ifPresent(v -> this.log.debug("Aids to Navigation number specified as: {}", atonNumber));
-        geometry.ifPresent(v -> this.log.debug("Aids to Navigation geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
-        startDate.ifPresent(v -> this.log.debug("Aids to Navigation start date specified as: {}", startDate));
-        endDate.ifPresent(v -> this.log.debug("Aids to Navigation end date specified as: {}", endDate));
+        log.debug("REST request to get page of Aids to Navigation");
+        atonNumber.ifPresent(v -> log.debug("Aids to Navigation number specified as: {}", atonNumber));
+        geometry.ifPresent(v -> log.debug("Aids to Navigation geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
+        startDate.ifPresent(v -> log.debug("Aids to Navigation start date specified as: {}", startDate));
+        endDate.ifPresent(v -> log.debug("Aids to Navigation end date specified as: {}", endDate));
         Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
                 atonNumber.orElse(null),
                 geometry.orElse(null),
@@ -100,7 +107,7 @@ public class AidsToNavigationController {
      */
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<AidsToNavigationDto>> getAidsToNavigationForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
-        this.log.debug("REST request to get page of Aids to Navigation for datatables");
+        log.debug("REST request to get page of Aids to Navigation for datatables");
         Page<AidsToNavigation> atonPage = this.aidsToNavigationService.handleDatatablesPagingRequest(
                 dtPagingRequest
         );
@@ -116,10 +123,21 @@ public class AidsToNavigationController {
      */
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteAidsToNavigation(@PathVariable BigInteger id) {
-        this.log.debug("REST request to delete Aids to Navigation : {}", id);
-        this.aidsToNavigationService.delete(id);
+        log.debug("REST request to delete Aids to Navigation : {}", id);
+
+        // Delete and retrieve the aids to navigation
+        final AidsToNavigation aidsToNavigation = this.aidsToNavigationService.delete(id);
+
+        // Now we should update all datasets that are affected in this area
+        Optional.ofNullable(aidsToNavigation.getGeometry())
+                .map(g -> this.datasetService.findAll(null, g, null, null, Pageable.unpaged()))
+                .orElse(Page.empty())
+                .stream()
+                .forEach(this.datasetService::save);
+
+        // And return the response
         return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityDeletionAlert("aton", id.toString()))
+                .headers(HeaderUtil.createEntityDeletionAlert("aton", aidsToNavigation.getId().toString()))
                 .build();
     }
 

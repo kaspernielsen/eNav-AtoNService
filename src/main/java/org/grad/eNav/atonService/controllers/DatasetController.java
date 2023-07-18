@@ -75,9 +75,9 @@ public class DatasetController {
     public ResponseEntity<Page<S125DataSetDto>> getDatasets(@RequestParam("datasetTitle") Optional<UUID> uuid,
                                                             @RequestParam("geometry") Optional<Geometry> geometry,
                                                             Pageable pageable) {
-        this.log.debug("REST request to get page of Dataset");
-        uuid.ifPresent(v -> this.log.debug("Dataset UUID specified as: {}", uuid.toString()));
-        geometry.ifPresent(v -> this.log.debug("Dataset geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
+        log.debug("REST request to get page of Dataset");
+        uuid.ifPresent(v -> log.debug("Dataset UUID specified as: {}", uuid.toString()));
+        geometry.ifPresent(v -> log.debug("Dataset geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
         Page<S125Dataset> datasetPage = this.datasetService.findAll(
                 uuid.orElse(null),
                 geometry.orElse(null),
@@ -98,7 +98,7 @@ public class DatasetController {
      */
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<S125DataSetDto>> getDatasetsForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
-        this.log.debug("REST request to get page of Dataset for datatables");
+        log.debug("REST request to get page of Dataset for datatables");
         return ResponseEntity.ok()
                 .body(this.datasetDtoMapper.convertToDtPage(this.datasetService.handleDatatablesPagingRequest(dtPagingRequest), dtPagingRequest, S125DataSetDto.class));
     }
@@ -164,7 +164,7 @@ public class DatasetController {
      */
     @DeleteMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteDataset(@PathVariable UUID uuid) {
-        this.log.debug("REST request to delete Dataset with UUID : {}", uuid);
+        log.debug("REST request to delete Dataset with UUID : {}", uuid);
         this.datasetService.delete(uuid);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("dataset", uuid.toString()))
