@@ -17,12 +17,13 @@
 package org.grad.eNav.atonService.models.domain;
 
 import jakarta.persistence.*;
+import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.ScaledNumberField;
-import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
@@ -56,10 +57,13 @@ public class DatasetContent implements Serializable {
     private BigInteger id;
 
     @GenericField()
-    @CreatedDate
+    @LastModifiedDate
     private LocalDateTime generatedAt;
 
-    /**
+    @OneToOne(mappedBy = "datasetContent")
+    private S125Dataset dataset;
+
+    /*
      * This is actually created in Postgres as an OID field. To actually read
      * the contents of it we can run the following native query:
      * <p>
@@ -105,6 +109,25 @@ public class DatasetContent implements Serializable {
      */
     public void setGeneratedAt(LocalDateTime generatedAt) {
         this.generatedAt = generatedAt;
+    }
+
+
+    /**
+     * Gets dataset.
+     *
+     * @return the dataset
+     */
+    public S125Dataset getDataset() {
+        return dataset;
+    }
+
+    /**
+     * Sets dataset.
+     *
+     * @param dataset the dataset
+     */
+    public void setDataset(S125Dataset dataset) {
+        this.dataset = dataset;
     }
 
     /**

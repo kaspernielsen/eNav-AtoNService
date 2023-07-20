@@ -199,7 +199,7 @@ class SecomControllerTest {
 
         // Marshal the dataset content
         final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-        final Dataset dataset = s125DatasetBuilder.packageToDataset(s125DataSet, Collections.emptyList());
+        final Dataset dataset = s125DatasetBuilder.packageToDataset(this.s125DataSet, Collections.emptyList());
         this.s125DataSetAsXml = S125Utils.marshalS125(dataset, Boolean.FALSE);
         this.datasetContent = new DatasetContent();
         this.datasetContent.setId(BigInteger.ONE);
@@ -287,7 +287,7 @@ class SecomControllerTest {
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
                 .when(this.datasetService).findAll(any(), any(), any(), any(), any());
 
-        webTestClient.get()
+         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/secom" + GET_SUMMARY_INTERFACE_PATH)
                         .queryParam("containerType", this.queryContainerType.getValue())
@@ -444,8 +444,8 @@ class SecomControllerTest {
                     try {
                         Dataset result = S125Utils.unmarshallS125(s125Xml);
                         assertNotNull(result);
-                        assertNotNull(result.getDatasetIdentificationInformation());
                         assertNotNull(result.getId());
+                        assertNotNull(result.getDatasetIdentificationInformation());
                         assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
                         assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetFileIdentifier(), result.getDatasetIdentificationInformation().getDatasetFileIdentifier());
                         assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getProductEdition(), result.getDatasetIdentificationInformation().getProductEdition());

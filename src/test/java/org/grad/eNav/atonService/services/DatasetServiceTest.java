@@ -17,7 +17,6 @@
 package org.grad.eNav.atonService.services;
 
 import jakarta.persistence.EntityManager;
-import org.apache.commons.lang3.StringUtils;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
@@ -38,9 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -49,6 +46,7 @@ import org.springframework.messaging.Message;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,28 +64,22 @@ class DatasetServiceTest {
     DatasetService datasetService;
 
     /**
-     * The Model Mapper.
-     */
-    @Spy
-    ModelMapper modelMapper;
-
-    /**
      * The Entity Manager mock.
      */
     @Mock
     EntityManager entityManager;
 
     /**
-     * The Aids to Navigation Service mock.
+     * The Dataset Content Service mock.
      */
     @Mock
-    AidsToNavigationService aidsToNavigationService;
+    DatasetContentService datasetContentService;
 
     /**
-     * The S-125 Dataset Channel to publish the published data to.
+     * The Dataset Repo mock.
      */
     @Mock
-    PublishSubscribeChannel s125PublicationChannel;
+    DatasetRepo datasetRepo;
 
     /**
      * The S-125 Dataset Channel to publish the deleted data to.
@@ -95,11 +87,6 @@ class DatasetServiceTest {
     @Mock
     PublishSubscribeChannel s125DeletionChannel;
 
-    /**
-     * The Dataset Repo mock.
-     */
-    @Mock
-    DatasetRepo datasetRepo;
 
     // Test Variables
     private List<AidsToNavigation> aidsToNavigationList;
@@ -245,12 +232,12 @@ class DatasetServiceTest {
     }
 
     /**
-     * Test that we can retrieve the paged list of station nodes for a
+     * Test that we can retrieve the paged list of datatable entries for a
      * Datatables pagination request (which by the way also includes search and
      * sorting definitions).
      */
     @Test
-    void testGetStationNodesForDatatables() {
+    void testHandleDatatablesPagingRequest() {
         // First create the pagination request
         DtPagingRequest dtPagingRequest = new DtPagingRequest();
         dtPagingRequest.setStart(0);
@@ -274,8 +261,8 @@ class DatasetServiceTest {
         dtPagingRequest.setSearch(dtSearch);
 
         // Mock the full text query
-        SearchQuery mockedQuery = mock(SearchQuery.class);
-        SearchResult mockedResult = mock(SearchResult.class);
+        SearchQuery<?> mockedQuery = mock(SearchQuery.class);
+        SearchResult<?> mockedResult = mock(SearchResult.class);
         SearchResultTotal mockedResultTotal = mock(SearchResultTotal.class);
         doReturn(5L).when(mockedResultTotal).hitCount();
         doReturn(mockedResultTotal).when(mockedResult).total();
@@ -314,6 +301,7 @@ class DatasetServiceTest {
     @Test
     void testSave() {
         doReturn(this.newDataset).when(this.datasetRepo).save(any());
+        doReturn(CompletableFuture.completedFuture(this.newDataset)).when(this.datasetContentService).generateDatasetContent(any());
 
         // Perform the service call
         S125Dataset result = this.datasetService.save(new S125Dataset());
@@ -334,9 +322,6 @@ class DatasetServiceTest {
         assertNotNull(result.getDatasetContent());
         assertEquals(this.newDataset.getDatasetContent().getContent(), result.getDatasetContent().getContent());
         assertEquals(this.newDataset.getDatasetContent().getContentLength(), result.getDatasetContent().getContentLength());
-
-        // Verify that our message was saved and sent
-        verify(this.s125PublicationChannel, times(1)).send(any(Message.class));
     }
 
     /**
@@ -366,31 +351,6 @@ class DatasetServiceTest {
         assertThrows(DataNotFoundException.class, () ->
                 this.datasetService.delete(this.existingDataset.getUuid())
         );
-    }
-
-    /**
-     * Test that we can successfully generate the content of a dataset provided
-     * that we can access its respective member entries. In the current case
-     * this should be an S-125 dataset with the same number of members in the
-     * content as the AtoN that are assigned to it. Also note that the dataset
-     * ID is set to null since this is a new content object and hasn't been
-     * store in the database yet.
-     */
-    @Test
-    void testGenerateDatasetContent() {
-        final int numOfAtons = 5;
-        final Page<AidsToNavigation> aidsToNavigationPage = new PageImpl<>(this.aidsToNavigationList.subList(0, numOfAtons), Pageable.ofSize(5), this.aidsToNavigationList.size());
-        doReturn(aidsToNavigationPage).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
-
-        // Perform the service call
-        DatasetContent result = this.datasetService.generateDatasetContent(this.existingDataset);
-
-        // Test the result
-        assertNotNull(result);
-        assertNull(result.getId());
-        assertNotNull(result.getContent());
-        assertEquals(BigInteger.valueOf(result.getContent().length()), result.getContentLength());
-        assertEquals(numOfAtons*2, StringUtils.countMatches(result.getContent(), "member>"));
     }
 
 }

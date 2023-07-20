@@ -17,7 +17,6 @@
 package org.grad.eNav.atonService.services;
 
 
-import _int.iala_aism.s125.gml._0_0.Dataset;
 import _int.iho.s100.gml.base._5_0.MDTopicCategoryCode;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
@@ -33,13 +32,10 @@ import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.s125.S125DatasetIdentification;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.repos.DatasetRepo;
-import org.grad.eNav.atonService.utils.S125DatasetBuilder;
-import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
@@ -50,7 +46,6 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -62,7 +57,6 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -80,30 +74,22 @@ import static java.util.function.Predicate.not;
 public class DatasetService {
 
     /**
-     * The Model Mapper.
-     */
-    @Autowired
-    ModelMapper modelMapper;
-
-    /**
      * The Entity Manager.
      */
     @Autowired
     EntityManager entityManager;
 
-
     /**
-     * The Aids to Navigation Service.
+     * The Dataset Content Service.
      */
     @Autowired
-    AidsToNavigationService aidsToNavigationService;
+    DatasetContentService datasetContentService;
 
     /**
-     * The S-125 Dataset Channel to publish the published data to.
+     * The Dataset Repo.
      */
     @Autowired
-    @Qualifier("s125PublicationChannel")
-    PublishSubscribeChannel s125PublicationChannel;
+    DatasetRepo datasetRepo;
 
     /**
      * The S-125 Dataset Channel to publish the deleted data to.
@@ -111,12 +97,6 @@ public class DatasetService {
     @Autowired
     @Qualifier("s125DeletionChannel")
     PublishSubscribeChannel s125DeletionChannel;
-
-    /**
-     * The Dataset Repo.
-     */
-    @Autowired
-    DatasetRepo datasetRepo;
 
     // Service Variables
     private final String[] searchFields = new String[] {
@@ -208,43 +188,61 @@ public class DatasetService {
      * @param dataset the Dataset entity to be saved
      * @return the saved Dataset entity
      */
-    @LogDataset
     @Transactional
     public S125Dataset save(@NotNull S125Dataset dataset) {
         log.debug("Request to save Dataset : {}", dataset);
 
-        // Instantiate the dataset UUID if it does not exist
-        if(Objects.isNull(dataset.getUuid())) {
-            dataset.setUuid(UUID.randomUUID());
-        }
+        // If not defined, instantiate the dataset UUID
+        Optional.of(dataset)
+                .map(S125Dataset::getUuid)
+                .ifPresentOrElse(
+                        uuid -> {},
+                        () -> dataset.setUuid(UUID.randomUUID())
+                );
 
-        // Set the dataset ISO 19115-1 topic category if not defined
-        if(Optional.of(dataset)
+        // If not defined, set a default dataset ISO 19115-1 topic category
+        // TODO: Check that this is the right topic to be set
+        Optional.of(dataset)
                 .map(S125Dataset::getDatasetIdentificationInformation)
                 .map(S125DatasetIdentification::getDatasetTopicCategories)
                 .filter(not(List::isEmpty))
-                .isEmpty()) {
-            dataset.getDatasetIdentificationInformation().setDatasetTopicCategories(Collections.singletonList(MDTopicCategoryCode.OCEANS));
-        }
+                .ifPresentOrElse(
+                        datasetTopicCategories -> { },
+                        () -> dataset.getDatasetIdentificationInformation()
+                                .setDatasetTopicCategories(Collections.singletonList(MDTopicCategoryCode.OCEANS))
+                );
 
-        // Generate the new dataset content before the saving operation
-        dataset.setDatasetContent(this.generateDatasetContent(dataset));
+        // If not defined, copy the content from the previous entry or create a new one
+        Optional.of(dataset)
+                .map(S125Dataset::getDatasetContent)
+                .ifPresentOrElse(
+                        datasetContent -> {},
+                        () -> this.datasetRepo.findById(dataset.getUuid())
+                                .map(S125Dataset::getDatasetContent)
+                                .ifPresentOrElse(
+                                        dataset::setDatasetContent,
+                                        () -> dataset.setDatasetContent(new DatasetContent())
+                                )
+                );
 
         // Now save the dataset - Merge to pick up all the latest changes
-        final S125Dataset result = this.datasetRepo.save(dataset);
+        final S125Dataset savedDataset = this.datasetRepo.save(dataset);
 
         // Refresh the savedDataset object to fetch the updated values
         this.entityManager.flush();
-        this.entityManager.refresh(result);
+        this.entityManager.refresh(savedDataset);
 
-        // Publish the updated dataset to the publication channel
-        this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
-                .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
-                .setHeader("deletion", false)
-                .build());
+        // Update the dataset content asynchronously
+        this.datasetContentService.generateDatasetContent(savedDataset).whenCompleteAsync((result, ex) ->
+                Optional.ofNullable(ex)
+                        .ifPresentOrElse(
+                                throwable -> log.error("Error while generating the content of the dataset with UUID {}: {}", savedDataset.getUuid(), throwable.getMessage()),
+                                () -> log.info("Successfully generated the content of the dataset with UUID {}", savedDataset.getUuid())
+                        )
+        );
 
         // And return the object for AOP
-        return result;
+        return savedDataset;
     }
 
     /**
@@ -355,46 +353,4 @@ public class DatasetService {
                 .orElse(null);
     }
 
-    /**
-     * Provided a valid dataset this function will build the respective
-     * dataset content and populate it with all entries that match its
-     * geographical boundaries. The resulting object will then be marshalled
-     * into an XML string and returned.
-     *
-     * @param s125DataSet the UUID of the dataset
-     * @return the generated dataset content object
-     */
-    public DatasetContent generateDatasetContent(@NotNull S125Dataset s125DataSet) {
-        log.debug("Request to retrieve the content for Dataset with UUID : {}", s125DataSet.getUuid());
-
-        // Get all the matching Aids to Navigation - if we have a geometry at least
-        final Page<AidsToNavigation> atonPage = Optional.of(s125DataSet)
-                .map(S125Dataset::getGeometry)
-                .map(g -> this.aidsToNavigationService.findAll(
-                        null,
-                        s125DataSet.getGeometry(),
-                        null,
-                        null,
-                        Pageable.unpaged()
-                ))
-                .orElseGet(Page::empty);
-
-        // If everything is OK up to now start building the dataset content
-        final DatasetContent datasetContent = new DatasetContent();
-        datasetContent.setContent("");
-        datasetContent.setContentLength(BigInteger.ZERO);
-
-        // Now try to marshal the dataset into an XML string
-        try {
-            final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-            final Dataset dataset = s125DatasetBuilder.packageToDataset(s125DataSet, atonPage.getContent());
-            datasetContent.setContent(S125Utils.marshalS125(dataset, Boolean.FALSE));
-            datasetContent.setContentLength(BigInteger.valueOf(datasetContent.getContent().length()));
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-        }
-
-        // And return the dataset content
-        return datasetContent;
-    }
 }
