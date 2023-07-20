@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * The Dataset Aspect Component Class.
@@ -59,7 +60,7 @@ public class DatasetAspect {
     @Around("@annotation(LogDataset)")
     public Object logDataset(ProceedingJoinPoint joinPoint) throws Throwable {
         // Get the annotation parameters
-        String operation = Optional.of(joinPoint)
+        final String operation = Optional.of(joinPoint)
                 .map(ProceedingJoinPoint::getSignature)
                 .map(MethodSignature.class::cast)
                 .map(MethodSignature::getMethod)
@@ -68,10 +69,34 @@ public class DatasetAspect {
                 .orElse("");
 
         // Process and get the result object
-        Object proceed = joinPoint.proceed();
+        final Object proceed = joinPoint.proceed();
 
+        // // Handle if the object whether from an async execution or normal POJO
+        this.handleJoinPointProceed(proceed, operation);
+
+        // And return the result object
+        return proceed;
+    }
+
+    /**
+     * The main function for handling the AOP join-point return when this is an
+     * S125Dataset of a collection of these
+     *
+     * @param proceed       The return of the joint-point
+     * @param operation     The @LogDataset annotation operation if provided
+     */
+    protected void handleJoinPointProceed(Object proceed, String operation) {
+        // Handle if the object is a CompletableFuture
+        if(Optional.ofNullable(proceed).filter(CompletableFuture.class::isInstance).isPresent()) {
+            Optional.of(proceed)
+                    .map(CompletableFuture.class::cast)
+                    .ifPresentOrElse(
+                            completableFuture -> completableFuture.thenAcceptAsync((obj) -> this.handleJoinPointProceed(obj, operation)),
+                            () -> this.handleJoinPointProceed(proceed, operation)
+                    );
+        }
         // Handle if the object is an S-125 Dataset
-        if(Optional.ofNullable(proceed).filter(S125Dataset.class::isInstance).isPresent()) {
+        else if(Optional.ofNullable(proceed).filter(S125Dataset.class::isInstance).isPresent()) {
             Optional.of(proceed)
                     .map(S125Dataset.class::cast)
                     .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
@@ -84,9 +109,6 @@ public class DatasetAspect {
                     .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
                     .forEach(this.datasetContentLogService::save);
         }
-
-        // And return the result object
-        return proceed;
     }
 
     /**

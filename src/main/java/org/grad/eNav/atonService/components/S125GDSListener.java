@@ -52,7 +52,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.stereotype.Component;;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
@@ -236,7 +236,7 @@ public class S125GDSListener implements FeatureListener {
 
         // Now we should update all datasets that are affected in this area
         Optional.ofNullable(affectedGeometry)
-                .map(g -> this.datasetService.findAll(null, g, null, null, Pageable.unpaged()))
+                .map(geometry -> this.datasetService.findAll(null, geometry, null, null, Pageable.unpaged()))
                 .orElse(Page.empty())
                 .stream()
                 .forEach(this.datasetService::save);

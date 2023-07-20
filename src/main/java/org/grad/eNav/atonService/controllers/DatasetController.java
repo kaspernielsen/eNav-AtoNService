@@ -119,7 +119,7 @@ public class DatasetController {
                     .headers(HeaderUtil.createFailureAlert("dataset", "idexists", "A new dataset cannot already have an ID"))
                     .build();
         }
-        // Save the station
+        // Save the dataset
         try {
             S125Dataset s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125Dataset.class));
             return ResponseEntity.created(new URI(String.format("/api/dataset/%s", s125DataSet.getUuid())))

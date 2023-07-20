@@ -130,7 +130,7 @@ class S125GDSListenerTest {
 
         // Read a valid S125 content to generate the S125Node message for.
         InputStream in = new ClassPathResource("s125-msg.xml").getInputStream();
-        String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+        String xml = IOUtils.toString(in, StandardCharsets.UTF_8);
 
         // Also create a GeoJSON point geometry for our S125 message
         JsonNode point = GeoJSONUtils.createGeoJSONPoint(53.61, 1.594);
@@ -274,6 +274,8 @@ class S125GDSListenerTest {
     void testListenToEventsRemoved() throws IOException {
         AidsToNavigation aidsToNavigation = new BeaconCardinal();
         aidsToNavigation.setGeometry(this.geometryFactory.createPoint(new Coordinate(0, 0)));
+
+        // Mock the service calls
         doReturn(Optional.of(aidsToNavigation)).when(this.aidsToNavigationService).findByAtonNumber(any());
         doReturn(aidsToNavigation).when(this.aidsToNavigationService).delete(any());
 
