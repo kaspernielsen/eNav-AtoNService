@@ -101,9 +101,8 @@ public class GlobalConfig {
         // we can use the protected fields directly to perform the mapping.
         // Note that this creates ambiguity with the existing setters, so we
         // should account for that.
-        org.modelmapper.config.Configuration s125MappingConfig = modelMapper.getConfiguration()
-                .copy()
-                .setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PROTECTED)
+        modelMapper.getConfiguration()
+                //.setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PROTECTED) // Not required any more?
                 .setFieldMatchingEnabled(true)
                 .setAmbiguityIgnored(true);
 
