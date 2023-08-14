@@ -26,6 +26,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.persistence.EntityManager;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
@@ -68,12 +69,12 @@ class HibernateSearchInitTest {
         try (MockedStatic<Search> mockedSearch = Mockito.mockStatic(Search.class)) {
             mockedSearch.when(() -> Search.session(this.entityManager)).thenReturn(this.searchSession);
 
-            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class));
+            doReturn(this.massIndexer).when(this.searchSession).massIndexer(anyCollection());
             doReturn(this.massIndexer).when(this.massIndexer).threadsToLoadObjects(anyInt());
             doNothing().when(this.massIndexer).startAndWait();
 
             // Perform the component call
-            this.hibernateSearchInit.onApplicationEvent(null);
+            this.hibernateSearchInit.onApplicationEvent(mock(ApplicationReadyEvent.class));
         }
 
         // Verify the indexing initialisation was performed
@@ -81,7 +82,7 @@ class HibernateSearchInitTest {
     }
 
     /**
-     * Test that when the hibernate search will failed to initialise we can
+     * Test that when the hibernate search will fail to initialise we can
      * still boot the service without an error.
      */
     @Test
@@ -89,12 +90,12 @@ class HibernateSearchInitTest {
         try (MockedStatic<Search> mockedSearch = Mockito.mockStatic(Search.class)) {
             mockedSearch.when(() -> Search.session(this.entityManager)).thenReturn(this.searchSession);
 
-            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class));
+            doReturn(this.massIndexer).when(this.searchSession).massIndexer(anyCollection());
             doReturn(this.massIndexer).when(this.massIndexer).threadsToLoadObjects(anyInt());
             doThrow(InterruptedException.class).when(this.massIndexer).startAndWait();
 
             // Perform the component call
-            this.hibernateSearchInit.onApplicationEvent(null);
+            this.hibernateSearchInit.onApplicationEvent(mock(ApplicationReadyEvent.class));
         }
 
         // Verify the indexing initialisation was performed

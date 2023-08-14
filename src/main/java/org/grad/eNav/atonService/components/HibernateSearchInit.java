@@ -33,6 +33,8 @@ import org.springframework.stereotype.Component;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import java.util.Arrays;
+
 /**
  * The HibernateSearchInit Component Class
  *
@@ -64,11 +66,11 @@ public class HibernateSearchInit implements ApplicationListener<ApplicationReady
         SearchSession searchSession = Search.session( entityManager );
 
         // Create a mass indexer
-        MassIndexer indexer = searchSession.massIndexer(
+        MassIndexer indexer = searchSession.massIndexer(Arrays.asList(
                         S125Dataset.class,
                         S125DatasetIdentification.class,
                         AidsToNavigation.class,
-                        SubscriptionRequest.class)
+                        SubscriptionRequest.class))
                 .threadsToLoadObjects( 7 );
 
         // And perform the indexing
