@@ -20,10 +20,10 @@ import _int.iala_aism.s125.gml._0_0.*;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
-import org.grad.eNav.atonService.models.enums.ReferenceTypeRole;
 import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
+import org.grad.eNav.atonService.models.enums.ReferenceTypeRole;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.ReferenceTypeS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
@@ -102,7 +102,7 @@ public class GlobalConfig {
         // Note that this creates ambiguity with the existing setters, so we
         // should account for that.
         modelMapper.getConfiguration()
-                //.setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PROTECTED) // Not required any more?
+                .setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PROTECTED)
                 .setFieldMatchingEnabled(true)
                 .setAmbiguityIgnored(true);
 
