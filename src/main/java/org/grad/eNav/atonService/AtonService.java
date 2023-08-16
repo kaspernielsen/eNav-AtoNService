@@ -23,15 +23,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * The VDES Controller Micro-Service.
+ * The AtoN Service Micro-Service.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@SpringBootApplication(scanBasePackages = {
-		"org.grad.eNav.atonService",
-		"org.grad.secom",
-		"org.jboss.resteasy.springboot",
-})
+@SpringBootApplication
 @EnableDiscoveryClient
 @EnableFeignClients
 @EnableScheduling
