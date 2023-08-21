@@ -32,6 +32,7 @@ import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.models.SubscriptionRequestObject;
 import org.locationtech.jts.io.ParseException;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.MappingContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
@@ -103,6 +104,7 @@ public class GlobalConfig {
         // should account for that.
         modelMapper.getConfiguration()
                 .setFieldAccessLevel(org.modelmapper.config.Configuration.AccessLevel.PROTECTED)
+                .setMatchingStrategy(MatchingStrategies.STRICT)
                 .setFieldMatchingEnabled(true)
                 .setAmbiguityIgnored(true);
 
