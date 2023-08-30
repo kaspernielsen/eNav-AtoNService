@@ -20,18 +20,18 @@ import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
-import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
 
@@ -60,6 +60,34 @@ public class DatasetContentLogService {
      */
     @Autowired
     DatasetContentLogRepo datasetContentLogRepo;
+
+    /**
+     * Find the latest dataset content by UUID.
+     *
+     * @param uuid the UUID of the dataset
+     * @return the dataset content
+     */
+    @Transactional(readOnly = true)
+    public DatasetContentLog findOriginal(@NotNull UUID uuid) {
+        return this.datasetContentLogRepo.findOriginalForUuid(uuid)
+                .orElse(null);
+    }
+
+    /**
+     * Returns the sorted list of dataset content log entries for a specific
+     * UUID that contain all the updates in the dataset but not the original
+     * content, i.e. the deltas.
+     *
+     * @param uuid the UUID of the dataset
+     * @return the list of the dataset content log entries that contain the deltas
+     */
+    public List<DatasetContentLog> findDeltas(@NotNull UUID uuid) {
+        return this.datasetContentLogRepo.findByUuid(uuid)
+                .stream()
+                .filter(log -> log.getSequenceNo().compareTo(BigInteger.ZERO) > 0)
+                .sorted(Comparator.comparing(DatasetContentLog::getSequenceNo))
+                .collect(Collectors.toList());
+    }
 
     /**
      * Find the latest dataset content by UUID.
@@ -116,29 +144,49 @@ public class DatasetContentLogService {
      * geographical boundaries. The resulting object will then be marshalled
      * into an XML string and returned.
      *
-     * @param s125DataSet the UUID of the dataset
-     * @return
+     * @param s125Dataset the UUID of the dataset
+     * @return the dataset content log entry
      */
-    public DatasetContentLog generateDatasetContentLog(@NotNull S125Dataset s125DataSet, @NotNull String operation) {
-        log.debug("Request to retrieve the content for Dataset with UUID : {}", s125DataSet.getUuid());
+    public DatasetContentLog generateDatasetContentLog(@NotNull S125Dataset s125Dataset, @NotNull String operation) {
+        log.debug("Request to retrieve the content for Dataset with UUID : {}", s125Dataset.getUuid());
 
         // If everything is OK up to now start building the dataset content
         final DatasetContentLog datasetContentLog = new DatasetContentLog();
         datasetContentLog.setDatasetType(DatasetType.S125);
-        datasetContentLog.setUuid(s125DataSet.getUuid());
-        datasetContentLog.setGeometry(s125DataSet.getGeometry());
+        datasetContentLog.setUuid(s125Dataset.getUuid());
+        datasetContentLog.setGeometry(s125Dataset.getGeometry());
         datasetContentLog.setOperation(Optional.of(operation)
                 .filter(not(String::isBlank))
                 .orElseGet(() ->
-                        Objects.equals(s125DataSet.getCreatedAt(), s125DataSet.getLastUpdatedAt()) ?
+                        Objects.equals(s125Dataset.getCreatedAt(), s125Dataset.getLastUpdatedAt()) ?
                         "CREATED" : "UPDATED"));
-        datasetContentLog.setGeneratedAt(Optional.of(s125DataSet)
+        datasetContentLog.setSequenceNo(Optional.of(s125Dataset)
+                .map(S125Dataset::getDatasetContent)
+                .map(DatasetContent::getSequenceNo)
+                .orElse(BigInteger.ZERO));
+        datasetContentLog.setGeneratedAt(Optional.of(s125Dataset)
                 .map(S125Dataset::getDatasetContent)
                 .map(DatasetContent::getGeneratedAt)
                 .orElse(LocalDateTime.now()));
-        datasetContentLog.setContent(Optional.of(s125DataSet)
+
+        // Copy the content
+        datasetContentLog.setContent(Optional.of(s125Dataset)
                 .map(S125Dataset::getDatasetContent)
                 .map(DatasetContent::getContent)
+                .orElse(null));
+        datasetContentLog.setContentLength(Optional.of(s125Dataset)
+                .map(S125Dataset::getDatasetContent)
+                .map(DatasetContent::getContentLength)
+                .orElse(null));
+
+        // Copy the delta
+        datasetContentLog.setDelta(Optional.of(s125Dataset)
+                .map(S125Dataset::getDatasetContent)
+                .map(DatasetContent::getDelta)
+                .orElse(null));
+        datasetContentLog.setDeltaLength(Optional.of(s125Dataset)
+                .map(S125Dataset::getDatasetContent)
+                .map(DatasetContent::getDeltaLength)
                 .orElse(null));
 
         // And return the dataset content

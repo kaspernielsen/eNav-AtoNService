@@ -29,6 +29,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * The S-125 Dataset Entity Content Class
@@ -48,6 +49,17 @@ import java.time.LocalDateTime;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class DatasetContent implements Serializable {
 
+    /**
+     * Whenever an update takes place, the sequence number of the dataset
+     * content should be increased.
+     */
+    @PreUpdate
+    public void preUpdate() {
+        this.sequenceNo = Optional.of(this.sequenceNo)
+                .map(BigInteger.ONE::add)
+                .orElse(BigInteger.ZERO);
+    }
+
     // Class Variables
     @Id
     @ScaledNumberField(name = "id_sort", decimalScale=0, sortable = Sortable.YES)
@@ -56,12 +68,14 @@ public class DatasetContent implements Serializable {
     @Column(name = "id", nullable = false, precision = 24, scale = 0)
     private BigInteger id;
 
+    @OneToOne(mappedBy = "datasetContent")
+    private S125Dataset dataset;
+
     @GenericField()
     @LastModifiedDate
     private LocalDateTime generatedAt;
 
-    @OneToOne(mappedBy = "datasetContent")
-    private S125Dataset dataset;
+    private BigInteger sequenceNo;
 
     /*
      * This is actually created in Postgres as an OID field. To actually read
@@ -74,6 +88,18 @@ public class DatasetContent implements Serializable {
     private String content;
 
     private BigInteger contentLength;
+
+    /*
+     * This is actually created in Postgres as an OID field. To actually read
+     * the contents of it we can run the following native query:
+     * <p>
+     *     select convert_from(lo_get(delta), 'UTF-8') from dataset_content;
+     * </p>
+     */
+    @Lob
+    private String delta;
+
+    private BigInteger deltaLength;
 
     /**
      * Gets id.
@@ -94,25 +120,6 @@ public class DatasetContent implements Serializable {
     }
 
     /**
-     * Gets generated at.
-     *
-     * @return the generated at
-     */
-    public LocalDateTime getGeneratedAt() {
-        return generatedAt;
-    }
-
-    /**
-     * Sets generated at.
-     *
-     * @param generatedAt the generated at
-     */
-    public void setGeneratedAt(LocalDateTime generatedAt) {
-        this.generatedAt = generatedAt;
-    }
-
-
-    /**
      * Gets dataset.
      *
      * @return the dataset
@@ -128,6 +135,43 @@ public class DatasetContent implements Serializable {
      */
     public void setDataset(S125Dataset dataset) {
         this.dataset = dataset;
+    }
+
+    /**
+     * Gets generated at.
+     *
+     * @return the generated at
+     */
+    public LocalDateTime getGeneratedAt() {
+        return generatedAt;
+    }
+
+
+    /**
+     * Gets sequence no.
+     *
+     * @return the sequence no
+     */
+    public BigInteger getSequenceNo() {
+        return sequenceNo;
+    }
+
+    /**
+     * Sets sequence no.
+     *
+     * @param sequenceNo the sequence no
+     */
+    public void setSequenceNo(BigInteger sequenceNo) {
+        this.sequenceNo = sequenceNo;
+    }
+
+    /**
+     * Sets generated at.
+     *
+     * @param generatedAt the generated at
+     */
+    public void setGeneratedAt(LocalDateTime generatedAt) {
+        this.generatedAt = generatedAt;
     }
 
     /**
@@ -164,6 +208,42 @@ public class DatasetContent implements Serializable {
      */
     public void setContentLength(BigInteger contentLength) {
         this.contentLength = contentLength;
+    }
+
+    /**
+     * Gets delta.
+     *
+     * @return the delta
+     */
+    public String getDelta() {
+        return delta;
+    }
+
+    /**
+     * Sets delta.
+     *
+     * @param delta the delta
+     */
+    public void setDelta(String delta) {
+        this.delta = delta;
+    }
+
+    /**
+     * Gets delta length.
+     *
+     * @return the delta length
+     */
+    public BigInteger getDeltaLength() {
+        return deltaLength;
+    }
+
+    /**
+     * Sets delta length.
+     *
+     * @param deltaLength the delta length
+     */
+    public void setDeltaLength(BigInteger deltaLength) {
+        this.deltaLength = deltaLength;
     }
 
 }

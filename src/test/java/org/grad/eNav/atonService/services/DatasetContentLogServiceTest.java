@@ -18,8 +18,8 @@ package org.grad.eNav.atonService.services;
 
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
-import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,8 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -68,6 +67,7 @@ class DatasetContentLogServiceTest {
     private S125Dataset s125Dataset;
     private DatasetContentLog newDatasetContentLog;
     private DatasetContentLog existingDatasetContentLog;
+    private DatasetContentLog deltaDatasetContentLog;
 
     /**
      * Common setup for all the tests.
@@ -85,11 +85,13 @@ class DatasetContentLogServiceTest {
         this.s125Dataset.setLastUpdatedAt(LocalDateTime.now());
         this.s125Dataset.setGeometry(factory.createPoint(new Coordinate(52.98, 2.28)));
         this.s125Dataset.setDatasetContent(new DatasetContent());
+        this.s125Dataset.getDatasetContent().setSequenceNo(BigInteger.ONE);
         this.s125Dataset.getDatasetContent().setContent("Existing Dataset Content");
 
         // Create a Dataset Content Log for the new dataset
         this.newDatasetContentLog = new DatasetContentLog();
         this.newDatasetContentLog.setDatasetType(DatasetType.S125);
+        this.newDatasetContentLog.setSequenceNo(BigInteger.ZERO);
         this.newDatasetContentLog.setGeneratedAt(LocalDateTime.now());
         this.newDatasetContentLog.setGeometry(this.s125Dataset.getGeometry());
         this.newDatasetContentLog.setOperation("CREATED");
@@ -100,11 +102,86 @@ class DatasetContentLogServiceTest {
         this.existingDatasetContentLog = new DatasetContentLog();
         this.existingDatasetContentLog.setId(BigInteger.ONE);
         this.existingDatasetContentLog.setDatasetType(DatasetType.S125);
+        this.existingDatasetContentLog.setSequenceNo(BigInteger.ONE);
         this.existingDatasetContentLog.setGeneratedAt(LocalDateTime.now());
         this.existingDatasetContentLog.setGeometry(this.s125Dataset.getGeometry());
-        this.newDatasetContentLog.setOperation("UPDATED");
+        this.existingDatasetContentLog.setOperation("UPDATED");
         this.existingDatasetContentLog.setContent("Existing Dataset Content");
         this.existingDatasetContentLog.setContentLength(BigInteger.valueOf(this.existingDatasetContentLog.getContent().length()));
+
+        // Create a Dataset Content Log for the existing dataset
+        this.deltaDatasetContentLog = new DatasetContentLog();
+        this.deltaDatasetContentLog.setId(BigInteger.TWO);
+        this.deltaDatasetContentLog.setDatasetType(DatasetType.S125);
+        this.deltaDatasetContentLog.setSequenceNo(BigInteger.TWO);
+        this.deltaDatasetContentLog.setGeneratedAt(LocalDateTime.now());
+        this.deltaDatasetContentLog.setGeometry(this.s125Dataset.getGeometry());
+        this.deltaDatasetContentLog.setOperation("UPDATED");
+        this.deltaDatasetContentLog.setContent("Existing Dataset Content");
+        this.deltaDatasetContentLog.setContentLength(BigInteger.valueOf(this.existingDatasetContentLog.getContent().length()));
+    }
+
+    /**
+     * Test that we can successfully retrieve the original dataset content log
+     * (i.e. the one with sequence number equal to ZERO (0)), by providing an
+     * existing UUID identifier.
+     */
+    @Test
+    void testFindOriginal() {
+        doReturn(Optional.of(this.existingDatasetContentLog)).when(this.datasetContentLogRepo).findOriginalForUuid(any());
+
+        // Perform the service call
+        DatasetContentLog result = this.datasetContentLogService.findOriginal(this.s125Dataset.getUuid());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingDatasetContentLog.getId(), result.getId());
+        assertEquals(this.existingDatasetContentLog.getUuid(), result.getUuid());
+        assertEquals(this.existingDatasetContentLog.getDatasetType(), result.getDatasetType());
+        assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
+        assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
+        assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
+        assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
+        assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
+    }
+
+    /**
+     * Test that if we request the optional entry of the content log for an
+     * invalid UUID, then the service will return null.
+     */
+    @Test
+    void testFindOriginalNotFound() {
+        doReturn(Optional.empty()).when(this.datasetContentLogRepo).findOriginalForUuid(any());
+
+        // Perform the service call
+        DatasetContentLog result = this.datasetContentLogService.findOriginal(this.s125Dataset.getUuid());
+
+        // Test the result
+        assertNull(result);
+    }
+
+    /**
+     * Test that we can correctly retrieve the delta dataset content log
+     * entries, i.e. the entries that have a sequence number larger than
+     * ZERO (0).
+     */
+    @Test
+    void testFindDeltas() {
+        doReturn(Arrays.asList(
+                this.existingDatasetContentLog,
+                this.deltaDatasetContentLog)
+        ).when(this.datasetContentLogRepo).findByUuid(any());
+
+        // Perform the service call
+        List<DatasetContentLog> result = this.datasetContentLogService.findDeltas(this.s125Dataset.getUuid());
+
+        // Test the result
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertEquals(2, result.size());
+        assertEquals(BigInteger.ONE, result.get(0).getSequenceNo());
+        assertEquals(BigInteger.TWO, result.get(1).getSequenceNo());
     }
 
     /**
@@ -126,6 +203,7 @@ class DatasetContentLogServiceTest {
         assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
         assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
         assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
         assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
         assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
     }
@@ -149,6 +227,7 @@ class DatasetContentLogServiceTest {
         assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
         assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
         assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
         assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
         assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
     }
@@ -175,6 +254,7 @@ class DatasetContentLogServiceTest {
         assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
         assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
         assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
         assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
         assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
     }
@@ -198,6 +278,7 @@ class DatasetContentLogServiceTest {
         assertEquals(this.newDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
         assertEquals(this.newDatasetContentLog.getGeometry(), result.getGeometry());
         assertEquals(this.newDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.newDatasetContentLog.getSequenceNo(), result.getSequenceNo());
         assertEquals(this.newDatasetContentLog.getContent(), result.getContent());
         assertEquals(this.newDatasetContentLog.getContentLength(), result.getContentLength());
     }
@@ -221,6 +302,7 @@ class DatasetContentLogServiceTest {
         assertNotNull(result.getGeneratedAt());
         assertEquals(this.s125Dataset.getGeometry(), result.getGeometry());
         assertEquals("custom", result.getOperation());
+        assertEquals(this.s125Dataset.getDatasetContent().getSequenceNo(), result.getSequenceNo());
         assertEquals(this.s125Dataset.getDatasetContent().getContent(), result.getContent());
     }
 

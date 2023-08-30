@@ -41,6 +41,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -96,20 +98,32 @@ public class DatasetContentService {
         log.debug("Request to generate the content for Dataset with UUID: {}", s125Dataset.getUuid());
 
         // Get all the matching Aids to Navigation - if we have a geometry at least
-        final Page<AidsToNavigation> atonPage = Optional.of(s125Dataset)
+        final List<AidsToNavigation> atonList = Optional.of(s125Dataset)
                 .map(S125Dataset::getGeometry)
                 .map(geometry ->
                         this.aidsToNavigationService.findAll(null, geometry, null, null, Pageable.unpaged())
                 )
-                .orElseGet(Page::empty);
+                .orElseGet(Page::empty)
+                .getContent();
 
-        // Now try to marshal the dataset into an XML string and update the content
+        // Filter the new/updated Aids to Navigation entries
+        final List<AidsToNavigation> deltaAtonList = atonList.stream()
+                .filter(aton -> Objects.nonNull(aton.getLastModifiedAt()))
+                .filter(aton -> aton.getLastModifiedAt().isAfter(s125Dataset.getLastUpdatedAt()))
+                .toList();
+
+        // Now try to marshal the dataset into an XML string and update the content/delta
+        final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
         try {
-            // Build the dataset XML content
-            final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
-            final Dataset dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atonPage.getContent());
+            // Build the dataset contents, if any
+            final Dataset dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atonList);
+            final Dataset delta = s125DatasetBuilder.packageToDataset(s125Dataset, deltaAtonList);
 
-            // Populate the new content
+            // Marshall the contents into XML
+            final String datasetXML = S125Utils.marshalS125(dataset, Boolean.FALSE);
+            final String deltaXML = S125Utils.marshalS125(delta, Boolean.FALSE);
+
+            // Populate the new content/delta
             final DatasetContent datasetContent = Optional.of(s125Dataset)
                     .map(S125Dataset::getDatasetContent)
                     .orElseThrow(() -> new DataNotFoundException(
@@ -118,9 +132,13 @@ public class DatasetContentService {
                                     s125Dataset.getUuid()
                             )
                     ));
+
+            // Populate the dataset content
             datasetContent.setDataset(s125Dataset);
-            datasetContent.setContent(S125Utils.marshalS125(dataset, Boolean.FALSE));
-            datasetContent.setContentLength(BigInteger.valueOf(datasetContent.getContent().length()));
+            datasetContent.setContent(datasetXML);
+            datasetContent.setContentLength(BigInteger.valueOf(datasetXML.length()));
+            datasetContent.setDelta(deltaXML);
+            datasetContent.setDeltaLength(BigInteger.valueOf(deltaXML.length()));
 
             // And finally perform the saving operation
             s125Dataset.setDatasetContent(this.datasetContentRepo.save(datasetContent));
