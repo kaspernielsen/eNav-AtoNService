@@ -29,10 +29,13 @@ import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.locationtech.jts.geom.Geometry;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,6 +51,7 @@ import java.util.Set;
  * @see _int.iala_aism.s125.gml._0_0.AidsToNavigationType
  */
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Cacheable
 @Indexed
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -108,6 +112,10 @@ public abstract class AidsToNavigation implements Serializable {
     @JsonManagedReference
     @ManyToMany(mappedBy = "peers")
     final private Set<Association> associations = new HashSet<>();
+
+    @GenericField()
+    @LastModifiedDate
+    private LocalDateTime lastModifiedAt;
 
     /**
      * Gets id.
@@ -401,5 +409,23 @@ public abstract class AidsToNavigation implements Serializable {
         if (associations != null) {
             this.associations.addAll(associations);
         }
+    }
+
+    /**
+     * Gets last modified at.
+     *
+     * @return the last modified at
+     */
+    public LocalDateTime getLastModifiedAt() {
+        return lastModifiedAt;
+    }
+
+    /**
+     * Sets last modified at.
+     *
+     * @param lastModifiedAt the last modified at
+     */
+    public void setLastModifiedAt(LocalDateTime lastModifiedAt) {
+        this.lastModifiedAt = lastModifiedAt;
     }
 }

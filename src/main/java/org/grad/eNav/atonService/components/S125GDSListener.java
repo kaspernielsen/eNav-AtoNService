@@ -17,11 +17,9 @@
 package org.grad.eNav.atonService.components;
 
 import _int.iala_aism.s125.gml._0_0.*;
-import _net.opengis.gml.profiles.AbstractFeatureMemberType;
 import _net.opengis.gml.profiles.AbstractFeatureType;
 import _net.opengis.gml.profiles.ReferenceType;
 import jakarta.annotation.PreDestroy;
-import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.data.DataStore;
@@ -32,7 +30,6 @@ import org.geotools.filter.FidFilterImpl;
 import org.grad.eNav.atonService.models.GeomesaData;
 import org.grad.eNav.atonService.models.GeomesaS125;
 import org.grad.eNav.atonService.models.domain.s125.*;
-import org.grad.eNav.atonService.models.dtos.S100AbstractNode;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
@@ -57,7 +54,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -175,14 +171,14 @@ public class S125GDSListener implements FeatureListener {
                     .map(sl -> new GeomesaS125().retrieveData(sl))
                     .orElseGet(Collections::emptyList);
 
-            // Parse the S-125 AtoN entries
+            // Parse and save the created/updated AtoN entries
             final List<? extends AidsToNavigation> listOfAtons = s125Nodes.stream()
                     .flatMap(this::parseS125Dataset)
                     .parallel()
                     .map(this.aidsToNavigationService::save)
                     .toList();
 
-            // Extract the S-125 message and send it
+            // Publish the created/updated AtoN entries
             listOfAtons.stream()
                     .map(MessageBuilder::withPayload)
                     .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
@@ -218,7 +214,7 @@ public class S125GDSListener implements FeatureListener {
                     .map(this.aidsToNavigationService::delete)
                     .toList();
 
-            // Now delete the selected AtoNs
+            // Publish the deleted AtoN entries
             listOfAtons.stream()
                     .map(MessageBuilder::withPayload)
                     .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
@@ -244,33 +240,28 @@ public class S125GDSListener implements FeatureListener {
 
     /**
      * A helper that processes the S125Node entry provided and parses the
-     * contained S-125 Aids to Navigation entries
+     * contained S-125 Aids to Navigation entries. Each entry might be
+     * complex with a structure that contains multiple equipment entries, and
+     * additional aggregation/association links to other objects which also
+     * need to be referenced in the dataset. Therefore, we need to be able to
+     * handle all the information and parse to the local data format.
      *
      * @param s125Node  the S-125 dataset node to be processed
      * @return the contained list of Aids to Navigation entries
      */
     protected Stream<? extends AidsToNavigation> parseS125Dataset(S125Node s125Node) {
-        // Get the S125 node members
+        // Get the S-125 node content included members
         final List<? extends AbstractFeatureType> members = Optional.of(s125Node)
-                .map(S100AbstractNode::getContent)
+                .map(S125Node::getContent)
                 .map(xml -> {
                     try {
-                        return S125Utils.unmarshallS125(xml);
+                        return S125Utils.getS125Members(xml);
                     } catch (JAXBException ex) {
+                        log.error(ex.getMessage());
                         return null;
                     }
                 })
-                .map(Dataset::getImembersAndMembers)
-                .filter(((Predicate<List<AbstractFeatureMemberType>>) List::isEmpty).negate())
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(MemberType.class::isInstance)
-                .map(MemberType.class::cast)
-                .map(MemberType::getAbstractFeature)
-                .map(JAXBElement::getValue)
-                .filter(Objects::nonNull)
-                .filter(obj -> Objects.nonNull(obj.getId()))
-                .toList();
+                .orElse(Collections.emptyList());
 
         // Map the individual types to local objects but with the original ID
         final Map<String, ? extends StructureObject> structureObjectTypeMap = members.stream()

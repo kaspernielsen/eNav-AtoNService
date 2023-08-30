@@ -25,6 +25,7 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 /**
  * Spring Data JPA repository for the S-125 Dataset Content Log entities.
@@ -34,13 +35,31 @@ import java.util.UUID;
 public interface DatasetContentLogRepo extends JpaRepository<DatasetContentLog, BigInteger> {
 
     /**
-     * Retrieves the latest database content entries for a specific UUID. It
+     * Find all the dataset content log entries that match a specific UUID.
+     *
+     * @param uuid              The UUID of the dataset
+     * @return the matching dataset content log entry if it exists
+     */
+    List<DatasetContentLog> findByUuid(UUID uuid);
+
+    /**
+     * Retrieves the original dataset content entry (i.e. the one with sequence
+     * number equal to ZERO (0)) for the provided UUID.
+     *
+     * @param uuid              The UUID of the dataset
+     * @return the original dataset content log entry if it exists
+     */
+    @Query("select d from DatasetContentLog d where d.uuid = :uuid AND d.sequenceNo = 0")
+    Optional<DatasetContentLog> findOriginalForUuid(UUID uuid);
+
+    /**
+     * Retrieves the latest dataset content entries for a specific UUID. It
      * also accepts a pageable argument to provide only a subset of the
      * matching entries (e.g. just the last one).
      *
      * @param uuid              The UUID of the dataset
      * @param generatedAt       The generation date of the content
-     * @return The dataset content if it exists
+     * @return the latest dataset content log entry if it exists
      */
     @Query("select d from DatasetContentLog d where d.uuid = :uuid AND d.generatedAt <= :generatedAt ORDER BY d.generatedAt DESC")
     List<DatasetContentLog> findLatestForUuid(UUID uuid, LocalDateTime generatedAt, Pageable pageable);

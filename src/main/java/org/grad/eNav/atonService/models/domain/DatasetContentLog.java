@@ -40,7 +40,7 @@ import java.util.UUID;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
-@Table(indexes = @Index(columnList = "datasetType, uuid, operation, generatedAt"))
+@Table(indexes = @Index(columnList = "datasetType, uuid, operation, sequenceNo, generatedAt"))
 @EntityListeners(AuditingEntityListener.class)
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -61,12 +61,14 @@ public class DatasetContentLog implements Serializable {
 
     private String operation;
 
+    private BigInteger sequenceNo;
+
     @CreatedDate
     private LocalDateTime generatedAt;
 
     private Geometry geometry;
 
-    /**
+    /*
      * This is actually created in Postgres as an OID field. To actually read
      * the contents of it we can run the following native query:
      * <p>
@@ -77,6 +79,18 @@ public class DatasetContentLog implements Serializable {
     private String content;
 
     private BigInteger contentLength;
+
+    /*
+     * This is actually created in Postgres as an OID field. To actually read
+     * the contents of it we can run the following native query:
+     * <p>
+     *     select convert_from(lo_get(delta), 'UTF-8') from dataset_content;
+     * </p>
+     */
+    @Lob
+    private String delta;
+
+    private BigInteger deltaLength;
 
     /**
      * Gets id.
@@ -151,6 +165,24 @@ public class DatasetContentLog implements Serializable {
     }
 
     /**
+     * Gets sequence no.
+     *
+     * @return the sequence no
+     */
+    public BigInteger getSequenceNo() {
+        return sequenceNo;
+    }
+
+    /**
+     * Sets sequence no.
+     *
+     * @param sequenceNo the sequence no
+     */
+    public void setSequenceNo(BigInteger sequenceNo) {
+        this.sequenceNo = sequenceNo;
+    }
+
+    /**
      * Gets generated at.
      *
      * @return the generated at
@@ -222,4 +254,39 @@ public class DatasetContentLog implements Serializable {
         this.contentLength = contentLength;
     }
 
+    /**
+     * Gets delta.
+     *
+     * @return the delta
+     */
+    public String getDelta() {
+        return delta;
+    }
+
+    /**
+     * Sets delta.
+     *
+     * @param delta the delta
+     */
+    public void setDelta(String delta) {
+        this.delta = delta;
+    }
+
+    /**
+     * Gets delta length.
+     *
+     * @return the delta length
+     */
+    public BigInteger getDeltaLength() {
+        return deltaLength;
+    }
+
+    /**
+     * Sets delta length.
+     *
+     * @param deltaLength the delta length
+     */
+    public void setDeltaLength(BigInteger deltaLength) {
+        this.deltaLength = deltaLength;
+    }
 }

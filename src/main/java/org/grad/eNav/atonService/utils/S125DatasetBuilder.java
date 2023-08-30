@@ -36,10 +36,10 @@ public class S125DatasetBuilder {
     /**
      * The Model Mapper
      */
-    private ModelMapper modelMapper;
+    private final ModelMapper modelMapper;
 
     // Class Variables
-    private _int.iala_aism.s125.gml._0_0.ObjectFactory s125GMLFactory;
+    private final _int.iala_aism.s125.gml._0_0.ObjectFactory s125GMLFactory;
 
     /**
      * Class Constructor.
