@@ -182,11 +182,11 @@ public class DatasetService {
     }
 
     /**
-     * A simple saving operation that persists the datasets in the database using
+     * The saving operation that persists the datasets in the database using
      * the correct repository based on the instance type.
      *
-     * @param dataset the Dataset entity to be saved
-     * @return the saved Dataset entity
+     * @param dataset the dataset entity to be saved
+     * @return the saved dataset entity
      */
     @Transactional
     public S125Dataset save(@NotNull S125Dataset dataset) {

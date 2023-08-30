@@ -17,10 +17,12 @@
 package org.grad.eNav.atonService.services;
 
 import _int.iala_aism.s125.gml._0_0.Dataset;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.exceptions.SavingFailedException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
@@ -64,6 +66,12 @@ public class DatasetContentService {
     ModelMapper modelMapper;
 
     /**
+     * The Entity Manager.
+     */
+    @Autowired
+    EntityManager entityManager;
+
+    /**
      * The Aids to Navigation Service.
      */
     @Autowired
@@ -81,6 +89,34 @@ public class DatasetContentService {
     @Autowired
     @Qualifier("s125PublicationChannel")
     PublishSubscribeChannel s125PublicationChannel;
+
+    /**
+     * The saving operation that persists the dataset content in the database
+     * using the respective repository.
+     *updated
+     * @param datasetContent the dataset content entity to be saved
+     * @return the saved dataset content entity
+     */
+    @Transactional
+    public DatasetContent save(@NotNull DatasetContent datasetContent) {
+        log.debug("Request to save Dataset Content : {}", datasetContent);
+
+        // Sanity Check
+        Optional.of(datasetContent)
+                .map(DatasetContent::getDataset)
+                .map(S125Dataset::getUuid)
+                .orElseThrow(() -> new SavingFailedException("Cannot save a dataset content entity without it being linked to an actual dataset"));
+
+        // Save the new/updated dataset content
+        final DatasetContent savedDatasetContent = this.datasetContentRepo.save(datasetContent);
+
+        // Refresh the savedDatasetContent object to fetch the updated values
+        this.entityManager.flush();
+        this.entityManager.refresh(savedDatasetContent);
+
+        // Return the updated dataset content
+        return savedDatasetContent;
+    }
 
     /**
      * Provided a valid dataset this function will build the respective
@@ -133,6 +169,9 @@ public class DatasetContentService {
                             )
                     ));
 
+            // Increase the dataset sequence number
+            datasetContent.increaseSequenceNo();
+
             // Populate the dataset content
             datasetContent.setDataset(s125Dataset);
             datasetContent.setContent(datasetXML);
@@ -141,7 +180,7 @@ public class DatasetContentService {
             datasetContent.setDeltaLength(BigInteger.valueOf(deltaXML.length()));
 
             // And finally perform the saving operation
-            s125Dataset.setDatasetContent(this.datasetContentRepo.save(datasetContent));
+            s125Dataset.setDatasetContent(this.save(datasetContent));
         } catch (Exception ex) {
             log.error(ex.getMessage());
             return CompletableFuture.failedFuture(ex);

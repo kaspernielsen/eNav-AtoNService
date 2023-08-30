@@ -16,11 +16,14 @@
 
 package org.grad.eNav.atonService.services;
 
+import jakarta.persistence.EntityManager;
+import org.grad.eNav.atonService.exceptions.SavingFailedException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.repos.DatasetContentRepo;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.MappingException;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -41,6 +45,7 @@ import org.springframework.messaging.Message;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -48,8 +53,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -73,6 +77,12 @@ class DatasetContentServiceTest {
     ModelMapper modelMapper;
 
     /**
+     * The Entity Manager mock.
+     */
+    @Mock
+    EntityManager entityManager;
+
+    /**
      * The Aids to Navigation Service.
      */
     @Mock
@@ -93,7 +103,9 @@ class DatasetContentServiceTest {
     // Test Variables
     private GeometryFactory factory;
     private List<AidsToNavigation> aidsToNavigationList;
+    private S125Dataset newDataset;
     private S125Dataset existingDataset;
+    private DatasetContent newDatasetContent;
     private DatasetContent existingDatasetContent;
 
     /**
@@ -117,6 +129,13 @@ class DatasetContentServiceTest {
             this.aidsToNavigationList.add(aidsToNavigation);
         }
 
+        // Create a new Dataset with a UUID (required for saving)
+        this.newDataset = new S125Dataset("NewDataset");
+        this.newDataset.setUuid(UUID.randomUUID());
+        this.newDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));
+        this.newDataset.setCreatedAt(LocalDateTime.now());
+        this.newDataset.setLastUpdatedAt(LocalDateTime.now());
+
         // Create a Dataset with a UUID
         this.existingDataset = new S125Dataset("ExistingDataset");
         this.existingDataset.setUuid(UUID.randomUUID());
@@ -124,13 +143,59 @@ class DatasetContentServiceTest {
         this.existingDataset.setCreatedAt(LocalDateTime.now());
         this.existingDataset.setLastUpdatedAt(LocalDateTime.now());
 
-        // And create a test content for the dataset
+        // Create a test new content for the dataset
+        this.newDatasetContent = new DatasetContent();
+        this.newDatasetContent.setContent("New dataset content");
+        this.newDatasetContent.setContentLength(BigInteger.valueOf(this.newDatasetContent.getContent().length()));
+        this.newDatasetContent.setGeneratedAt(LocalDateTime.now());
+        this.newDatasetContent.setDataset(this.newDataset);
+        this.newDatasetContent.setDelta("");
+        this.newDatasetContent.setDeltaLength(BigInteger.ZERO);
+
+        // And create a test existing content for the dataset
         this.existingDatasetContent = new DatasetContent();
         this.existingDatasetContent.setId(BigInteger.TWO);
         this.existingDatasetContent.setContent("Existing dataset content");
         this.existingDatasetContent.setContentLength(BigInteger.valueOf(this.existingDatasetContent.getContent().length()));
         this.existingDatasetContent.setGeneratedAt(LocalDateTime.now());
         this.existingDataset.setDatasetContent(this.existingDatasetContent);
+    }
+
+    /**
+     * Test that we can successfully save a new dataset content into the
+     * database and the updated result will be returned.
+     */
+    @Test
+    void testSave() {
+        doReturn(this.newDatasetContent).when(this.datasetContentRepo).save(any());
+
+        // Perform the service call
+        DatasetContent result = this.datasetContentService.save(this.newDatasetContent);
+
+        // Test the result
+        assertNotNull(result);
+        Assertions.assertEquals(this.newDatasetContent.getId(), result.getId());
+        Assertions.assertEquals(this.newDatasetContent.getGeneratedAt(), result.getGeneratedAt());
+        Assertions.assertEquals(this.newDatasetContent.getSequenceNo(), result.getSequenceNo());
+        Assertions.assertEquals(this.newDatasetContent.getContent(), result.getContent());
+        Assertions.assertEquals(this.newDatasetContent.getContentLength(), result.getContentLength());
+        Assertions.assertEquals(this.newDatasetContent.getDelta(), result.getDelta());
+        Assertions.assertEquals(this.newDatasetContent.getDeltaLength(), result.getDeltaLength());
+    }
+
+    /**
+     * Test that we can successfully save a new dataset content into the
+     * database and the updated result will be returned.
+     */
+    @Test
+    void testSaveWithoutDataset() {
+        // Remove the dataset link from the dataset content
+        this.newDatasetContent.setDataset(null);
+
+        // Perform the service call
+        assertThrows(SavingFailedException.class, () ->
+                this.datasetContentService.save(this.newDatasetContent)
+        );
     }
 
     /**
@@ -146,7 +211,7 @@ class DatasetContentServiceTest {
 
         // Mock the service calls
         doReturn(aidsToNavigationPage).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
-        doAnswer((inv) -> inv.getArgument(0)).when(this.datasetContentRepo).save(any());
+        doAnswer((inv) -> inv.getArgument(0)).when(this.datasetContentService).save(any());
 
         // Perform the service call
         CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset);
@@ -164,7 +229,7 @@ class DatasetContentServiceTest {
         assertEquals(BigInteger.valueOf(result.get().getDatasetContent().getContent().length()), result.get().getDatasetContent().getContentLength());
 
         // Make also sure that we save and published the generated content
-        verify(this.datasetContentRepo, times(1)).save(any(DatasetContent.class));
+        verify(this.datasetContentService, times(1)).save(any(DatasetContent.class));
         verify(this.s125DeletionChannel, times(1)).send(any(Message.class));
     }
 
@@ -173,27 +238,27 @@ class DatasetContentServiceTest {
      * exception is thrown, the CompletableFuture response will include the
      * message of that exception.
      */
-//    @Test
-//    void testGenerateDatasetContentWithException() throws ExecutionException, InterruptedException {
-//        final int numOfAtons = 5;
-//        final Page<AidsToNavigation> aidsToNavigationPage = new PageImpl<>(this.aidsToNavigationList.subList(0, numOfAtons), Pageable.ofSize(5), this.aidsToNavigationList.size());
-//
-//        // Mock the service calls
-//        doReturn(aidsToNavigationPage).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
-//        doThrow(new MappingException(Collections.emptyList())).when(this.modelMapper).map(any(), any());
-//
-//        // Perform the service call
-//        CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset);
-//
-//        // Test the result
-//        assertNotNull(result);
-//        assertTrue(result.isDone());
-//        assertTrue(result.isCompletedExceptionally());
-//        assertThrows(ExecutionException.class, result::get);
-//
-//        // Make also sure that we save and published the generated content
-//        verify(this.datasetContentRepo, never()).save(any(DatasetContent.class));
-//        verify(this.s125DeletionChannel, never()).send(any(Message.class));
-//    }
+    @Test
+    void testGenerateDatasetContentWithException() throws ExecutionException, InterruptedException {
+        final int numOfAtons = 5;
+        final Page<AidsToNavigation> aidsToNavigationPage = new PageImpl<>(this.aidsToNavigationList.subList(0, numOfAtons), Pageable.ofSize(5), this.aidsToNavigationList.size());
+
+        // Mock the service calls
+        doReturn(aidsToNavigationPage).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
+        doThrow(new MappingException(Collections.emptyList())).when(this.modelMapper).map(any(), any());
+
+        // Perform the service call
+        CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset);
+
+        // Test the result
+        assertNotNull(result);
+        assertTrue(result.isDone());
+        assertTrue(result.isCompletedExceptionally());
+        assertThrows(ExecutionException.class, result::get);
+
+        // Make also sure that we save and published the generated content
+        verify(this.datasetContentRepo, never()).save(any(DatasetContent.class));
+        verify(this.s125DeletionChannel, never()).send(any(Message.class));
+    }
 
 }

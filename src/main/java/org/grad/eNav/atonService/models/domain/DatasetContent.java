@@ -49,17 +49,6 @@ import java.util.Optional;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class DatasetContent implements Serializable {
 
-    /**
-     * Whenever an update takes place, the sequence number of the dataset
-     * content should be increased.
-     */
-    @PreUpdate
-    public void preUpdate() {
-        this.sequenceNo = Optional.of(this.sequenceNo)
-                .map(BigInteger.ONE::add)
-                .orElse(BigInteger.ZERO);
-    }
-
     // Class Variables
     @Id
     @ScaledNumberField(name = "id_sort", decimalScale=0, sortable = Sortable.YES)
@@ -246,4 +235,15 @@ public class DatasetContent implements Serializable {
         this.deltaLength = deltaLength;
     }
 
+    /**
+     * Whenever a persistence/update operation takes place, the sequence number
+     * of the dataset content should be increased.
+     */
+    //@PrePersist
+    //@PreUpdate
+    public void increaseSequenceNo() {
+        this.sequenceNo = Optional.ofNullable(this.sequenceNo)
+                .map(BigInteger.ONE::add)
+                .orElse(BigInteger.ZERO);
+    }
 }
