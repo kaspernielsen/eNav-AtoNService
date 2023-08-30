@@ -260,7 +260,7 @@ class DatasetContentLogServiceTest {
     }
 
     /**
-     * Test that we can successfully save a new dataset content into the
+     * Test that we can successfully save a new dataset content log into the
      * database and the updated result will be returned.
      */
     @Test
