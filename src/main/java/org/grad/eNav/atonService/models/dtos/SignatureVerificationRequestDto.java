@@ -19,7 +19,7 @@ package org.grad.eNav.atonService.models.dtos;
 import java.util.Objects;
 
 /**
- * The type Signature verification request.
+ * The Signature Verification Request DTO.
  *
  * Note that the class variables are expected to be Base64 encoded.
  *

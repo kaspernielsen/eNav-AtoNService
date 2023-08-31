@@ -16,9 +16,11 @@
 
 package org.grad.eNav.atonService.services;
 
+import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
 import _int.iala_aism.s125.gml._0_0.Dataset;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
+import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
@@ -38,10 +40,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.geotools.filter.function.StaticGeometry.not;
 
 /**
  * The S-125 Dataset Content Service.
@@ -121,7 +125,22 @@ public class DatasetContentService {
     public CompletableFuture<S125Dataset> generateDatasetContent(@NotNull S125Dataset s125Dataset) {
         log.debug("Request to generate the content for Dataset with UUID: {}", s125Dataset.getUuid());
 
-        // Get all the matching Aids to Navigation - if we have a geometry at least
+        // Get all the previously included Aids to Navigation - if we have the old content
+        final Set<String> origAtonNumbers = Optional.of(s125Dataset)
+                .map(S125Dataset::getDatasetContent)
+                .map(DatasetContent::getContent)
+                .map(xml -> {
+                    try { return S125Utils.getS125Members(xml); }
+                    catch (JAXBException ex) { return null; }
+                })
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .filter(AidsToNavigationType.class::isInstance)
+                .map(AidsToNavigationType.class::cast)
+                .map(AidsToNavigationType::getAtonNumber)
+                .collect(Collectors.toSet());
+
+        // Get all the new matching Aids to Navigation - if we have a geometry at least
         final List<AidsToNavigation> atonList = Optional.of(s125Dataset)
                 .map(S125Dataset::getGeometry)
                 .map(geometry ->
@@ -130,10 +149,20 @@ public class DatasetContentService {
                 .orElseGet(Page::empty)
                 .getContent();
 
-        // Filter the new/updated Aids to Navigation entries
-        final List<AidsToNavigation> deltaAtonList = atonList.stream()
+        // Filter the new/updated Aids to Navigation entries - CAREFUL keel only
+        // the unique items cause some might be included in both cases.
+        final List<AidsToNavigation> newAtonList = atonList.stream()
+                .filter(aton -> Objects.nonNull(aton.getAtonNumber()))
+                .filter(aton -> not(origAtonNumbers.contains(aton.getAtonNumber())))
+                .toList();
+        final List<AidsToNavigation> updatedAtonList = atonList.stream()
                 .filter(aton -> Objects.nonNull(aton.getLastModifiedAt()))
                 .filter(aton -> aton.getLastModifiedAt().isAfter(s125Dataset.getLastUpdatedAt()))
+                .toList();
+        final List<AidsToNavigation> deltaAtonList = Stream
+                .concat(newAtonList.stream(), updatedAtonList.stream())
+                .collect(Collectors.toSet()) // To keep only the unique items
+                .stream()
                 .toList();
 
         // Now try to marshal the dataset into an XML string and update the content/delta

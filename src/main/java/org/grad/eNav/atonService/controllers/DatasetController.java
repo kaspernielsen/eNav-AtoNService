@@ -40,6 +40,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 
+/**
+ * REST controller for managing Datasets.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
 @RestController
 @RequestMapping("/api/dataset")
 @Slf4j
@@ -69,7 +74,7 @@ public class DatasetController {
      * @param uuid the UUID of the dataset to be retrieved
      * @param geometry the geometry for Dataset filtering
      * @param pageable the pagination information
-     * @return the ResponseEntity with status 200 (OK) and the list of stations in body
+     * @return the ResponseEntity with status 200 (OK) and the list of datasets in body
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<S125DataSetDto>> getDatasets(@RequestParam("datasetTitle") Optional<UUID> uuid,
@@ -94,7 +99,7 @@ public class DatasetController {
      * for the datatables front-end.
      *
      * @param dtPagingRequest the datatables paging request
-     * @return the ResponseEntity with status 200 (OK) and the list of stations in body
+     * @return the ResponseEntity with status 200 (OK) and the list of datasets in body
      */
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<S125DataSetDto>> getDatasetsForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {

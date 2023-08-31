@@ -69,7 +69,18 @@ class HTMLViewerControllerTest {
     void testGetAtons() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(get("/atons")
-                        .contentType(MediaType.TEXT_HTML))
+                .contentType(MediaType.TEXT_HTML))
+                .andExpect(status().isOk());
+    }
+
+    /**
+     * Test that we can access the Logs HTML page.
+     */
+    @Test
+    void testGetLogs() throws Exception {
+        // Perform the MVC request
+        this.mockMvc.perform(get("/logs")
+                .contentType(MediaType.TEXT_HTML))
                 .andExpect(status().isOk());
     }
 

@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * The S-125 Dataset Entity Content Log Class
+ * The Dataset Content Log Entity Class
  * <p>
  * This class is used to log the generated S-125 dataset content into a
  * separate table that can be used for normal queries but also auditing

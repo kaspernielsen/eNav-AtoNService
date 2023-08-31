@@ -18,13 +18,17 @@ package org.grad.eNav.atonService.services;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,7 +66,19 @@ public class DatasetContentLogService {
     DatasetContentLogRepo datasetContentLogRepo;
 
     /**
-     * Find the latest dataset content by UUID.
+     * Find one dataset content log by ID.
+     *
+     * @param id the UUID of the dataset
+     * @return the dataset
+     */
+    @Transactional(readOnly = true)
+    public DatasetContentLog findOne(@NotNull BigInteger id) {
+        return this.datasetContentLogRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset content log with ID %d was not found", id)));
+    }
+
+    /**
+     * Find the latest dataset content log by UUID.
      *
      * @param uuid the UUID of the dataset
      * @return the dataset content
@@ -117,10 +133,40 @@ public class DatasetContentLogService {
                 .stream()
                 .findFirst()
                 .orElseGet(() ->
-                    // Handling cases where the content is not yet generated
-                    // We need to first generate and store this manually
-                    this.save(this.generateDatasetContentLog(this.datasetService.findOne(uuid), "CREATED"))
+                        // Handling cases where the content is not yet generated
+                        // We need to first generate and store this manually
+                        this.save(this.generateDatasetContentLog(this.datasetService.findOne(uuid), "CREATED"))
                 );
+    }
+
+    /**
+     * Get all the dataset content logs in a pageable search.
+     *
+     * @param pageable  The pageable result ouput
+     * @return The matching dataset content logs in a paged response
+     */
+    @Transactional(readOnly = true)
+    public Page<DatasetContentLog> findAll(Pageable pageable) {
+        log.debug("Request to get Datasets Content Logs in a pageable search");
+
+        // Return the query result
+        return this.datasetContentLogRepo.findAll(pageable);
+    }
+
+    /**
+     * Handles a datatables pagination request and returns the dataset content
+     * log results list in an appropriate format to be viewed by a datatables
+     * jQuery table.
+     *
+     * @param dtPagingRequest the Datatables pagination request
+     * @return the Datatables paged response
+     */
+    @Transactional(readOnly = true)
+    public Page<DatasetContentLog> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+        log.debug("Request to get Dataset Content Logs in a Datatables pageable search");
+
+        // Return the query result
+        return this.findAll(dtPagingRequest.toPageRequest());
     }
 
     /**
