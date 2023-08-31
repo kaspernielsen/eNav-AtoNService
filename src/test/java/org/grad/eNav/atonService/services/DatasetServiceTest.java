@@ -82,6 +82,12 @@ class DatasetServiceTest {
     DatasetRepo datasetRepo;
 
     /**
+     * The S-125 Dataset Channel to publish the published data to.
+     */
+    @Mock
+    PublishSubscribeChannel s125PublicationChannel;
+
+    /**
      * The S-125 Dataset Channel to publish the deleted data to.
      */
     @Mock
@@ -301,7 +307,10 @@ class DatasetServiceTest {
     @Test
     void testSave() {
         doReturn(this.newDataset).when(this.datasetRepo).save(any());
-        doReturn(CompletableFuture.completedFuture(this.newDataset)).when(this.datasetContentService).generateDatasetContent(any());
+
+        // Create a data content generation response to wait for
+        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.completedFuture(this.newDataset);
+        doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
 
         // Perform the service call
         S125Dataset result = this.datasetService.save(new S125Dataset());
@@ -322,6 +331,31 @@ class DatasetServiceTest {
         assertNotNull(result.getDatasetContent());
         assertEquals(this.newDataset.getDatasetContent().getContent(), result.getDatasetContent().getContent());
         assertEquals(this.newDataset.getDatasetContent().getContentLength(), result.getDatasetContent().getContentLength());
+
+        // Wait until the end and verify that the message was published
+        assertTrue(contentGenerationTask.isDone());
+        verify(this.s125PublicationChannel, timeout(100).times(1)).send(any(Message.class));
+    }
+
+    /**
+     * Test that if the dataset content generation fails, then a log entry will
+     * be generated and no dataset will be published in the publish-subscribe
+     * channels.
+     */
+    @Test
+    void testSaveNotGenerated() {
+        doReturn(this.newDataset).when(this.datasetRepo).save(any());
+
+        // Create a data content generation response to wait for
+        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.failedFuture(new RuntimeException("something went wrong"));
+        doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
+
+        // Perform the service call
+        this.datasetService.save(new S125Dataset());
+
+        // Also verify that the message was NOT published
+        assertThrows(RuntimeException.class, contentGenerationTask::join);
+        verify(this.s125PublicationChannel, timeout(100).times(0)).send(any(Message.class));
     }
 
     /**
@@ -335,7 +369,8 @@ class DatasetServiceTest {
         // Perform the service call
         this.datasetService.delete(this.existingDataset.getUuid());
 
-        // Verify that our message was saved and sent
+        // Verify that our message was deleted and sent
+        verify(this.datasetRepo, times(1)).delete(any());
         verify(this.s125DeletionChannel, times(1)).send(any(Message.class));
     }
 
