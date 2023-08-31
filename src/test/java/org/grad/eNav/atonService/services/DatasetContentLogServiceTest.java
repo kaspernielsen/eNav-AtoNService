@@ -16,9 +16,11 @@
 
 package org.grad.eNav.atonService.services;
 
+import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,14 +33,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,6 +72,8 @@ class DatasetContentLogServiceTest {
     DatasetContentLogRepo datasetContentLogRepo;
 
     // Test Variables
+    private Pageable pageable;
+    private List<DatasetContentLog> datasetContentLogList;
     private S125Dataset s125Dataset;
     private DatasetContentLog newDatasetContentLog;
     private DatasetContentLog existingDatasetContentLog;
@@ -78,6 +88,24 @@ class DatasetContentLogServiceTest {
         // Test Variables
         GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
+        // Create a pageable definition
+        this.pageable = PageRequest.of(0, 5);
+
+        // Initialise the Dataset Content Log list
+        this.datasetContentLogList = new ArrayList<>();
+        for(long i=0; i<10; i++) {
+            DatasetContentLog datasetContentLog = new DatasetContentLog();
+            datasetContentLog.setId(BigInteger.valueOf(i));
+            datasetContentLog.setDatasetType(DatasetType.S125);
+            datasetContentLog.setSequenceNo(BigInteger.ONE);
+            datasetContentLog.setGeneratedAt(LocalDateTime.now());
+            datasetContentLog.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
+            datasetContentLog.setOperation("UPDATED");
+            datasetContentLog.setContent("Existing Dataset Content " + i);
+            datasetContentLog.setContentLength(BigInteger.valueOf(datasetContentLog.getContent().length()));
+            this.datasetContentLogList.add(datasetContentLog);
+        }
+
         // Create a Dataset with a UUID
         this.s125Dataset = new S125Dataset("ExistingDataset");
         this.s125Dataset.setUuid(UUID.randomUUID());
@@ -88,7 +116,7 @@ class DatasetContentLogServiceTest {
         this.s125Dataset.getDatasetContent().setSequenceNo(BigInteger.ONE);
         this.s125Dataset.getDatasetContent().setContent("Existing Dataset Content");
 
-        // Create a Dataset Content Log for the new dataset
+        // Create a new Dataset Content Log entry
         this.newDatasetContentLog = new DatasetContentLog();
         this.newDatasetContentLog.setDatasetType(DatasetType.S125);
         this.newDatasetContentLog.setSequenceNo(BigInteger.ZERO);
@@ -98,7 +126,7 @@ class DatasetContentLogServiceTest {
         this.newDatasetContentLog.setContent("New Dataset Content");
         this.newDatasetContentLog.setContentLength(BigInteger.valueOf(this.newDatasetContentLog.getContent().length()));
 
-        // Create a Dataset Content Log for the existing dataset
+        // Create an existing Dataset Content Log entry
         this.existingDatasetContentLog = new DatasetContentLog();
         this.existingDatasetContentLog.setId(BigInteger.ONE);
         this.existingDatasetContentLog.setDatasetType(DatasetType.S125);
@@ -108,8 +136,10 @@ class DatasetContentLogServiceTest {
         this.existingDatasetContentLog.setOperation("UPDATED");
         this.existingDatasetContentLog.setContent("Existing Dataset Content");
         this.existingDatasetContentLog.setContentLength(BigInteger.valueOf(this.existingDatasetContentLog.getContent().length()));
+        this.existingDatasetContentLog.setDelta("Existing Dataset Content Delta");
+        this.existingDatasetContentLog.setDeltaLength(BigInteger.valueOf(this.existingDatasetContentLog.getDelta().length()));
 
-        // Create a Dataset Content Log for the existing dataset
+        // Create another existing Dataset Content Log containing a delta
         this.deltaDatasetContentLog = new DatasetContentLog();
         this.deltaDatasetContentLog.setId(BigInteger.TWO);
         this.deltaDatasetContentLog.setDatasetType(DatasetType.S125);
@@ -117,8 +147,49 @@ class DatasetContentLogServiceTest {
         this.deltaDatasetContentLog.setGeneratedAt(LocalDateTime.now());
         this.deltaDatasetContentLog.setGeometry(this.s125Dataset.getGeometry());
         this.deltaDatasetContentLog.setOperation("UPDATED");
-        this.deltaDatasetContentLog.setContent("Existing Dataset Content");
-        this.deltaDatasetContentLog.setContentLength(BigInteger.valueOf(this.existingDatasetContentLog.getContent().length()));
+        this.deltaDatasetContentLog.setContent("Another Dataset Content");
+        this.deltaDatasetContentLog.setContentLength(BigInteger.valueOf(this.deltaDatasetContentLog.getContent().length()));
+        this.deltaDatasetContentLog.setDelta("Another Dataset Content Delta");
+        this.deltaDatasetContentLog.setDeltaLength(BigInteger.valueOf(this.deltaDatasetContentLog.getDelta().length()));
+    }
+
+    /**
+     * Test that we can successfully retrieve a specific dataset content log
+     * if the log's ID is provided.
+     */
+    @Test
+    void testFindOne() {
+        doReturn(Optional.of(this.existingDatasetContentLog)).when(this.datasetContentLogRepo).findById(any());
+
+        // Perform the service call
+        DatasetContentLog result = this.datasetContentLogService.findOne(this.existingDatasetContentLog.getId());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingDatasetContentLog.getId(), result.getId());
+        assertEquals(this.existingDatasetContentLog.getUuid(), result.getUuid());
+        assertEquals(this.existingDatasetContentLog.getDatasetType(), result.getDatasetType());
+        assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
+        assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
+        assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
+        assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
+        assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
+    }
+
+    /**
+     * Test that if the provided dataset content log ID does not exist, then
+     * the retrieval function will throw a DataNotFound exception.
+     */
+    @Test
+    void testFindOneNotFound() {
+        doReturn(Optional.empty()).when(this.datasetContentLogRepo).findById(any());
+
+        // Perform the service call
+        assertThrows(
+                DataNotFoundException.class,
+                ()-> this.datasetContentLogService.findOne(this.existingDatasetContentLog.getId())
+        );
     }
 
     /**
@@ -257,6 +328,95 @@ class DatasetContentLogServiceTest {
         assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
         assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
         assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
+    }
+
+    /**
+     * Test that we can search for all the datasets currently present in the
+     * database and matching the provided criteria, through a paged call.
+     */
+    @Test
+    void testFindAllPaged() {
+        // Mock the repository query
+        doAnswer((inv) -> new PageImpl<>(this.datasetContentLogList, this.pageable, this.datasetContentLogList.size()))
+                .when(this.datasetContentLogRepo)
+                .findAll(any(Pageable.class));
+
+        // Perform the service call
+        Page<DatasetContentLog> result = this.datasetContentLogService.findAll(pageable);
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(5, result.getSize());
+
+        // Test each of the result entries
+        for(int i=0; i < result.getSize(); i++){
+            assertNotNull(result.getContent().get(i));
+            assertEquals(this.datasetContentLogList.get(i).getId(), result.getContent().get(i).getId());
+            assertEquals(this.datasetContentLogList.get(i).getUuid(), result.getContent().get(i).getUuid());
+            assertEquals(this.datasetContentLogList.get(i).getDatasetType(), result.getContent().get(i).getDatasetType());
+            assertEquals(this.datasetContentLogList.get(i).getGeneratedAt(), result.getContent().get(i).getGeneratedAt());
+            assertEquals(this.datasetContentLogList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
+            assertEquals(this.datasetContentLogList.get(i).getOperation(), result.getContent().get(i).getOperation());
+            assertEquals(this.datasetContentLogList.get(i).getSequenceNo(), result.getContent().get(i).getSequenceNo());
+            assertEquals(this.datasetContentLogList.get(i).getContent(), result.getContent().get(i).getContent());
+            assertEquals(this.datasetContentLogList.get(i).getContentLength(), result.getContent().get(i).getContentLength());
+        }
+    }
+
+    /**
+     * Test that we can retrieve the paged list of datatable entries for a
+     * Datatables pagination request (which by the way also includes search and
+     * sorting definitions).
+     */
+    @Test
+    void testHandleDatatablesPagingRequest() {
+        // First create the pagination request
+        DtPagingRequest dtPagingRequest = new DtPagingRequest();
+        dtPagingRequest.setStart(0);
+        dtPagingRequest.setLength(5);
+
+        // Set the pagination request columns
+        dtPagingRequest.setColumns(new ArrayList());
+        Stream.of("id", "datasetType", "uuid","operation","sequenceNo")
+                .map(DtColumn::new)
+                .forEach(dtPagingRequest.getColumns()::add);
+
+        // Set the pagination request ordering
+        DtOrder dtOrder = new DtOrder();
+        dtOrder.setColumn(0);
+        dtOrder.setDir(DtDirection.asc);
+        dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
+
+        // Set the pagination search
+        DtSearch dtSearch = new DtSearch();
+        dtSearch.setValue("search-term");
+        dtPagingRequest.setSearch(dtSearch);
+
+        // Mock the internal service query// Mock the repository query
+        doAnswer((inv) -> new PageImpl<>(this.datasetContentLogList, this.pageable, this.datasetContentLogList.size()))
+                .when(this.datasetContentLogService)
+                .findAll(any(Pageable.class));
+
+        // Perform the service call
+        Page<DatasetContentLog> result = this.datasetContentLogService.handleDatatablesPagingRequest(dtPagingRequest);
+
+        // Validate the result
+        assertNotNull(result);
+        assertEquals(5, result.getSize());
+
+        // Test each of the result entries
+        for(int i=0; i < result.getSize(); i++){
+            assertNotNull(result.getContent().get(i));
+            assertEquals(this.datasetContentLogList.get(i).getId(), result.getContent().get(i).getId());
+            assertEquals(this.datasetContentLogList.get(i).getUuid(), result.getContent().get(i).getUuid());
+            assertEquals(this.datasetContentLogList.get(i).getDatasetType(), result.getContent().get(i).getDatasetType());
+            assertEquals(this.datasetContentLogList.get(i).getGeneratedAt(), result.getContent().get(i).getGeneratedAt());
+            assertEquals(this.datasetContentLogList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
+            assertEquals(this.datasetContentLogList.get(i).getOperation(), result.getContent().get(i).getOperation());
+            assertEquals(this.datasetContentLogList.get(i).getSequenceNo(), result.getContent().get(i).getSequenceNo());
+            assertEquals(this.datasetContentLogList.get(i).getContent(), result.getContent().get(i).getContent());
+            assertEquals(this.datasetContentLogList.get(i).getContentLength(), result.getContent().get(i).getContentLength());
+        }
     }
 
     /**

@@ -7,7 +7,7 @@ var drawControl = undefined;
 var drawnItems = undefined;
 
 /**
- * The AtoN Messages Table Column Definitions
+ * The Dataset Table Column Definitions
  * @type {Array}
  */
 var datasetColumnDefs = [

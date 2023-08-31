@@ -123,6 +123,20 @@ public class HTMLViewerController {
     }
 
     /**
+     * The Aids to Navigation page of the AtoN Service Application.
+     *
+     * @param model The application UI model
+     * @return The index page
+     */
+    @GetMapping("/logs")
+    public String logs(Model model) {
+        model.addAttribute("appName", this.appName);
+        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
+        model.addAttribute("appCopyright", this.appCopyright);
+        return "datasetContentLogs";
+    }
+
+    /**
      * The about page of the AtoN Service Application.
      *
      * @param model The application UI model

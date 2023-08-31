@@ -19,8 +19,10 @@ package org.grad.eNav.atonService;
 import org.geotools.data.DataStore;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.config.GlobalConfig;
+import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.dtos.DatasetContentLogDto;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.models.dtos.s125.S125DataSetDto;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -61,6 +63,14 @@ public class TestingConfiguration {
 	 */
 	@Bean
 	public DomainDtoMapper<S125DataSetDto, S125Dataset> datasetDomainMapper() {
+		return new DomainDtoMapper<>();
+	}
+
+	/**
+	 * DatasetContentLogMapper from Domain to DTO.
+	 */
+	@Bean
+	public DomainDtoMapper<DatasetContentLog, DatasetContentLogDto> datasetContentLogDtoMapper() {
 		return new DomainDtoMapper<>();
 	}
 
