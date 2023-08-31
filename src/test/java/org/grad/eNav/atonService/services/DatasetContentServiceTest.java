@@ -39,8 +39,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.integration.channel.PublishSubscribeChannel;
-import org.springframework.messaging.Message;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -93,12 +91,6 @@ class DatasetContentServiceTest {
      */
     @Mock
     DatasetContentRepo datasetContentRepo;
-
-    /**
-     * The S-125 Dataset Channel to publish the deleted data to.
-     */
-    @Mock
-    PublishSubscribeChannel s125DeletionChannel;
 
     // Test Variables
     private GeometryFactory factory;
@@ -230,7 +222,6 @@ class DatasetContentServiceTest {
 
         // Make also sure that we save and published the generated content
         verify(this.datasetContentService, times(1)).save(any(DatasetContent.class));
-        verify(this.s125DeletionChannel, times(1)).send(any(Message.class));
     }
 
     /**
@@ -258,7 +249,6 @@ class DatasetContentServiceTest {
 
         // Make also sure that we save and published the generated content
         verify(this.datasetContentRepo, never()).save(any(DatasetContent.class));
-        verify(this.s125DeletionChannel, never()).send(any(Message.class));
     }
 
 }

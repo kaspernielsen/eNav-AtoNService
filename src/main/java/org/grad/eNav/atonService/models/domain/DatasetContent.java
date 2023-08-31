@@ -238,6 +238,11 @@ public class DatasetContent implements Serializable {
     /**
      * Whenever a persistence/update operation takes place, the sequence number
      * of the dataset content should be increased.
+     * <p/>
+     * NOTE: This function could be annotated with a @PrePersist/@PreUpdate
+     * annotation, but this is not fired in cases where the updated entry
+     * remains the same. Note a big issue, but we need to be careful so for
+     * the time being this is called manually.
      */
     //@PrePersist
     //@PreUpdate

@@ -92,6 +92,13 @@ public class DatasetService {
     DatasetRepo datasetRepo;
 
     /**
+     * The S-125 Dataset Channel to publish the published data to.
+     */
+    @Autowired
+    @Qualifier("s125PublicationChannel")
+    PublishSubscribeChannel s125PublicationChannel;
+
+    /**
      * The S-125 Dataset Channel to publish the deleted data to.
      */
     @Autowired
@@ -233,13 +240,19 @@ public class DatasetService {
         this.entityManager.refresh(savedDataset);
 
         // Update the dataset content asynchronously
-        this.datasetContentService.generateDatasetContent(savedDataset).whenCompleteAsync((result, ex) ->
-                Optional.ofNullable(ex)
-                        .ifPresentOrElse(
-                                throwable -> log.error("Error while generating the content of the dataset with UUID {}: {}", savedDataset.getUuid(), throwable.getMessage()),
-                                () -> log.info("Successfully generated the content of the dataset with UUID {}", savedDataset.getUuid())
-                        )
-        );
+        this.datasetContentService.generateDatasetContent(savedDataset)
+                .whenCompleteAsync((result, ex) -> {
+                    if(Objects.nonNull(ex)) {
+                        log.error("Error while generating the content of the dataset with UUID {}: {}", dataset.getUuid(), ex.getMessage());
+                    } else {
+                        log.info("Successfully generated the content of the dataset with UUID {}", result.getUuid());
+                        // Publish the updated dataset to the publication channel
+                        this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
+                                .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
+                                .setHeader("deletion", false)
+                                .build());
+                    }
+                });
 
         // And return the object for AOP
         return savedDataset;

@@ -29,15 +29,10 @@ import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.repos.DatasetContentRepo;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.s125.utils.S125Utils;
-import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.integration.channel.PublishSubscribeChannel;
-import org.springframework.integration.support.MessageBuilder;
-import org.springframework.messaging.MessageHeaders;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,13 +77,6 @@ public class DatasetContentService {
      */
     @Autowired
     DatasetContentRepo datasetContentRepo;
-
-    /**
-     * The S-125 Dataset Channel to publish the published data to.
-     */
-    @Autowired
-    @Qualifier("s125PublicationChannel")
-    PublishSubscribeChannel s125PublicationChannel;
 
     /**
      * The saving operation that persists the dataset content in the database
@@ -185,12 +173,6 @@ public class DatasetContentService {
             log.error(ex.getMessage());
             return CompletableFuture.failedFuture(ex);
         }
-
-        // Publish the updated dataset to the publication channel
-        this.s125PublicationChannel.send(MessageBuilder.withPayload(s125Dataset)
-                .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
-                .setHeader("deletion", false)
-                .build());
 
         // Now return the update dataset content
         return CompletableFuture.completedFuture(s125Dataset);
