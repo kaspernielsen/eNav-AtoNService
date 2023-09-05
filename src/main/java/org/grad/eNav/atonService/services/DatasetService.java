@@ -118,7 +118,7 @@ public class DatasetService {
             "datasetIdentificationInformation.productEdition",
             "datasetIdentificationInformation.applicationProfile",
             "datasetIdentificationInformation.datasetFileIdentifier",
-            "datasetIdentificationInformation.datasetAbstract",
+            "datasetIdentificationInformation.datasetAbstract"
     };
     private final String[] searchFieldsWithSort = new String[] {
 
@@ -188,7 +188,7 @@ public class DatasetService {
     public Page<S125Dataset> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         log.debug("Request to get S-125 Datasets in a Datatables pageable search");
         // Create the search query
-        SearchQuery<S125Dataset> searchQuery = this.getDatasetSearchQueryByText(
+        final SearchQuery<S125Dataset> searchQuery = this.getDatasetSearchQueryByText(
                 dtPagingRequest.getSearch().getValue(),
                 dtPagingRequest.getSearch().getIncludeCancelled(),
                 dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort))
@@ -296,6 +296,11 @@ public class DatasetService {
                 .map(cancellationUuid ->true)
                 .ifPresent(result::setCancelled);
 
+        // Increase the dataset content sequence for logging
+        Optional.of(result)
+                .map(S125Dataset::getDatasetContent)
+                .ifPresent(DatasetContent::increaseSequenceNo);
+
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset cancelledDataset = this.datasetRepo.save(result);
 
@@ -327,6 +332,11 @@ public class DatasetService {
         final S125Dataset result = this.datasetRepo.findById(uuid)
                 .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
 
+        // Increase the dataset content sequence for logging
+        Optional.of(result)
+                .map(S125Dataset::getDatasetContent)
+                .ifPresent(DatasetContent::increaseSequenceNo);
+
         // Now delete the dataset
         this.datasetRepo.delete(result);
 
@@ -342,9 +352,19 @@ public class DatasetService {
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
-     * search test. This query will be based solely on the station nodes table
-     * and will include the following fields:
-     * -
+     * search test. This query will be based on both the dataset and
+     * datasetIdentificationInformation tables and will include the following
+     * fields:
+     * <ul>
+     *  <li>datasetIdentificationInformation.datasetTitle</li>
+     *  <li>datasetIdentificationInformation.encodingSpecification</li>
+     *  <li>datasetIdentificationInformation.encodingSpecificationEdition</li>
+     *  <li>datasetIdentificationInformation.productIdentifier</li>
+     *  <li>datasetIdentificationInformation.productEdition</li>
+     *  <li>datasetIdentificationInformation.applicationProfile</li>
+     *  <li>datasetIdentificationInformation.datasetFileIdentifier</li>
+     *  <li>datasetIdentificationInformation.datasetAbstract</li>
+     * </ul>
      *
      * @param searchText the text to be searched
      * @param includeCancelled whether cancelled datasets should be included in the response
@@ -380,9 +400,9 @@ public class DatasetService {
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
-     * AtoN UID and geometry. This query will be based solely on the AtoN
-     * messages table and will include the following fields:
-     * -
+     * AtoN UID and geometry. This query will be based solely on the datasets
+     * table.
+     * </p>
      * For any more elaborate search, the getSearchMessageQueryByText function
      * can be used.
      *

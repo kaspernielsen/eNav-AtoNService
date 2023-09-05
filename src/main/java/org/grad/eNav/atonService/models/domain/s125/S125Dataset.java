@@ -78,11 +78,11 @@ public class S125Dataset {
     @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     private Geometry geometry;
 
-    @GenericField()
+    @GenericField(sortable = Sortable.YES)
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @GenericField()
+    @GenericField(sortable = Sortable.YES)
     @LastModifiedDate
     private LocalDateTime lastUpdatedAt;
 
@@ -92,6 +92,7 @@ public class S125Dataset {
                     { @JoinColumn(name = "dataset_uuid", referencedColumnName = "uuid", unique = true) },
             inverseJoinColumns =
                     { @JoinColumn(name = "dataset_content_id", referencedColumnName = "id", unique = true) })
+    @IndexedEmbedded(includeEmbeddedObjectId = false)
     private DatasetContent datasetContent;
 
     @GenericField()

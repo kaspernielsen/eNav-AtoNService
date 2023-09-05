@@ -189,11 +189,11 @@ public class DtPagingRequest {
                     String field = this.getColumns().get(dtOrder.getColumn()).getData();
                     field = Optional.ofNullable(diffSortFields).orElseGet(() -> Collections.emptyList()).contains(field) ? field + "_sort" : field;
                     if(field.compareTo("id_sort") == 0) {
-                        return new SortedNumericSortField(field, SortField.Type.LONG,  dtOrder.getDir() == DtDirection.desc);
-                    } else if(field.toLowerCase().endsWith("port")) {
-                        return new SortedNumericSortField(field, SortField.Type.INT,  dtOrder.getDir() == DtDirection.desc);
+                        return new SortedNumericSortField(field, SortField.Type.LONG,  dtOrder.getDir() == DtDirection.asc);
+                    } else if(field.endsWith("At")) {
+                        return new SortedNumericSortField(field, SortField.Type.INT,  dtOrder.getDir() == DtDirection.asc);
                     } else {
-                        return new SortedSetSortField(field, dtOrder.getDir() == DtDirection.desc);
+                        return new SortedSetSortField(field, dtOrder.getDir() == DtDirection.asc);
                     }
                 })
                 .collect(Collectors.toList());

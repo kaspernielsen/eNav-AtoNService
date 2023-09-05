@@ -24,6 +24,9 @@ import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.engine.search.query.SearchResult;
+import org.hibernate.search.engine.search.query.SearchResultTotal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,8 +50,8 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class DatasetContentLogServiceTest {
@@ -393,10 +396,15 @@ class DatasetContentLogServiceTest {
         dtSearch.setValue("search-term");
         dtPagingRequest.setSearch(dtSearch);
 
-        // Mock the internal service query// Mock the repository query
-        doAnswer((inv) -> new PageImpl<>(this.datasetContentLogList, this.pageable, this.datasetContentLogList.size()))
-                .when(this.datasetContentLogService)
-                .findAll(any(Pageable.class));
+        // Mock the full text query
+        SearchQuery<?> mockedQuery = mock(SearchQuery.class);
+        SearchResult<?> mockedResult = mock(SearchResult.class);
+        SearchResultTotal mockedResultTotal = mock(SearchResultTotal.class);
+        doReturn(5L).when(mockedResultTotal).hitCount();
+        doReturn(mockedResultTotal).when(mockedResult).total();
+        doReturn(this.datasetContentLogList.subList(0, 5)).when(mockedResult).hits();
+        doReturn(mockedResult).when(mockedQuery).fetch(any(), any());
+        doReturn(mockedQuery).when(this.datasetContentLogService).getDatasetContentLogSearchQueryByText(any(), any());
 
         // Perform the service call
         Page<DatasetContentLog> result = this.datasetContentLogService.handleDatatablesPagingRequest(dtPagingRequest);

@@ -118,7 +118,7 @@ var datasetColumnDefs = [
     placeholder: "Dataset Updated At",
     searchable: false
 }, {
-     data: "datasetContentGeneratedAt",
+     data: "datasetContent.generatedAt",
      title: "Content Updated At",
      type: "hidden",
      hoverMsg: "Dataset Content Updated At",
