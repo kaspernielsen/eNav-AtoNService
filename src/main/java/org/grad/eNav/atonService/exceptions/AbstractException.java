@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.exceptions;
 
-import org.grad.eNav.atonService.models.domain.Pair;
+import org.grad.eNav.atonService.models.Pair;
 import java.util.List;
 
 /**

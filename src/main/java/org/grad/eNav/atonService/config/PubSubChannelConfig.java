@@ -46,9 +46,9 @@ public class PubSubChannelConfig {
 
     /**
      * Defining a publication publish-subscribe Spring Integration channel to
-     * exchange the incoming S-125 datasets between the application components.
+     * exchange the published S-125 datasets between the application components.
      *
-     * @return The publish-subscribe channel for the incoming S-125 datasets
+     * @return The publish-subscribe channel for the published S-125 datasets
      */
     @Bean
     public PublishSubscribeChannel s125PublicationChannel() {
@@ -59,12 +59,12 @@ public class PubSubChannelConfig {
 
     /**
      * Defining a deletion publish-subscribe Spring Integration channel to
-     * exchange the deleted S-125 datasets between the application components.
+     * exchange the removed S-125 datasets between the application components.
      *
-     * @return The publish-subscribe channel for the deleted S-125 datasets
+     * @return The publish-subscribe channel for the removed S-125 datasets
      */
     @Bean
-    public PublishSubscribeChannel s125DeletionChannel() {
+    public PublishSubscribeChannel s125RemovalChannel() {
         PublishSubscribeChannel pubsubChannel = new PublishSubscribeChannel(this.taskExecutor);
         pubsubChannel.setErrorHandler(new PubSubErrorHandler());
         return pubsubChannel;

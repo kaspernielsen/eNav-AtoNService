@@ -33,6 +33,10 @@
                         <h2>S-125 Datasets Dashboard</h2>
                     </div>
                     <div class="card-body">
+                        <div class="form-check form-switch m-1">
+                            <input id="showCancelledDatasetsSwitch" class="form-check-input" type="checkbox">
+                            <label for="showCancelledDatasetsSwitch" class="form-check-label" >Show Cancelled Datasets</label>
+                        </div>
                         <div class="col-12 m-1">
                             <table id="dataset_table" class="table table-sm table-striped row-border hover w-100">
                             </table>
@@ -93,6 +97,8 @@
             </div>
         </div>
         <div th:replace="~{fragments/general.html :: footer}"></div>
+        <div th:replace="~{fragments/general.html :: confirmation-dialog}"></div>
+        <div th:replace="~{fragments/general.html :: error-dialog}"></div>
     </div>
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>

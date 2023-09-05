@@ -108,6 +108,7 @@ var datasetColumnDefs = [
     type: "hidden",
     hoverMsg: "Dataset Created At",
     placeholder: "Dataset Created At",
+    visible: false,
     searchable: false
 }, {
     data: "lastUpdatedAt",
@@ -115,6 +116,21 @@ var datasetColumnDefs = [
     type: "hidden",
     hoverMsg: "Dataset Updated At",
     placeholder: "Dataset Updated At",
+    searchable: false
+}, {
+     data: "datasetContentGeneratedAt",
+     title: "Content Updated At",
+     type: "hidden",
+     hoverMsg: "Dataset Content Updated At",
+     placeholder: "Dataset Content Updated At",
+     searchable: false
+ }, {
+    data: "cancelled",
+    title: "Cancelled",
+    type: "hidden",
+    hoverMsg: "Cancelled",
+    placeholder: "Cancelled",
+    visible: false,
     searchable: false
 }];
 
@@ -126,9 +142,12 @@ $(function () {
         serverSide: true,
         ajax: {
             type: "POST",
-            url: "./api/dataset/dt",
+            url: `./api/dataset/dt`,
             contentType: "application/json",
             data: function (d) {
+                // Add the include cancelled datasets option
+                d.search.includeCancelled = $('#showCancelledDatasetsSwitch').is(":checked") ? true : false;
+                // And build the JSON object
                 return JSON.stringify(d);
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
@@ -150,6 +169,14 @@ $(function () {
             text: '<i class="fa-solid fa-pen-to-square"></i>',
             titleAttr: 'Edit Dataset',
             name: 'edit' // do not change name
+        }, {
+            extend: 'selected', // Bind to Selected row
+            text: '<i class="fa-solid fa-ban"></i>',
+            titleAttr: 'Cancel Dataset',
+            name: 'cancel',
+            action: (e, dt, node, config) => {
+                cancelDataset(e, dt, node, config);
+            }
         }, {
             extend: 'selected', // Bind to Selected row
             text: '<i class="fa-solid fa-trash-can"></i>',
@@ -195,10 +222,14 @@ $(function () {
                     },
                     geometry: null,
                     createdAt: null,
-                    lastUpdatedAt: null
+                    lastUpdatedAt: null,
+                    datasetContentGeneratedAt: null,
+                    cancelled: null
                 }),
                 success: success,
-                error: error
+                error: (response, status, more) => {
+                    error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
+                }
             });
         },
         onEditRow: function (datatable, rowdata, success, error) {
@@ -227,24 +258,40 @@ $(function () {
                     },
                     geometry: geometry,
                     createdAt: rowdata["createdAt"],
-                    lastUpdatedAt: rowdata["lastUpdatedAt"]
+                    lastUpdatedAt: rowdata["lastUpdatedAt"],
+                    datasetContentGeneratedAt: rowdata["datasetContentGeneratedAt"],
+                    cancelled: rowdata["cancelled"]
                 }),
                 success: success,
-                error: error
+                error: (response, status, more) => {
+                     error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
+                }
             });
         },
         onDeleteRow: function (datatable, selectedRows, success, error) {
-            selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
+            selectedRows.every(function (rowdata, tableLoop, rowLoop) {
                 $.ajax({
                     type: 'DELETE',
-                    url: `./api/dataset/${this.data()["uuid"]}`,
+                    url: `./api/dataset/${rowdata["uuid"]}`,
                     crossDomain: true,
                     success: success,
-                    error: error
+                    error: (response, status, more) => {
+                        error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
+                    }
                 });
             });
+        },
+        // Indicate the dataset rows that have been cancelled
+        createdRow: function(row, data, dataIndex) {
+            if(data["cancelled"] == true) {
+                $(row).addClass('cancelled');
+            }
         }
     });
+
+    // On changes in the cancelled dataset inclusion option, we need to
+    // reload the whole table
+    $('#showCancelledDatasetsSwitch').change(() => datasetTable.ajax.reload());
 
     // We also need to link the aton geometry toggle button with the the modal
     // panel so that by clicking the button the panel pops up. It's easier done
@@ -301,6 +348,41 @@ $(function () {
         }, 10);
     });
 });
+
+/**
+ * This function will cancel the selected dataset if possible based on its
+ * UUID.
+ *
+ * @param {Event}         event         The event that took place
+ * @param {DataTable}     table         The dataset table
+ * @param {Node}          button        The button node that was pressed
+ * @param {Configuration} config        The table configuration
+ */
+function cancelDataset(event, table, button, config) {
+    var idx = table.cell('.selected', 0).index();
+    var data = table.rows(idx.row).data();
+    var datasetId = data[0].uuid;
+
+    // Show the confirmation dialog
+    showConfirmationDialog(`
+           <p>The selected dataset with UUID:<p>
+           <p class="fw-bold">${datasetId}</p>
+           <p>will be cancelled. This action cannot be undone.<p>
+           <p class="text-danger">Are  you sure you want to proceed?</p>
+       `,
+       () => {
+          $.ajax({
+                url: `./api/dataset/${datasetId}/cancel`,
+                type: 'PUT',
+                contentType: 'application/json; charset=utf-8',
+                success: (response) => datasetTable.ajax.reload(),
+                error: (response, status, more) => {
+                    showErrorDialog(response.getResponseHeader("X-atonService-error"));
+                }
+          });
+       }
+    );
+}
 
 /**
  * This function will load the dataset geometry onto the drawnItems variable
@@ -379,7 +461,9 @@ function loadDatasetContent(event, table, button, config) {
                 $('#datasetContentTextArea').val("No data found");
             }
         },
-        error: () => {console.error("error")}
+        error: (response, status, more) => {
+            showErrorDialog(response.getResponseHeader("X-atonService-error"));
+        }
     });
 }
 
@@ -422,7 +506,9 @@ function saveGeometry() {
             dataType: 'json',
             data: JSON.stringify(dataset),
             success: () => {console.log("success"); datasetTable.ajax.reload();},
-            error: () => {console.error("error")}
+            error: (response, status, more) => {
+               showErrorDialog(response.getResponseHeader("X-atonService-error"));
+            }
         });
     }
 }

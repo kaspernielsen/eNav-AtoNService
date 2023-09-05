@@ -91,7 +91,7 @@ class DatasetServiceTest {
      * The S-125 Dataset Channel to publish the deleted data to.
      */
     @Mock
-    PublishSubscribeChannel s125DeletionChannel;
+    PublishSubscribeChannel s125RemovalChannel;
 
 
     // Test Variables
@@ -211,10 +211,10 @@ class DatasetServiceTest {
         doReturn(this.datasetList.subList(0, 5)).when(searchResult).hits();
         doReturn(searchResultTotal).when(searchResult).total();
         doReturn(10L).when(searchResultTotal).hitCount();
-        doReturn(mockedQuery).when(this.datasetService).getDatasetSearchQuery(any(), any(), any(), any(), any());
+        doReturn(mockedQuery).when(this.datasetService).getDatasetSearchQuery(any(), any(), any(), any(), any(), any());
 
         // Perform the service call
-        Page<S125Dataset> result = this.datasetService.findAll(UUID.randomUUID(), null, null, null, pageable);
+        Page<S125Dataset> result = this.datasetService.findAll(UUID.randomUUID(), null, null, null, Boolean.FALSE, pageable);
 
         // Test the result
         assertNotNull(result);
@@ -274,7 +274,7 @@ class DatasetServiceTest {
         doReturn(mockedResultTotal).when(mockedResult).total();
         doReturn(this.datasetList.subList(0, 5)).when(mockedResult).hits();
         doReturn(mockedResult).when(mockedQuery).fetch(any(), any());
-        doReturn(mockedQuery).when(this.datasetService).getDatasetSearchQueryByText(any(), any());
+        doReturn(mockedQuery).when(this.datasetService).getDatasetSearchQueryByText(any(), any(), any());
 
         // Perform the service call
         Page<S125Dataset> result = this.datasetService.handleDatatablesPagingRequest(dtPagingRequest);
@@ -371,7 +371,7 @@ class DatasetServiceTest {
 
         // Verify that our message was deleted and sent
         verify(this.datasetRepo, times(1)).delete(any());
-        verify(this.s125DeletionChannel, times(1)).send(any(Message.class));
+        verify(this.s125RemovalChannel, times(1)).send(any(Message.class));
     }
 
     /**

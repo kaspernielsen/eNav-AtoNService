@@ -51,6 +51,10 @@ public class S125DataSetDto {
 
     private LocalDateTime lastUpdatedAt;
 
+    private LocalDateTime datasetContentGeneratedAt;
+
+    private boolean cancelled;
+
     /**
      * Gets uuid.
      *
@@ -139,5 +143,41 @@ public class S125DataSetDto {
      */
     public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    /**
+     * Gets dataset content generated at.
+     *
+     * @return the dataset content generated at
+     */
+    public LocalDateTime getDatasetContentGeneratedAt() {
+        return datasetContentGeneratedAt;
+    }
+
+    /**
+     * Sets dataset content generated at.
+     *
+     * @param datasetContentGeneratedAt the dataset content generated at
+     */
+    public void setDatasetContentGeneratedAt(LocalDateTime datasetContentGeneratedAt) {
+        this.datasetContentGeneratedAt = datasetContentGeneratedAt;
+    }
+
+    /**
+     * Is cancelled boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
+    /**
+     * Sets cancelled.
+     *
+     * @param cancelled the cancelled
+     */
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 }

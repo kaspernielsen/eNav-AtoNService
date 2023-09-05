@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package org.grad.eNav.atonService.models.domain;
+package org.grad.eNav.atonService.models;
 
 import java.util.Objects;
 
 /**
- * A generic pair implementation for the OWS library.
+ * A generic pair implementation for the AtoN Service.
  *
  * Since java does not have its own pair implementation, this is a simple
  * class to provide the pair functionality.

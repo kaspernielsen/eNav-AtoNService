@@ -21,6 +21,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,6 +33,8 @@ import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 /**
  * The S125 Web-Socket Service Class
@@ -103,7 +106,10 @@ public class S125WebSocketService implements MessageHandler {
     public void handleMessage(Message<?> message) throws MessagingException {
         // Get the headers of the incoming message
         SECOM_DataProductType contentType = message.getHeaders().get(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.class);
-        Boolean deletion = message.getHeaders().get("deletion", Boolean.class);
+        DatasetOperation datasetOperation = Optional.of(message)
+                .map(Message::getHeaders)
+                .map(headers -> headers.get("operation", DatasetOperation.class))
+                .orElse(DatasetOperation.OTHER);
 
         // Only listen to S-125 data product messages
         if(contentType != SECOM_DataProductType.S125) {
@@ -117,14 +123,14 @@ public class S125WebSocketService implements MessageHandler {
 
             // A simple debug message
             log.debug(String.format("S-125 Web Socket Service received AtoN %s with AtoN number: %s.",
-                    deletion ? "deletion" : "publication",
+                    datasetOperation.getOperation(),
                     aidsToNavigation.getAtonNumber()));
 
             // Handle based on whether this is a deletion or not
-            if(deletion) {
-                this.publishMessage(this.webSocket, String.format("/%s/%s", prefix + "/deletions", contentType), aidsToNavigation);
-            } else {
+            if(!datasetOperation.isWithdrawal()) {
                 this.publishMessage(this.webSocket, String.format("/%s/%s", prefix, contentType), aidsToNavigation);
+            } else {
+                this.publishMessage(this.webSocket, String.format("/%s/%s", prefix + "/deletions", contentType), aidsToNavigation);
             }
         }
         else {

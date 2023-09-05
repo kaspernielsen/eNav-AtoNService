@@ -17,7 +17,7 @@
 package org.grad.eNav.atonService.exceptions;
 
 import org.apache.logging.log4j.util.Strings;
-import org.grad.eNav.atonService.models.domain.Pair;
+import org.grad.eNav.atonService.models.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 

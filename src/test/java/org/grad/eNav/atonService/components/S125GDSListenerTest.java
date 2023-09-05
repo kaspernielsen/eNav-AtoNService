@@ -212,7 +212,7 @@ class S125GDSListenerTest {
 
         // Add a matching dataset
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(1), 1))
-                .when(this.datasetService).findAll(isNull(), any(), isNull(), isNull(), any());
+                .when(this.datasetService).findAll(isNull(), any(), isNull(), isNull(), any(), any());
 
         // We need to use the actual Spring model mapper to pick up the type-maps
         this.s125GDSListener.modelMapper = new GlobalConfig().modelMapper();
@@ -223,7 +223,7 @@ class S125GDSListenerTest {
 
         // Verify that our message was saved and sent
         verify(this.atonPublicationChannel, times(1)).send(any(Message.class));
-        verify(this.datasetService, times(1)).findAll(isNull(), any(), isNull(), isNull(), any());
+        verify(this.datasetService, times(1)).findAll(isNull(), any(), isNull(), isNull(), any(), any());
         verify(this.datasetService, times(1)).save(eq(this.s125DataSet));
     }
 
@@ -259,7 +259,7 @@ class S125GDSListenerTest {
 
         // Verify that our message was not saved or sent
         verify(this.atonPublicationChannel, never()).send(any(Message.class));
-        verify(this.datasetService, never()).findAll(any(), any(), any(), any(), any());
+        verify(this.datasetService, never()).findAll(any(), any(), any(), any(), any(), any());
         verify(this.datasetService, never()).save(any());
 
     }
@@ -288,7 +288,7 @@ class S125GDSListenerTest {
 
         // Add a matching dataset
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(1), 1))
-                .when(this.datasetService).findAll(isNull(), any(), isNull(), isNull(), any());
+                .when(this.datasetService).findAll(isNull(), any(), isNull(), isNull(), any(), any());
 
         // Init and perform the component call
         this.s125GDSListener.init(this.consumer, this.geomesaData, this.geometry);
@@ -296,7 +296,7 @@ class S125GDSListenerTest {
 
         // Make sure the evaluation works
         verify(this.atonDeletionChannel, times(1)).send(any(Message.class));
-        verify(this.datasetService, times(1)).findAll(isNull(), any(), isNull(), isNull(), any());
+        verify(this.datasetService, times(1)).findAll(isNull(), any(), isNull(), isNull(), any(), any());
         verify(this.datasetService, times(1)).save(eq(this.s125DataSet));
     }
 

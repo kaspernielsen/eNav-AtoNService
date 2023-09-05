@@ -19,6 +19,7 @@ package org.grad.eNav.atonService.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -124,9 +125,9 @@ class S125WebSocketServiceTest {
     @Test
     void testHandleAidsToNavigationMessage() throws IOException {
         // Create a message to be handled
-        Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
+        Message<?> message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
-                .map(builder -> builder.setHeader("deletion", false))
+                .map(builder -> builder.setHeader("operation", DatasetOperation.CREATED))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -155,9 +156,9 @@ class S125WebSocketServiceTest {
     @Test
     void testHandleStringMessage() throws IOException {
         /// Create a message to be handled
-        Message message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
+        Message<?> message = Optional.of(this.aidsToNavigation).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
-                .map(builder -> builder.setHeader("deletion", true))
+                .map(builder -> builder.setHeader("operation", DatasetOperation.DELETED))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -185,7 +186,7 @@ class S125WebSocketServiceTest {
     @Test
     void testHandleMessageWrongPayload() throws IOException {
         // Change the message content type to something else
-        Message message = Optional.of(Integer.MAX_VALUE).map(MessageBuilder::withPayload)
+        Message<?> message = Optional.of(Integer.MAX_VALUE).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
                 .map(MessageBuilder::build)
                 .orElse(null);

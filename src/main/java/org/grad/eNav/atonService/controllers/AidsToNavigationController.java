@@ -130,7 +130,7 @@ public class AidsToNavigationController {
 
         // Now we should update all datasets that are affected in this area
         Optional.ofNullable(aidsToNavigation.getGeometry())
-                .map(g -> this.datasetService.findAll(null, g, null, null, Pageable.unpaged()))
+                .map(g -> this.datasetService.findAll(null, g, null, null, Boolean.FALSE, Pageable.unpaged()))
                 .orElse(Page.empty())
                 .stream()
                 .forEach(this.datasetService::save);

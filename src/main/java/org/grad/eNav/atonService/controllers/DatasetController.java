@@ -88,6 +88,7 @@ public class DatasetController {
                 geometry.orElse(null),
                 null,
                 null,
+                Boolean.TRUE,
                 pageable
         );
         return ResponseEntity.ok()
@@ -116,7 +117,7 @@ public class DatasetController {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<S125DataSetDto> createDataset(@RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
+    public ResponseEntity<S125DataSetDto> createDataset(@RequestBody S125DataSetDto dataSetDto) {
         log.debug("REST request to save Dataset : {}", dataSetDto);
         // Check for an ID
         if (dataSetDto.getUuid() != null) {
@@ -145,11 +146,11 @@ public class DatasetController {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<S125DataSetDto> updateDataset(@PathVariable UUID uuid, @Valid @RequestBody S125DataSetDto dataSetDto) throws URISyntaxException {
+    public ResponseEntity<S125DataSetDto> updateDataset(@PathVariable UUID uuid, @Valid @RequestBody S125DataSetDto dataSetDto) {
         log.debug("REST request to update Dataset : {}", dataSetDto);
         // Make sure we got the UUID
         dataSetDto.setUuid(uuid);
-        // Save the station
+        // Save the dataset
         try {
             S125Dataset s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125Dataset.class));
             return ResponseEntity.ok()
@@ -158,6 +159,27 @@ public class DatasetController {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("dataset", e.getMessage(), e.toString()))
                     .body(dataSetDto);
+        }
+    }
+
+    /**
+     * PUT /api/dataset/{uuid}/cancel : Cancels an existing "UUID" dataset.
+     *
+     * @param uuid the UUID of the dataset to be updated
+     * @return the ResponseEntity with status 200 (OK) and with body the updated instance
+     */
+    @PutMapping(value = "/{uuid}/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<S125DataSetDto> cancelDataset(@PathVariable UUID uuid) {
+        log.debug("REST request to cancel Dataset with UUID: {}", uuid);
+        // Cancel the dataset
+        try {
+            S125Dataset s125DataSet = this.datasetService.cancel(uuid);
+            return ResponseEntity.ok()
+                    .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("dataset", e.getMessage(), e.toString()))
+                    .build();
         }
     }
 

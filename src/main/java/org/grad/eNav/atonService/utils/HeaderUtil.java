@@ -19,6 +19,8 @@ package org.grad.eNav.atonService.utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 
+import java.util.Optional;
+
 /**
  * Utility class for HTTP headers creation.
  *
@@ -36,8 +38,8 @@ public class HeaderUtil {
      */
     public static HttpHeaders createAlert(String message, String param) {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-atonService-alert", message);
-        headers.add("X-atonService-params", param);
+        headers.add("X-atonService-alert", Optional.ofNullable(message).orElse(""));
+        headers.add("X-atonService-params", Optional.ofNullable(param).orElse(""));
         return headers;
     }
 
@@ -52,8 +54,8 @@ public class HeaderUtil {
     public static HttpHeaders createFailureAlert(String entityName, String errorKey, String defaultMessage) {
         log.error("Entity creation failed, {}", defaultMessage);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-atonService-error", "error." + errorKey);
-        headers.add("X-atonService-params", entityName);
+        headers.add("X-atonService-error", Optional.ofNullable(errorKey).orElse(""));
+        headers.add("X-atonService-params", Optional.ofNullable(entityName).orElse(""));
         return headers;
     }
 

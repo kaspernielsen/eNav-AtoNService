@@ -285,7 +285,7 @@ class SecomControllerTest {
     @Test
     void testGetSummary() {
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
-                .when(this.datasetService).findAll(any(), any(), any(), any(), any());
+                .when(this.datasetService).findAll(any(), any(), any(), any(), any(), any());
 
          webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -399,7 +399,7 @@ class SecomControllerTest {
 
         // Mock the rest
         doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
-                .when(this.datasetService).findAll(any(), any(), any(), any(), any());
+                .when(this.datasetService).findAll(any(), any(), any(), any(), any(), any());
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder

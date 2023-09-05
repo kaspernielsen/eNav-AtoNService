@@ -28,6 +28,7 @@ public class DtSearch {
     // Class Variables
     private String value;
     private String regexp;
+    private Boolean includeCancelled;
 
     /**
      * Instantiates a new Search.
@@ -71,4 +72,21 @@ public class DtSearch {
         this.regexp = regexp;
     }
 
+    /**
+     * Gets include cancelled.
+     *
+     * @return the include cancelled
+     */
+    public Boolean getIncludeCancelled() {
+        return includeCancelled;
+    }
+
+    /**
+     * Sets include cancelled.
+     *
+     * @param includeCancelled the include cancelled
+     */
+    public void setIncludeCancelled(Boolean includeCancelled) {
+        this.includeCancelled = includeCancelled;
+    }
 }

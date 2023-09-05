@@ -86,12 +86,8 @@
 /*****************************
  *        Datatables         *
  *****************************/
-table.dataTable tbody tr.odd.selected {
-    background-color:#acbad4
-}
-
-table.dataTable tbody tr.even.selected {
-    background-color:#acbad5
+table.dataTable.table-striped > tbody > tr.cancelled > td {
+    background-color: lightpink !important;
 }
 
 div.dataTables_processing {
