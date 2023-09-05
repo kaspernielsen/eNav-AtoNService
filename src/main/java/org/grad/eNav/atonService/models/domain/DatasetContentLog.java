@@ -20,6 +20,9 @@ import jakarta.persistence.*;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -44,6 +47,7 @@ import java.util.UUID;
 @Table(indexes = @Index(columnList = "datasetType, uuid, operation, sequenceNo, generatedAt"))
 @EntityListeners(AuditingEntityListener.class)
 @Cacheable
+@Indexed
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class DatasetContentLog implements Serializable {
 
@@ -57,6 +61,7 @@ public class DatasetContentLog implements Serializable {
     @Enumerated(EnumType.STRING)
     private DatasetType datasetType;
 
+    @GenericField(sortable = Sortable.YES)
     @Column(nullable = false)
     private UUID uuid;
 
@@ -65,6 +70,7 @@ public class DatasetContentLog implements Serializable {
 
     private BigInteger sequenceNo;
 
+    @GenericField(sortable = Sortable.YES)
     @CreatedDate
     private LocalDateTime generatedAt;
 

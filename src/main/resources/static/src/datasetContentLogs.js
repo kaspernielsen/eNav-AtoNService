@@ -75,7 +75,7 @@ $(function () {
         },
         columns: datasetContentLogColumnDefs,
         order: [[6, 'desc']],
-        dom: "<'row'<'col-lg-2 col-md-2'B><'col-lg-2 col-md-2'l><'col'>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-lg-2 col-md-2'B><'col-lg-2 col-md-2'l><'col'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,

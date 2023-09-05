@@ -52,6 +52,7 @@ public class S125DatasetIdentification {
     @SequenceGenerator(name="dataset_identification_generator", sequenceName = "dataset_identification_generator_seq", allocationSize=1)
     private BigInteger id;
 
+    @AssociationInverseSide(inversePath = @ObjectPath(@PropertyValue(propertyName = "datasetIdentificationInformation")))
     @OneToOne(mappedBy = "datasetIdentificationInformation")
     private S125Dataset s125Dataset;
 
@@ -134,6 +135,24 @@ public class S125DatasetIdentification {
      */
     public void setId(BigInteger id) {
         this.id = id;
+    }
+
+    /**
+     * Gets s 125 dataset.
+     *
+     * @return the s 125 dataset
+     */
+    public S125Dataset getS125Dataset() {
+        return s125Dataset;
+    }
+
+    /**
+     * Sets s 125 dataset.
+     *
+     * @param s125Dataset the s 125 dataset
+     */
+    public void setS125Dataset(S125Dataset s125Dataset) {
+        this.s125Dataset = s125Dataset;
     }
 
     /**

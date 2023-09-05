@@ -20,9 +20,7 @@ import jakarta.persistence.*;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.ScaledNumberField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -57,13 +55,15 @@ public class DatasetContent implements Serializable {
     @Column(name = "id", nullable = false, precision = 24, scale = 0)
     private BigInteger id;
 
+    @AssociationInverseSide(inversePath = @ObjectPath(@PropertyValue(propertyName = "datasetContent")))
     @OneToOne(mappedBy = "datasetContent")
     private S125Dataset dataset;
 
-    @GenericField()
+    @GenericField(sortable = Sortable.YES)
     @LastModifiedDate
     private LocalDateTime generatedAt;
 
+    @GenericField(sortable = Sortable.YES)
     private BigInteger sequenceNo;
 
     /*

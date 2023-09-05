@@ -23,7 +23,6 @@ import org.apache.commons.text.CaseUtils;
 import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
-import org.grad.eNav.atonService.models.dtos.s125.S125DataSetDto;
 import org.grad.eNav.atonService.models.enums.ReferenceTypeRole;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.ReferenceTypeS125Converter;
@@ -108,13 +107,6 @@ public class GlobalConfig {
                 .setMatchingStrategy(MatchingStrategies.STRICT)
                 .setFieldMatchingEnabled(true)
                 .setAmbiguityIgnored(true);
-
-        // First, perform the mapping for the S125 Datasets
-        modelMapper.createTypeMap(S125Dataset.class, S125DataSetDto.class)
-                .implicitMappings()
-                .addMappings(mapper -> {
-                   mapper.map(src -> src.getDatasetContent().getGeneratedAt(), S125DataSetDto::setDatasetContentGeneratedAt);
-                });
 
         // Loop all the mapped S-125 AtoN types and configure the model mapper
         // to translate correctly from the S-125 onto the local classes and

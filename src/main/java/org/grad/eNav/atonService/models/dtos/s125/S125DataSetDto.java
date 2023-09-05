@@ -51,7 +51,7 @@ public class S125DataSetDto {
 
     private LocalDateTime lastUpdatedAt;
 
-    private LocalDateTime datasetContentGeneratedAt;
+    private DatasetContentDto datasetContent;
 
     private boolean cancelled;
 
@@ -146,21 +146,21 @@ public class S125DataSetDto {
     }
 
     /**
-     * Gets dataset content generated at.
+     * Gets dataset content.
      *
-     * @return the dataset content generated at
+     * @return the dataset content
      */
-    public LocalDateTime getDatasetContentGeneratedAt() {
-        return datasetContentGeneratedAt;
+    public DatasetContentDto getDatasetContent() {
+        return datasetContent;
     }
 
     /**
-     * Sets dataset content generated at.
+     * Sets dataset content.
      *
-     * @param datasetContentGeneratedAt the dataset content generated at
+     * @param datasetContent the dataset content
      */
-    public void setDatasetContentGeneratedAt(LocalDateTime datasetContentGeneratedAt) {
-        this.datasetContentGeneratedAt = datasetContentGeneratedAt;
+    public void setDatasetContent(DatasetContentDto datasetContent) {
+        this.datasetContent = datasetContent;
     }
 
     /**

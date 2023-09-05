@@ -16,8 +16,10 @@
 
 package org.grad.eNav.atonService.services;
 
+import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.search.Sort;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
@@ -26,8 +28,14 @@ import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -53,6 +61,12 @@ import static java.util.function.Predicate.not;
 @Service
 @Slf4j
 public class DatasetContentLogService {
+
+    /**
+     * The Entity Manager.
+     */
+    @Autowired
+    EntityManager entityManager;
 
     /**
      * The Dataset Service.
@@ -165,9 +179,17 @@ public class DatasetContentLogService {
     @Transactional(readOnly = true)
     public Page<DatasetContentLog> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         log.debug("Request to get Dataset Content Logs in a Datatables pageable search");
+        // Create the search query
+        final SearchQuery<DatasetContentLog> searchQuery = this.getDatasetContentLogSearchQueryByText(
+                dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getLucenceSort(Collections.emptyList())
+        );
 
-        // Return the query result
-        return this.findAll(dtPagingRequest.toPageRequest());
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
+                .map(searchResult -> new PageImpl<>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
     /**
@@ -238,6 +260,31 @@ public class DatasetContentLogService {
 
         // And return the dataset content
         return datasetContentLog;
+    }
+
+    /**
+     * Constructs a hibernate search query using Lucene based on the provided
+     * search test. This query will be based solely on the dataset content log
+     * table and will include the following fields:
+     * <ul>
+     *  <li>uuid</li>
+     * </ul>
+     *
+     * @param searchText the UUID as text to be searched
+     * @param sort the sorting selection for the search query
+     * @return the full text query
+     */
+    protected SearchQuery<DatasetContentLog> getDatasetContentLogSearchQueryByText(String searchText, Sort sort) {
+        SearchSession searchSession = Search.session( this.entityManager );
+        SearchScope<DatasetContentLog> scope = searchSession.scope( DatasetContentLog.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where(f -> f.wildcard()
+                        .fields("uuid")
+                        .matching(Optional.ofNullable(searchText).map(st -> "*" + st).orElse("") + "*")
+                )
+                .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
     }
 
 }
