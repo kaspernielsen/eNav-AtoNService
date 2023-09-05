@@ -147,7 +147,7 @@ public class GetSecomController implements GetSecomInterface {
             if(reqDataProductType == SECOM_DataProductType.S125) {
                 try {
                     // Retrieve all matching datasets
-                    this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, pageable)
+                    this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, Boolean.FALSE, pageable)
                             .stream()
                             .map(S125Dataset::getDatasetContent)
                             .filter(Objects::nonNull)

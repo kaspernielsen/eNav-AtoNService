@@ -40,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -157,7 +158,10 @@ public class DatasetContentService {
                 .toList();
         final List<AidsToNavigation> updatedAtonList = atonList.stream()
                 .filter(aton -> Objects.nonNull(aton.getLastModifiedAt()))
-                .filter(aton -> aton.getLastModifiedAt().isAfter(s125Dataset.getLastUpdatedAt()))
+                .filter(aton -> aton.getLastModifiedAt().isAfter(Optional.of(s125Dataset)
+                        .map(S125Dataset::getDatasetContent)
+                        .map(DatasetContent::getGeneratedAt)
+                        .orElse(LocalDateTime.MIN)))
                 .toList();
         final List<AidsToNavigation> deltaAtonList = Stream
                 .concat(newAtonList.stream(), updatedAtonList.stream())

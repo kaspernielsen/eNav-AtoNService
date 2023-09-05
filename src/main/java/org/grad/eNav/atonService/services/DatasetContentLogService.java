@@ -23,6 +23,7 @@ import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,14 +136,14 @@ public class DatasetContentLogService {
                 .orElseGet(() ->
                         // Handling cases where the content is not yet generated
                         // We need to first generate and store this manually
-                        this.save(this.generateDatasetContentLog(this.datasetService.findOne(uuid), "CREATED"))
+                        this.save(this.generateDatasetContentLog(this.datasetService.findOne(uuid), DatasetOperation.CREATED))
                 );
     }
 
     /**
      * Get all the dataset content logs in a pageable search.
      *
-     * @param pageable  The pageable result ouput
+     * @param pageable  The pageable result output
      * @return The matching dataset content logs in a paged response
      */
     @Transactional(readOnly = true)
@@ -193,7 +194,7 @@ public class DatasetContentLogService {
      * @param s125Dataset the UUID of the dataset
      * @return the dataset content log entry
      */
-    public DatasetContentLog generateDatasetContentLog(@NotNull S125Dataset s125Dataset, @NotNull String operation) {
+    public DatasetContentLog generateDatasetContentLog(@NotNull S125Dataset s125Dataset, @NotNull DatasetOperation operation) {
         log.debug("Request to retrieve the content for Dataset with UUID : {}", s125Dataset.getUuid());
 
         // If everything is OK up to now start building the dataset content
@@ -202,10 +203,10 @@ public class DatasetContentLogService {
         datasetContentLog.setUuid(s125Dataset.getUuid());
         datasetContentLog.setGeometry(s125Dataset.getGeometry());
         datasetContentLog.setOperation(Optional.of(operation)
-                .filter(not(String::isBlank))
-                .orElseGet(() ->
+                .filter(not(DatasetOperation.AUTO::equals))
+                .orElseGet(() -> // Automatically select the operation
                         Objects.equals(s125Dataset.getCreatedAt(), s125Dataset.getLastUpdatedAt()) ?
-                        "CREATED" : "UPDATED"));
+                        DatasetOperation.CREATED : DatasetOperation.UPDATED));
         datasetContentLog.setSequenceNo(Optional.of(s125Dataset)
                 .map(S125Dataset::getDatasetContent)
                 .map(DatasetContent::getSequenceNo)

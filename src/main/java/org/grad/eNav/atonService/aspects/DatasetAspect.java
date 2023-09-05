@@ -22,6 +22,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.services.DatasetContentLogService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -60,13 +61,13 @@ public class DatasetAspect {
     @Around("@annotation(LogDataset)")
     public Object logDataset(ProceedingJoinPoint joinPoint) throws Throwable {
         // Get the annotation parameters
-        final String operation = Optional.of(joinPoint)
+        final DatasetOperation operation = Optional.of(joinPoint)
                 .map(ProceedingJoinPoint::getSignature)
                 .map(MethodSignature.class::cast)
                 .map(MethodSignature::getMethod)
                 .map(m -> m.getAnnotation(LogDataset.class))
                 .map(LogDataset::operation)
-                .orElse("");
+                .orElse(DatasetOperation.AUTO);
 
         // Process and get the result object
         final Object proceed = joinPoint.proceed();
@@ -85,7 +86,7 @@ public class DatasetAspect {
      * @param proceed       The return of the joint-point
      * @param operation     The @LogDataset annotation operation if provided
      */
-    protected void handleJoinPointProceed(Object proceed, String operation) {
+    protected void handleJoinPointProceed(Object proceed, DatasetOperation operation) {
         // Handle if the object is a CompletableFuture
         if(Optional.ofNullable(proceed).filter(CompletableFuture.class::isInstance).isPresent()) {
             Optional.of(proceed)

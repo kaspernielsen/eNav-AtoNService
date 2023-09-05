@@ -81,7 +81,7 @@ class HeaderUtilTest {
         HttpHeaders headers = HeaderUtil.createFailureAlert("entity", "key", "message");
         assertNotNull(headers);
         assertTrue(headers.containsKey("X-atonService-error"));
-        assertEquals("[error.key]", headers.get("X-atonService-error").toString());
+        assertEquals("[key]", headers.get("X-atonService-error").toString());
         assertTrue(headers.containsKey("X-atonService-params"));
         assertEquals("[entity]", headers.get("X-atonService-params").toString());
     }

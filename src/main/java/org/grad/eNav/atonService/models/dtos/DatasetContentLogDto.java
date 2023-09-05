@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.models.dtos;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.utils.GeometryJSONDeserializer;
 import org.grad.eNav.atonService.utils.GeometryJSONSerializer;
@@ -38,7 +39,7 @@ public class DatasetContentLogDto {
     private BigInteger id;
     private DatasetType datasetType;
     private UUID uuid;
-    private String operation;
+    private DatasetOperation operation;
     private BigInteger sequenceNo;
     private LocalDateTime generatedAt;
     @JsonSerialize(using = GeometryJSONSerializer.class)
@@ -104,7 +105,7 @@ public class DatasetContentLogDto {
      *
      * @return the operation
      */
-    public String getOperation() {
+    public DatasetOperation getOperation() {
         return operation;
     }
 
@@ -113,7 +114,7 @@ public class DatasetContentLogDto {
      *
      * @param operation the operation
      */
-    public void setOperation(String operation) {
+    public void setOperation(DatasetOperation operation) {
         this.operation = operation;
     }
 

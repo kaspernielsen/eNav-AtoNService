@@ -129,7 +129,7 @@ class DatasetControllerTest {
     void testGetDatasets() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<S125Dataset> page = new PageImpl<>(this.datasetList.subList(0, 5), this.pageable, this.datasetList.size());
-        doReturn(page).when(this.datasetService).findAll(any(), any(), any(), any(), any());
+        doReturn(page).when(this.datasetService).findAll(any(), any(), any(), any(), any(), any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/dataset"))
@@ -184,7 +184,7 @@ class DatasetControllerTest {
         doReturn(page).when(this.datasetService).handleDatatablesPagingRequest(any());
 
         // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(post("/api/dataset/dt")
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/dataset/dt?includeCancelled=true")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(this.objectMapper.writeValueAsString(dtPagingRequest)))
                 .andExpect(status().isOk())

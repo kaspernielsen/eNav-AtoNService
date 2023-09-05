@@ -94,6 +94,9 @@ public class S125Dataset {
                     { @JoinColumn(name = "dataset_content_id", referencedColumnName = "id", unique = true) })
     private DatasetContent datasetContent;
 
+    @GenericField()
+    private Boolean cancelled;
+
     /**
      * Instantiates a new Dataset.
      */
@@ -217,4 +220,23 @@ public class S125Dataset {
     public void setDatasetContent(DatasetContent datasetContent) {
         this.datasetContent = datasetContent;
     }
+
+    /**
+     * Gets cancelled.
+     *
+     * @return the cancelled
+     */
+    public Boolean getCancelled() {
+        return cancelled;
+    }
+
+    /**
+     * Sets cancelled.
+     *
+     * @param cancelled the cancelled
+     */
+    public void setCancelled(Boolean cancelled) {
+        this.cancelled = cancelled;
+    }
+
 }

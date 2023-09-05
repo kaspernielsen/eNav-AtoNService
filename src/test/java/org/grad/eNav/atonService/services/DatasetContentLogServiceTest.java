@@ -21,6 +21,7 @@ import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.repos.DatasetContentLogRepo;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,7 +101,7 @@ class DatasetContentLogServiceTest {
             datasetContentLog.setSequenceNo(BigInteger.ONE);
             datasetContentLog.setGeneratedAt(LocalDateTime.now());
             datasetContentLog.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
-            datasetContentLog.setOperation("UPDATED");
+            datasetContentLog.setOperation(DatasetOperation.UPDATED);
             datasetContentLog.setContent("Existing Dataset Content " + i);
             datasetContentLog.setContentLength(BigInteger.valueOf(datasetContentLog.getContent().length()));
             this.datasetContentLogList.add(datasetContentLog);
@@ -122,7 +123,7 @@ class DatasetContentLogServiceTest {
         this.newDatasetContentLog.setSequenceNo(BigInteger.ZERO);
         this.newDatasetContentLog.setGeneratedAt(LocalDateTime.now());
         this.newDatasetContentLog.setGeometry(this.s125Dataset.getGeometry());
-        this.newDatasetContentLog.setOperation("CREATED");
+        this.newDatasetContentLog.setOperation(DatasetOperation.CREATED);
         this.newDatasetContentLog.setContent("New Dataset Content");
         this.newDatasetContentLog.setContentLength(BigInteger.valueOf(this.newDatasetContentLog.getContent().length()));
 
@@ -133,7 +134,7 @@ class DatasetContentLogServiceTest {
         this.existingDatasetContentLog.setSequenceNo(BigInteger.ONE);
         this.existingDatasetContentLog.setGeneratedAt(LocalDateTime.now());
         this.existingDatasetContentLog.setGeometry(this.s125Dataset.getGeometry());
-        this.existingDatasetContentLog.setOperation("UPDATED");
+        this.existingDatasetContentLog.setOperation(DatasetOperation.UPDATED);
         this.existingDatasetContentLog.setContent("Existing Dataset Content");
         this.existingDatasetContentLog.setContentLength(BigInteger.valueOf(this.existingDatasetContentLog.getContent().length()));
         this.existingDatasetContentLog.setDelta("Existing Dataset Content Delta");
@@ -146,7 +147,7 @@ class DatasetContentLogServiceTest {
         this.deltaDatasetContentLog.setSequenceNo(BigInteger.TWO);
         this.deltaDatasetContentLog.setGeneratedAt(LocalDateTime.now());
         this.deltaDatasetContentLog.setGeometry(this.s125Dataset.getGeometry());
-        this.deltaDatasetContentLog.setOperation("UPDATED");
+        this.deltaDatasetContentLog.setOperation(DatasetOperation.UPDATED);
         this.deltaDatasetContentLog.setContent("Another Dataset Content");
         this.deltaDatasetContentLog.setContentLength(BigInteger.valueOf(this.deltaDatasetContentLog.getContent().length()));
         this.deltaDatasetContentLog.setDelta("Another Dataset Content Delta");
@@ -452,7 +453,7 @@ class DatasetContentLogServiceTest {
     @Test
     void testGenerateDatasetContent() {
         // Perform the service call
-        DatasetContentLog result = this.datasetContentLogService.generateDatasetContentLog(this.s125Dataset, "custom");
+        DatasetContentLog result = this.datasetContentLogService.generateDatasetContentLog(this.s125Dataset, DatasetOperation.OTHER);
 
         // Test the result
         assertNotNull(result);
@@ -461,7 +462,7 @@ class DatasetContentLogServiceTest {
         assertEquals(DatasetType.S125, result.getDatasetType());
         assertNotNull(result.getGeneratedAt());
         assertEquals(this.s125Dataset.getGeometry(), result.getGeometry());
-        assertEquals("custom", result.getOperation());
+        assertEquals(DatasetOperation.OTHER, result.getOperation());
         assertEquals(this.s125Dataset.getDatasetContent().getSequenceNo(), result.getSequenceNo());
         assertEquals(this.s125Dataset.getDatasetContent().getContent(), result.getContent());
     }

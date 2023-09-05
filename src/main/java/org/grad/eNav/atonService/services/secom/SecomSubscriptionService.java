@@ -32,6 +32,7 @@ import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
@@ -123,8 +124,8 @@ public class SecomSubscriptionService implements MessageHandler {
      * The S-125 Dataset Channel to publish the deleted data to.
      */
     @Autowired
-    @Qualifier("s125DeletionChannel")
-    PublishSubscribeChannel s125DeletionChannel;
+    @Qualifier("s125RemovalChannel")
+    PublishSubscribeChannel s125RemovalChannel;
 
     // Class Variables
     EntityManager entityManager;
@@ -138,7 +139,7 @@ public class SecomSubscriptionService implements MessageHandler {
         log.info("SECOM Subscription Service is booting up...");
         this.entityManager = this.entityManagerFactory.createEntityManager();
         this.s125PublicationChannel.subscribe(this);
-        this.s125DeletionChannel.subscribe(this);
+        this.s125RemovalChannel.subscribe(this);
     }
 
     /**
@@ -154,8 +155,8 @@ public class SecomSubscriptionService implements MessageHandler {
         if (this.s125PublicationChannel != null) {
             this.s125PublicationChannel.destroy();
         }
-        if (this.s125DeletionChannel != null) {
-            this.s125DeletionChannel.destroy();
+        if (this.s125RemovalChannel != null) {
+            this.s125RemovalChannel.destroy();
         }
     }
 
@@ -175,10 +176,10 @@ public class SecomSubscriptionService implements MessageHandler {
                 .map(Message::getHeaders)
                 .map(headers -> headers.get(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.class))
                 .orElse(null);
-        final boolean deletion = Optional.of(message)
+        final DatasetOperation datasetOperation = Optional.of(message)
                 .map(Message::getHeaders)
-                .map(headers -> headers.get("deletion", Boolean.class))
-                .orElse(false);
+                .map(headers -> headers.get("operation", DatasetOperation.class))
+                .orElse(DatasetOperation.OTHER);
 
         // Only listen to valid content types
         if(Objects.isNull(contentType)) {
@@ -191,11 +192,11 @@ public class SecomSubscriptionService implements MessageHandler {
 
             // A simple debug message
             log.debug(String.format("SECOM Subscription Service received an S125 dataset %s for UUID number: %s.",
-                    deletion ? "deletion" : "publication",
+                    datasetOperation.getOperation(),
                     s125Dataset.getUuid()));
 
             // Handle based on whether this is a deletion or not
-            if(!deletion) {
+            if(!datasetOperation.isWithdrawal()) {
                 // Get the matching subscriptions and inform them of the update
                 this.findAll(ContainerTypeEnum.S100_DataSet,
                                 SECOM_DataProductType.S125,

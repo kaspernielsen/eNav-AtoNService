@@ -147,7 +147,7 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
         if(reqContainerType == ContainerTypeEnum.S100_DataSet) {
             // We only support specifically S-125 Datasets
             if (reqDataProductType == SECOM_DataProductType.S125) {
-                this.datasetService.findAll(null, jtsGeometry, validFrom, validTo, pageable)
+                this.datasetService.findAll(null, jtsGeometry, validFrom, validTo, Boolean.FALSE, pageable)
                         .stream()
                         .map(dataset -> {
                             // Create and populate the summary object

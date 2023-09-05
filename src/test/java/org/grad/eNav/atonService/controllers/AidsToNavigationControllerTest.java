@@ -215,7 +215,7 @@ class AidsToNavigationControllerTest {
     @Test
     void testDeleteAidsToNavigation() throws Exception {
         doReturn(this.existingAidsToNavigation).when(this.aidsToNavigationService).delete(any());
-        doReturn(Page.empty()).when(this.datasetService).findAll(any(), any(), any(), any(), any());
+        doReturn(Page.empty()).when(this.datasetService).findAll(any(), any(), any(), any(), any(), any());
 
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/atons/{id}", this.existingAidsToNavigation.getId())

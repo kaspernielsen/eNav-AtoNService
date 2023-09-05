@@ -31,14 +31,17 @@ import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.exceptions.ValidationException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.s125.S125DatasetIdentification;
 import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.repos.DatasetRepo;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
+import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep;
 import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
@@ -59,6 +62,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.function.Predicate.not;
 
@@ -102,8 +106,8 @@ public class DatasetService {
      * The S-125 Dataset Channel to publish the deleted data to.
      */
     @Autowired
-    @Qualifier("s125DeletionChannel")
-    PublishSubscribeChannel s125DeletionChannel;
+    @Qualifier("s125RemovalChannel")
+    PublishSubscribeChannel s125RemovalChannel;
 
     // Service Variables
     private final String[] searchFields = new String[] {
@@ -134,12 +138,15 @@ public class DatasetService {
 
     /**
      * Get all the datasets in a pageable search.
+     * <p/>
+     * Note that this operation by default does NOT show any cancelled datasets.
      *
-     * @param uuid      The dataset UUID
-     * @param geometry  The dataset geometry
-     * @param fromTime  the dataset validity starting time
-     * @param toTime    the dataset validity ending time
-     * @param pageable  The pageable result ouput
+     * @param uuid the dataset UUID
+     * @param geometry the dataset geometry
+     * @param fromTime the dataset validity starting time
+     * @param toTime the dataset validity ending time
+     * @param includeCancelled whether cancelled datasets should be included in the response
+     * @param pageable the pageable result output
      * @return The matching datasets in a paged response
      */
     @Transactional(readOnly = true)
@@ -147,6 +154,7 @@ public class DatasetService {
                                      Geometry geometry,
                                      LocalDateTime fromTime,
                                      LocalDateTime toTime,
+                                     Boolean includeCancelled,
                                      Pageable pageable) {
         log.debug("Request to get S-125 Datasets in a pageable search");
         // Create the search query - always sort by name
@@ -155,6 +163,7 @@ public class DatasetService {
                 geometry,
                 fromTime,
                 toTime,
+                includeCancelled,
                 new Sort(new SortedSetSortField("uuid", false))
         );
 
@@ -168,6 +177,9 @@ public class DatasetService {
     /**
      * Handles a datatables pagination request and returns the dataset results
      * list in an appropriate format to be viewed by a datatables jQuery table.
+     * <p/>
+     * Note that this operation by default does show even cancelled datasets,
+     * as datatables is used to manage all the available entries.
      *
      * @param dtPagingRequest the Datatables pagination request
      * @return the Datatables paged response
@@ -178,6 +190,7 @@ public class DatasetService {
         // Create the search query
         SearchQuery<S125Dataset> searchQuery = this.getDatasetSearchQueryByText(
                 dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getSearch().getIncludeCancelled(),
                 dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort))
         );
 
@@ -199,11 +212,15 @@ public class DatasetService {
     public S125Dataset save(@NotNull S125Dataset dataset) {
         log.debug("Request to save Dataset : {}", dataset);
 
-        // If not defined, instantiate the dataset UUID
+        // Cancellation check
+        this.cancellationCheck(dataset);
+
+        // If not defined, instantiate the dataset UUID for the new dataset
+        final AtomicBoolean isNewDataset = new AtomicBoolean(false);
         Optional.of(dataset)
                 .map(S125Dataset::getUuid)
                 .ifPresentOrElse(
-                        uuid -> {},
+                        uuid -> isNewDataset.set(true),
                         () -> dataset.setUuid(UUID.randomUUID())
                 );
 
@@ -249,7 +266,7 @@ public class DatasetService {
                         // Publish the updated dataset to the publication channel
                         this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
                                 .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
-                                .setHeader("deletion", false)
+                                .setHeader("operation", isNewDataset.get() ? DatasetOperation.CREATED : DatasetOperation.UPDATED)
                                 .build());
                     }
                 });
@@ -259,11 +276,49 @@ public class DatasetService {
     }
 
     /**
+     * Cancel the dataset specified by its UUID.
+     *
+     * @param uuid the UUID of the dataset
+     */
+    @LogDataset(operation = DatasetOperation.CANCELLED)
+    @Transactional
+    public S125Dataset cancel(UUID uuid) {
+        log.debug("Request to cancel Dataset with UUID : {}", uuid);
+
+        // Make sure the dataset exists
+        final S125Dataset result = this.datasetRepo.findById(uuid)
+                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
+
+        // Cancellation check - if OK then cancel the dataset
+        // TODO: Do we really need to check - maybe not fail after?
+        Optional.of(uuid)
+                .map(this::cancellationCheck)
+                .map(cancellationUuid ->true)
+                .ifPresent(result::setCancelled);
+
+        // Now save the dataset - Merge to pick up all the latest changes
+        final S125Dataset cancelledDataset = this.datasetRepo.save(result);
+
+        // Refresh the savedDataset object to fetch the updated values
+        this.entityManager.flush();
+        this.entityManager.refresh(cancelledDataset);
+
+        // Publish the cancelled dataset to the deleted channel
+        this.s125RemovalChannel.send(MessageBuilder.withPayload(result)
+                .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
+                .setHeader("operation", DatasetOperation.CANCELLED)
+                .build());
+
+        // And return the object for AOP
+        return cancelledDataset;
+    }
+
+    /**
      * Delete the dataset specified by its UUID.
      *
      * @param uuid the UUID of the dataset
      */
-    @LogDataset(operation = "DELETE")
+    @LogDataset(operation = DatasetOperation.DELETED)
     @Transactional
     public S125Dataset delete(UUID uuid) {
         log.debug("Request to delete Dataset with UUID : {}", uuid);
@@ -276,9 +331,9 @@ public class DatasetService {
         this.datasetRepo.delete(result);
 
         // Publish the updated dataset to the deleted channel
-        this.s125DeletionChannel.send(MessageBuilder.withPayload(result)
+        this.s125RemovalChannel.send(MessageBuilder.withPayload(result)
                 .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
-                .setHeader("deletion", true)
+                .setHeader("operation", DatasetOperation.DELETED)
                 .build());
 
         // And return the object for AOP
@@ -292,24 +347,40 @@ public class DatasetService {
      * -
      *
      * @param searchText the text to be searched
+     * @param includeCancelled whether cancelled datasets should be included in the response
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<S125Dataset> getDatasetSearchQueryByText(String searchText, Sort sort) {
+    protected SearchQuery<S125Dataset> getDatasetSearchQueryByText(String searchText, Boolean includeCancelled, Sort sort) {
         SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<S125Dataset> scope = searchSession.scope( S125Dataset.class );
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
-                .where(f -> f.wildcard()
-                        .fields( this.searchFields )
-                        .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" ))
+                .where(f -> {
+                    BooleanPredicateClausesStep<?> step = f.bool()
+                            .must(Optional.ofNullable(includeCancelled)
+                                    .filter(Boolean.TRUE::equals)
+                                    .map(c -> f.matchAll()
+                                            .toPredicate())
+                                    .orElseGet(() -> f.not(f.match()
+                                            .field("cancelled")
+                                            .matching(Boolean.TRUE))
+                                            .toPredicate()));
+                    if(Objects.nonNull(searchText)) {
+                        step = step.must(f.wildcard()
+                                .fields(this.searchFields)
+                                .matching(Optional.ofNullable(searchText).map(st -> "*" + st).orElse("") + "*"));
+                    }
+                    return step;
+                }
+                )
                 .sort(f -> f.fromLuceneSort(sort))
                 .toQuery();
     }
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
-     * AtoN UID and geometry. This query will be based solely on the aton
+     * AtoN UID and geometry. This query will be based solely on the AtoN
      * messages table and will include the following fields:
      * -
      * For any more elaborate search, the getSearchMessageQueryByText function
@@ -319,6 +390,7 @@ public class DatasetService {
      * @param geometry the geometry that the results should intersect with
      * @param fromTime the date-time the results should match from
      * @param toTime the date-time the results should match to
+     * @param includeCancelled  whether cancelled datasets should be included in the response
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
@@ -326,20 +398,34 @@ public class DatasetService {
                                                              Geometry geometry,
                                                              LocalDateTime fromTime,
                                                              LocalDateTime toTime,
+                                                             Boolean includeCancelled,
                                                              Sort sort) {
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<S125Dataset> scope = searchSession.scope( S125Dataset.class );
         return searchSession.search( scope )
-                .where( f -> f.bool(b -> {
-                            b.must(f.matchAll());
-                            Optional.ofNullable(uuid).ifPresent(v -> b.must(f.match()
-                                    .field("uuid")
-                                    .matching(v)));
-                            Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
-                                    .fromLuceneQuery(createGeoSpatialQuery(g))));
-                        })
-                )
+                .where( f -> {
+                    BooleanPredicateClausesStep<?> step = f.bool()
+                            .must(Optional.ofNullable(includeCancelled)
+                                    .filter(Boolean.TRUE::equals)
+                                    .map(c -> f.matchAll()
+                                            .toPredicate())
+                                    .orElseGet(() -> f.not(f.match()
+                                            .field("cancelled")
+                                            .matching(Boolean.TRUE))
+                                            .toPredicate()));
+                    if(Objects.nonNull(uuid)) {
+                        step = step.must(f.match()
+                                .field("uuid")
+                                .matching(uuid));
+                    }
+                    if(Objects.nonNull(geometry)) {
+                        step = step.must(f.bool()
+                                .must(f.extension(LuceneExtension.get())
+                                .fromLuceneQuery(createGeoSpatialQuery(geometry))));
+                    }
+                    return step;
+                })
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
                 .toQuery();
     }
@@ -364,6 +450,51 @@ public class DatasetService {
                 .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false , true)))
                 .map(strategy::makeQuery)
                 .orElse(null);
+    }
+
+    /**
+     * A helper function to protect the rest of the code from editing canceled
+     * datasets. This function will perform a database call and could become
+     * expensive in iterative operations.
+     *
+     * @param s125Dataset the dataset to be examined for being cancelled
+     */
+    @Transactional(readOnly = true)
+    protected S125Dataset cancellationCheck(S125Dataset s125Dataset) {
+        // Try to find whether the provided dataset has been cancelled
+        this.cancellationCheck(Optional.ofNullable(s125Dataset)
+                .map(S125Dataset::getUuid)
+                .orElse(null));
+
+        // If everything is OK, return the input back
+        return s125Dataset;
+    }
+
+    /**
+     * A helper function to protect the rest of the code from editing canceled
+     * datasets. This function will perform a database call and could become
+     * expensive in iterative operations.
+     *
+     * @param uuid the UUID of the dataset to be examined for being cancelled
+     */
+    @Transactional(readOnly = true)
+    protected UUID cancellationCheck(UUID uuid) {
+        // Try to find whether the provided dataset has been cancelled
+        final boolean cancellationDetected = Optional.ofNullable(uuid)
+                .flatMap(u -> this.datasetRepo.findByUuidAndCancelled(u, Boolean.TRUE))
+                .isPresent();
+
+        // If so, then just throw a runtime exception with a generic message
+        if(cancellationDetected) {
+            throw new ValidationException(
+                    String.format(
+                            "The specified dataset with UUID %s has been cancelled. No modifications are allowed!",
+                            uuid
+                    ));
+        }
+
+        // If everything is OK, return the input back
+        return uuid;
     }
 
 }

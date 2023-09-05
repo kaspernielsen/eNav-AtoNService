@@ -23,6 +23,7 @@ import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
@@ -114,7 +115,7 @@ class SecomSubscriptionServiceTest {
      * The S-125 Dataset Channel to publish the deleted data to.
      */
     @Mock
-    PublishSubscribeChannel s125DeletionChannel;
+    PublishSubscribeChannel s125RemovalChannel;
 
     // Test Variables
     private SubscriptionRequest newSubscriptionRequest;
@@ -178,7 +179,7 @@ class SecomSubscriptionServiceTest {
 
         verify(this.entityManagerFactory, times(1)).createEntityManager();
         verify(this.s125PublicationChannel, times(1)).subscribe(this.secomSubscriptionService);
-        verify(this.s125DeletionChannel, times(1)).subscribe(this.secomSubscriptionService);
+        verify(this.s125RemovalChannel, times(1)).subscribe(this.secomSubscriptionService);
     }
 
     /**
@@ -195,7 +196,7 @@ class SecomSubscriptionServiceTest {
 
         verify(this.secomSubscriptionService.entityManager , times(1)).close();
         verify(this.s125PublicationChannel, times(1)).destroy();
-        verify(this.s125DeletionChannel, times(1)).destroy();
+        verify(this.s125RemovalChannel, times(1)).destroy();
     }
 
     /**
@@ -212,7 +213,7 @@ class SecomSubscriptionServiceTest {
         // Create a message to be handled
         Message<S125Dataset> message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
-                .map(builder -> builder.setHeader("deletion", false))
+                .map(builder -> builder.setHeader("operation", DatasetOperation.CREATED))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -275,7 +276,7 @@ class SecomSubscriptionServiceTest {
         // Create a message to be handled
         Message<S125Dataset> message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125))
-                .map(builder -> builder.setHeader("deletion", true))
+                .map(builder -> builder.setHeader("operation", DatasetOperation.DELETED))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -325,7 +326,7 @@ class SecomSubscriptionServiceTest {
         // Create a message to be handled
         Message message = Optional.of(this.s125Dataset).map(MessageBuilder::withPayload)
                 .map(builder -> builder.setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.OTHER))
-                .map(builder -> builder.setHeader("deletion", false))
+                .map(builder -> builder.setHeader("operation", DatasetOperation.CREATED))
                 .map(MessageBuilder::build)
                 .orElse(null);
 
@@ -388,7 +389,6 @@ class SecomSubscriptionServiceTest {
         // Mock the HTTP servlet request
         final HttpServletRequest httpServletRequestMock = mock(HttpServletRequest.class);
         doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionRepo).save(any());
-//        doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionService.entityManager).merge(any());
 
         // Perform the service call
         SubscriptionRequest result = this.secomSubscriptionService.save("urn:mrn:org:test", this.newSubscriptionRequest);
@@ -422,7 +422,6 @@ class SecomSubscriptionServiceTest {
         doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findByClientMrn(eq(this.existingSubscriptionRequest.getClientMrn()));
         doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findById(this.existingSubscriptionRequest.getUuid());
         doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionRepo).save(any());
-//        doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionService.entityManager).merge(any());
 
         // Perform the service call
         SubscriptionRequest result = this.secomSubscriptionService.save(this.existingSubscriptionRequest.getClientMrn(), this.newSubscriptionRequest);

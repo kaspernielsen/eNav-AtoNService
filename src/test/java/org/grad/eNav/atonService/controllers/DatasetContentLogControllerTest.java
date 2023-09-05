@@ -23,6 +23,7 @@ import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.dtos.DatasetContentLogDto;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.grad.eNav.atonService.services.DatasetContentLogService;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,7 +111,7 @@ class DatasetContentLogControllerTest {
         this.datasetContentLog.setSequenceNo(BigInteger.ONE);
         this.datasetContentLog.setGeneratedAt(LocalDateTime.now());
         this.datasetContentLog.setGeometry(factory.createPoint(new Coordinate(1, 1)));
-        this.datasetContentLog.setOperation("UPDATED");
+        this.datasetContentLog.setOperation(DatasetOperation.UPDATED);
         this.datasetContentLog.setContent("Dataset Content Log");
         this.datasetContentLog.setContentLength(BigInteger.valueOf(this.datasetContentLog.getContent().length()));
         this.datasetContentLog.setDelta("Dataset Content Log Delta");
@@ -125,7 +126,7 @@ class DatasetContentLogControllerTest {
             datasetContentLog.setSequenceNo(BigInteger.ONE);
             datasetContentLog.setGeneratedAt(LocalDateTime.now());
             datasetContentLog.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
-            datasetContentLog.setOperation("UPDATED");
+            datasetContentLog.setOperation(DatasetOperation.UPDATED);
             datasetContentLog.setContent("Existing Dataset Content " + i);
             datasetContentLog.setContentLength(BigInteger.valueOf(datasetContentLog.getContent().length()));
             datasetContentLog.setDelta("Dataset Content Log Delta " + i);

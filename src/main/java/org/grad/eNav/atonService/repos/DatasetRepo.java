@@ -20,6 +20,7 @@ import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
+import java.util.Optional;
 
 /**
  * Spring Data JPA repository for the S-125 Dataset entities.
@@ -28,4 +29,15 @@ import java.util.UUID;
  */
 public interface DatasetRepo extends JpaRepository<S125Dataset, UUID> {
 
+    /**
+     * Find whether a specific UUID exists that belongs to a cancelled dataset.
+     * This function should be used to retrieve data, but can be utilised to
+     * check whether a dataset has been cancelled.
+     *
+     * @param uuid      The UUID of the dataset to be checked
+     * @param cancelled Whether the dataset has been cancelled or not
+     * @return the dataset matching the UUID and cancellation status
+     */
+    Optional<S125Dataset> findByUuidAndCancelled(UUID uuid, Boolean cancelled);
+    
 }

@@ -1,5 +1,40 @@
+
 /**
- * A helper function to prettyfy the XML string provided.
+ * A helper function to handle confirmation UI operations.
+ *
+ * @param {String}      text    The confirmation text to be displayed
+ * @param {Function}    action  The action to be performed after confirmation
+ */
+function showConfirmationDialog(text, action) {
+    // Initialise the confirmation dialog
+    $('#confirmationDialog .modal-body').html(text);
+
+    // Link the button (remove any previous links)
+    $('#confirmationDialog button.btn-primary')
+        .off('click')
+        .click((e) => action());
+
+    // And show the dialog
+    $('#confirmationDialog').modal('show');
+}
+
+/**
+ * A helper function to handle error UI operations.
+ *
+ * @param {String}      text    The error text to be displayed
+ */
+function showErrorDialog(text, action) {
+    // Initialise the confirmation dialog
+    $('#errorDialog .modal-body').html(text);
+
+    // And show the dialog
+    $('#errorDialog').modal('show');
+}
+
+/**
+ * A helper function to prettify the XML string provided.
+ *
+ * @param {String}  xml     The XML input to be prettified
  */
 function formatXml(xml) {
     var formatted = '';

@@ -232,7 +232,7 @@ public class S125GDSListener implements FeatureListener {
 
         // Now we should update all datasets that are affected in this area
         Optional.ofNullable(affectedGeometry)
-                .map(geometry -> this.datasetService.findAll(null, geometry, null, null, Pageable.unpaged()))
+                .map(geometry -> this.datasetService.findAll(null, geometry, null, null, Boolean.FALSE, Pageable.unpaged()))
                 .orElse(Page.empty())
                 .stream()
                 .forEach(this.datasetService::save);

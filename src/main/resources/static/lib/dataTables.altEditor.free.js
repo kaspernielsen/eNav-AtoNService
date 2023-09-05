@@ -288,7 +288,7 @@
                 this.language.edit = this.language.edit || {};
                 this.language.edit = {
                     title: this.language.edit.title || 'Edit record',
-                    button: this.language.edit.button || 'Save'
+                    button: this.language.edit.button || 'Edit'
                 };
                 this.language.delete = this.language.delete || {};
                 this.language.delete = {
@@ -495,7 +495,7 @@
 
                 var adata = dt.rows({
                     selected: true
-                });
+                }).data().toArray();
 
                 that.onDeleteRow(that,
                     adata,
@@ -522,19 +522,19 @@
 
             selectionListener: function() {
 
-                var dt = this.s.dt
+                var _dt = this.s.dt
 
-                dt.on('select', function (e, dt, type, indexes) {
+                _dt.on('select', function (e, dt, type, indexes) {
                     // when multiple rows selected then disable edit button
-                    if (dt.rows({selected: true}).count() > 1) {
-                        dt.buttons('edit:name').disable()
+                    if (_dt.rows({selected: true}).count() > 1) {
+                        _dt.buttons('edit:name').disable()
                     }
                 })
 
-                dt.on('deselect', function (e, dt, type, indexes) {
+                _dt.on('deselect', function (e, dt, type, indexes) {
                     // when multiple rows selected then disable edit button
-                    if (dt.rows({selected: true}).count() > 1) {
-                        dt.buttons('edit:name').disable()
+                    if (_dt.rows({selected: true}).count() > 1) {
+                        _dt.buttons('edit:name').disable()
                     }
                 })
             },
@@ -605,15 +605,8 @@
                     return attrsStr + " ";
                 };
 
-                var hasRequired = false;
                 for (var j in columnDefs) {
                     var title = columnDefs[j].title.replace(/(<([^>]+)>)/gi, "").trim();
-
-                    // Add the required asterisk
-                    if(columnDefs[j].required) {
-                        title += "<span class='text-danger'>*</span>";
-                        hasRequired = true;
-                    }
 
                     //handle hidden fields
                     if (columnDefs[j].type.indexOf("hidden") >= 0) {
@@ -675,7 +668,7 @@
                         {
                             data += "<textarea class='form-control' "
                                 + "id='" + this._quoteattr(columnDefs[j].name) + "' "
-                                + fillAttrs(columnDefs[j], ['name', 'style', 'rows', 'cols', 'maxlength', 'readonly', 'disabled', 'required'])
+                                + fillAttrs(columnDefs[j], ['name', 'style', 'rows', 'cols', 'maxLength', 'readonly', 'disabled', 'required'])
                                 + "placeholder='" + this._quoteattr(columnDefs[j].placeholder ? columnDefs[j].placeholder : title) + "' "
                                 + "data-special='" + this._quoteattr(columnDefs[j].special) + "' "
                                 + "data-unique='" + columnDefs[j].unique + "'>"
@@ -684,8 +677,8 @@
                         }
                         // Adding text-inputs and error labels, but also new HTML5 types (email, color, ...)
                         else {
-                            data += (columnDefs[j].type.indexOf("checkbox") >= 0 ? "<input class='form-check-input' " : "<input class='form-control' ")
-                                + fillAttrs(columnDefs[j], ['type', 'pattern', 'accept', 'name', 'step', 'min', 'max', 'maxlength', 'value', 'readonly', 'disabled', 'required'])
+                            data += "<input class='form-control' "
+                                + fillAttrs(columnDefs[j], ['type', 'pattern', 'accept', 'name', 'step', 'min', 'max', 'maxLength', 'value', 'readonly', 'disabled', 'required'])
                                 + /* ???? */ (columnDefs[j].type.indexOf("readonly") >= 0 ? "readonly " : "")
                                 + "id='" + this._quoteattr(columnDefs[j].name) + "' "
                                 + "title='" + this._quoteattr(columnDefs[j].hoverMsg) + "' "
@@ -706,9 +699,6 @@
                             data += "</div>";
                         }
                     }
-                }
-                if(hasRequired) {
-                    data += "<div><span class='m3'><small>Asterisks (<span class='text-danger'>*</span>) mark the mandatory fields</small></span></div>"
                 }
                 // data += "</form>";
 
@@ -740,15 +730,8 @@
                 // enable select 2 items, datepicker, datetimepickerm
                 for (var j in columnDefs) {
                     if (columnDefs[j].select2) {
-                        // Fix the select2 modal behaviour
-                        columnDefs[j].select2.dropdownParent = $(selector);
-
                         // Require select2 plugin
                         $(selector).find("select#" + columnDefs[j].name).select2(columnDefs[j].select2);
-
-                        // Add the on select/un-select handling
-                        $(selector).find("select#" + columnDefs[j].name).on('select2:select', columnDefs[j].select2.onSelect)
-                        $(selector).find("select#" + columnDefs[j].name).on('select2:unselect', columnDefs[j].select2.onUnselect)
                     }
                     else if (columnDefs[j].datepicker) {
                         // Require jquery-ui
@@ -972,10 +955,10 @@
             /**
              * Default callback for deletion: mock webservice, always success.
              */
-            onDeleteRow: function(dt, selectedRows, success, error) {
+            onDeleteRow: function(dt, rowdata, success, error) {
                 console.log("Missing AJAX configuration for DELETE");
-                selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
-                    success(this.data())
+                rowdata.every(function (rowIdx, tableLoop, rowLoop) {
+                    success(rowdata[rowIdx])
                 })
             },
 

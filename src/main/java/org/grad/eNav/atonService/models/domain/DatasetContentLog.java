@@ -17,6 +17,7 @@
 package org.grad.eNav.atonService.models.domain;
 
 import jakarta.persistence.*;
+import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.models.enums.DatasetType;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.locationtech.jts.geom.Geometry;
@@ -59,7 +60,8 @@ public class DatasetContentLog implements Serializable {
     @Column(nullable = false)
     private UUID uuid;
 
-    private String operation;
+    @Enumerated(EnumType.STRING)
+    private DatasetOperation operation;
 
     private BigInteger sequenceNo;
 
@@ -151,7 +153,7 @@ public class DatasetContentLog implements Serializable {
      *
      * @return the operation
      */
-    public String getOperation() {
+    public DatasetOperation getOperation() {
         return operation;
     }
 
@@ -160,7 +162,7 @@ public class DatasetContentLog implements Serializable {
      *
      * @param operation the operation
      */
-    public void setOperation(String operation) {
+    public void setOperation(DatasetOperation operation) {
         this.operation = operation;
     }
 
