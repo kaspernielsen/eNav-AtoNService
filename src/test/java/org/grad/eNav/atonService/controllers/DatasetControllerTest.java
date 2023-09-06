@@ -51,8 +51,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -103,8 +102,9 @@ class DatasetControllerTest {
         // Initialise the station nodes list
         this.datasetList = new ArrayList<>();
         for(long i=0; i<10; i++) {
-            S125Dataset dataset = new S125Dataset(String.format("Dataset{}", i));
+            S125Dataset dataset = new S125Dataset(String.format("Dataset %d", i));
             dataset.setGeometry(this.factory.createPoint(new Coordinate(i, i)));
+            dataset.setCancelled(false);
             this.datasetList.add(dataset);
         }
 
@@ -114,11 +114,13 @@ class DatasetControllerTest {
         // Create a Dataset without an ID
         this.newDataset = new S125Dataset("NewDataset");
         this.newDataset.setGeometry(this.factory.createPoint(new Coordinate(51.98, 1.28)));
+        this.newDataset.setCancelled(false);
 
         // Create a Dataset with an ID
         this.existingDataset = new S125Dataset("ExistingDataset");
         this.existingDataset.setUuid(UUID.randomUUID());
         this.existingDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));
+        this.existingDataset.setCancelled(false);
     }
 
     /**
@@ -155,6 +157,7 @@ class DatasetControllerTest {
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getApplicationProfile(), result.getContent().get(i).getDatasetIdentificationInformation().getApplicationProfile());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getDatasetLanguage(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetLanguage());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getDatasetAbstract(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetAbstract());
+            assertEquals(page.getContent().get(i).getCancelled(),  result.getContent().get(i).isCancelled());
         }
     }
 
@@ -208,6 +211,7 @@ class DatasetControllerTest {
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getApplicationProfile(), result.getData().get(i).getDatasetIdentificationInformation().getApplicationProfile());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getDatasetLanguage(), result.getData().get(i).getDatasetIdentificationInformation().getDatasetLanguage());
             assertEquals(page.getContent().get(i).getDatasetIdentificationInformation().getDatasetAbstract(), result.getData().get(i).getDatasetIdentificationInformation().getDatasetAbstract());
+            assertEquals(page.getContent().get(i).getCancelled(),  result.getData().get(i).isCancelled());
         }
     }
 
@@ -245,6 +249,7 @@ class DatasetControllerTest {
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+        assertEquals(this.existingDataset.getCancelled(),  result.isCancelled());
     }
 
     /**
@@ -266,7 +271,7 @@ class DatasetControllerTest {
 
     /**
      * Test that we can update an existing dataset correctly through a PUT
-     * request. The incoming dataset should always have an UUID.
+     * request. The incoming dataset should always have a UUID.
      */
     @Test
     void testUpdateDataset() throws Exception {
@@ -276,7 +281,7 @@ class DatasetControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(put("/api/dataset/{uuid}", this.existingDataset.getUuid())
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.newDataset, S125DataSetDto.class))))
+                        .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.existingDataset, S125DataSetDto.class))))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -295,6 +300,7 @@ class DatasetControllerTest {
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+        assertEquals(existingDataset.getCancelled(),  result.isCancelled());
     }
 
     /**
@@ -305,10 +311,126 @@ class DatasetControllerTest {
     @Test
     void testUpdateDatasetFailure() throws Exception {
         // Mock a general Exception when saving the instance
-        doThrow(RuntimeException.class).when(this.datasetService).save(any());
+        doThrow(RuntimeException.class).when(this.datasetService).cancel(any());
 
         // Perform the MVC request
         this.mockMvc.perform(put("/api/dataset/{uuid}", this.existingDataset.getUuid())
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.newDataset, S125DataSetDto.class))))
+                .andExpect(status().isBadRequest())
+                .andExpect(header().exists("X-atonService-error"))
+                .andExpect(header().exists("X-atonService-params"))
+                .andReturn();
+    }
+
+    /**
+     * Test that we can cancel an existing dataset correctly through a PUT
+     * request. The incoming dataset should always have a UUID.
+     */
+    @Test
+    void testCancelDataset() throws Exception {
+        // First cancel the dataset for the response
+        this.existingDataset.setCancelled(true);
+
+        // Mock the service call for updating an existing instance
+        doReturn(this.existingDataset).when(this.datasetService).cancel(any());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(put("/api/dataset/{uuid}/cancel", this.existingDataset.getUuid())
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.existingDataset, S125DataSetDto.class))))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        // Parse and validate the response
+        S125DataSetDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), S125DataSetDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingDataset.getUuid(), result.getUuid());
+        assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
+        assertNotNull(result.getDatasetIdentificationInformation());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecification(), result.getDatasetIdentificationInformation().getEncodingSpecification());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getDatasetIdentificationInformation().getEncodingSpecificationEdition());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductIdentifier(),result.getDatasetIdentificationInformation().getProductIdentifier());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductEdition(), result.getDatasetIdentificationInformation().getProductEdition());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+        assertTrue(result.isCancelled());
+    }
+
+    /**
+     * Test that if we fail to cancel the provided dataset due to a general
+     * error, an HTTP BAD_REQUEST response will be returned, with a description
+     * of the error in the header.
+     */
+    @Test
+    void testCancelDatasetFailure() throws Exception {
+        // Mock a general Exception when saving the instance
+        doThrow(RuntimeException.class).when(this.datasetService).cancel(any());
+
+        // Perform the MVC request
+        this.mockMvc.perform(put("/api/dataset/{uuid}/cancel", this.existingDataset.getUuid())
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.newDataset, S125DataSetDto.class))))
+                .andExpect(status().isBadRequest())
+                .andExpect(header().exists("X-atonService-error"))
+                .andExpect(header().exists("X-atonService-params"))
+                .andReturn();
+    }
+
+    /**
+     * Test that we can replace an existing dataset correctly through a PUT
+     * request. The incoming dataset should always have a UUID.
+     */
+    @Test
+    void testReplaceDataset() throws Exception {
+        // First cancel the dataset for the response
+        this.existingDataset.setCancelled(true);
+        // And create a new UUID for the new one
+        this.newDataset.setUuid(UUID.randomUUID());
+
+        // Mock the service call for updating an existing instance
+        doReturn(this.newDataset).when(this.datasetService).replace(any());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(put("/api/dataset/{uuid}/replace", this.existingDataset.getUuid())
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.existingDataset, S125DataSetDto.class))))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        // Parse and validate the response
+        S125DataSetDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), S125DataSetDto.class);
+        assertNotNull(result);
+        assertEquals(this.newDataset.getUuid(), result.getUuid());
+        assertEquals(this.newDataset.getGeometry(), result.getGeometry());
+        assertNotNull(result.getDatasetIdentificationInformation());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getEncodingSpecification(), result.getDatasetIdentificationInformation().getEncodingSpecification());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getDatasetIdentificationInformation().getEncodingSpecificationEdition());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getProductIdentifier(),result.getDatasetIdentificationInformation().getProductIdentifier());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getProductEdition(), result.getDatasetIdentificationInformation().getProductEdition());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
+        assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+        assertFalse(result.isCancelled());
+    }
+
+    /**
+     * Test that if we fail to replace the provided dataset due to a general
+     * error, an HTTP BAD_REQUEST response will be returned, with a description
+     * of the error in the header.
+     */
+    @Test
+    void testReplaceDatasetFailure() throws Exception {
+        // Mock a general Exception when saving the instance
+        doThrow(RuntimeException.class).when(this.datasetService).replace(any());
+
+        // Perform the MVC request
+        this.mockMvc.perform(put("/api/dataset/{uuid}/replace", this.existingDataset.getUuid())
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(this.objectMapper.writeValueAsString(new ModelMapper().map(this.newDataset, S125DataSetDto.class))))
                 .andExpect(status().isBadRequest())
@@ -323,6 +445,9 @@ class DatasetControllerTest {
      */
     @Test
     void testDeleteDataset() throws Exception {
+        // Mock the service call for deleting an existing instance
+        doReturn(this.existingDataset).when(this.datasetService).delete(any());
+
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/dataset/{uuid}", this.existingDataset.getUuid())
                         .contentType(MediaType.APPLICATION_JSON_VALUE))

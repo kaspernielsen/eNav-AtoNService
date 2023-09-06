@@ -23,6 +23,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.GenericField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -58,6 +59,7 @@ public class DatasetContentLog implements Serializable {
     @Column(name = "id", nullable = false, precision = 24, scale = 0)
     private BigInteger id;
 
+    @KeywordField(sortable = Sortable.YES)
     @Enumerated(EnumType.STRING)
     private DatasetType datasetType;
 
@@ -65,9 +67,11 @@ public class DatasetContentLog implements Serializable {
     @Column(nullable = false)
     private UUID uuid;
 
+    @KeywordField(sortable = Sortable.YES)
     @Enumerated(EnumType.STRING)
     private DatasetOperation operation;
 
+    @GenericField(sortable = Sortable.YES)
     private BigInteger sequenceNo;
 
     @GenericField(sortable = Sortable.YES)

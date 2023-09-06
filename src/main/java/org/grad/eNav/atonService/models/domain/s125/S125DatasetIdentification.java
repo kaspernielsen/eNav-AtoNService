@@ -352,4 +352,30 @@ public class S125DatasetIdentification {
     public void setDatasetTopicCategories(List<MDTopicCategoryCode> datasetTopicCategories) {
         this.datasetTopicCategories = datasetTopicCategories;
     }
+
+    /**
+     * This helper function will copy all the important information of this
+     * dataset identification object into branch new object which will be
+     * returned.
+     *
+     * @return the constructed dataset identification copy
+     */
+    public S125DatasetIdentification copy() {
+        // Create the copy
+        S125DatasetIdentification copy = new S125DatasetIdentification();
+        copy.setEncodingSpecification(this.getEncodingSpecification());
+        copy.setEncodingSpecificationEdition(this.getEncodingSpecificationEdition());
+        copy.setProductIdentifier(this.getProductIdentifier());
+        copy.setProductEdition(this.getProductEdition());
+        copy.setApplicationProfile(this.getApplicationProfile());
+        copy.setDatasetFileIdentifier(this.getDatasetFileIdentifier());
+        copy.setDatasetTitle(this.getDatasetTitle());
+        copy.setDatasetReferenceDate(this.getDatasetReferenceDate());
+        copy.setDatasetLanguage(this.getDatasetLanguage());
+        copy.setDatasetAbstract(this.getDatasetAbstract());
+        copy.setDatasetTopicCategories(this.getDatasetTopicCategories());
+
+        // And return it
+        return copy;
+    }
 }

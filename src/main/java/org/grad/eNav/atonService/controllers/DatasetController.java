@@ -35,7 +35,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -83,7 +82,7 @@ public class DatasetController {
         log.debug("REST request to get page of Dataset");
         uuid.ifPresent(v -> log.debug("Dataset UUID specified as: {}", uuid.toString()));
         geometry.ifPresent(v -> log.debug("Dataset geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
-        Page<S125Dataset> datasetPage = this.datasetService.findAll(
+        final Page<S125Dataset> datasetPage = this.datasetService.findAll(
                 uuid.orElse(null),
                 geometry.orElse(null),
                 null,
@@ -105,8 +104,9 @@ public class DatasetController {
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<S125DataSetDto>> getDatasetsForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
         log.debug("REST request to get page of Dataset for datatables");
+        final Page<S125Dataset> datasetPage = this.datasetService.handleDatatablesPagingRequest(dtPagingRequest);
         return ResponseEntity.ok()
-                .body(this.datasetDtoMapper.convertToDtPage(this.datasetService.handleDatatablesPagingRequest(dtPagingRequest), dtPagingRequest, S125DataSetDto.class));
+                .body(this.datasetDtoMapper.convertToDtPage(datasetPage, dtPagingRequest, S125DataSetDto.class));
     }
 
     /**
@@ -114,7 +114,6 @@ public class DatasetController {
      *
      * @param dataSetDto the dataset to create
      * @return the ResponseEntity with status 201 (Created) and with body the new instance, or with status 400 (Bad Request) if the instance has already an ID
-     * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> createDataset(@RequestBody S125DataSetDto dataSetDto) {
@@ -127,7 +126,7 @@ public class DatasetController {
         }
         // Save the dataset
         try {
-            S125Dataset s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125Dataset.class));
+            final S125Dataset s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125Dataset.class));
             return ResponseEntity.created(new URI(String.format("/api/dataset/%s", s125DataSet.getUuid())))
                     .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
         } catch (Exception e) {
@@ -143,7 +142,6 @@ public class DatasetController {
      * @param uuid the UUID of the dataset to be updated
      * @param dataSetDto the dataset to update
      * @return the ResponseEntity with status 200 (OK) and with body the updated instance
-     * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> updateDataset(@PathVariable UUID uuid, @Valid @RequestBody S125DataSetDto dataSetDto) {
@@ -152,7 +150,7 @@ public class DatasetController {
         dataSetDto.setUuid(uuid);
         // Save the dataset
         try {
-            S125Dataset s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125Dataset.class));
+            final S125Dataset s125DataSet = this.datasetService.save(this.datasetDomainMapper.convertTo(dataSetDto, S125Dataset.class));
             return ResponseEntity.ok()
                     .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
         } catch (Exception e) {
@@ -165,17 +163,38 @@ public class DatasetController {
     /**
      * PUT /api/dataset/{uuid}/cancel : Cancels an existing "UUID" dataset.
      *
-     * @param uuid the UUID of the dataset to be updated
-     * @return the ResponseEntity with status 200 (OK) and with body the updated instance
+     * @param uuid the UUID of the dataset to be cancelled
+     * @return the ResponseEntity with status 200 (OK) and with body the cancelled instance
      */
     @PutMapping(value = "/{uuid}/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> cancelDataset(@PathVariable UUID uuid) {
         log.debug("REST request to cancel Dataset with UUID: {}", uuid);
         // Cancel the dataset
         try {
-            S125Dataset s125DataSet = this.datasetService.cancel(uuid);
+            final S125Dataset s125DataSet = this.datasetService.cancel(uuid);
             return ResponseEntity.ok()
                     .body(this.datasetDtoMapper.convertTo(s125DataSet, S125DataSetDto.class));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("dataset", e.getMessage(), e.toString()))
+                    .build();
+        }
+    }
+
+    /**
+     * PUT /api/dataset/{uuid}/cancel : Replaces an existing "UUID" dataset.
+     *
+     * @param uuid the UUID of the dataset to be replaced
+     * @return the ResponseEntity with status 200 (OK) and with body the replaced instance
+     */
+    @PutMapping(value = "/{uuid}/replace", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<S125DataSetDto> replaceDataset(@PathVariable UUID uuid) {
+        log.debug("REST request to replace Dataset with UUID: {}", uuid);
+        // Replace the dataset
+        try {
+            final S125Dataset copiedDataSet = this.datasetService.replace(uuid);
+            return ResponseEntity.ok()
+                    .body(this.datasetDtoMapper.convertTo(copiedDataSet, S125DataSetDto.class));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("dataset", e.getMessage(), e.toString()))
@@ -192,9 +211,9 @@ public class DatasetController {
     @DeleteMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteDataset(@PathVariable UUID uuid) {
         log.debug("REST request to delete Dataset with UUID : {}", uuid);
-        this.datasetService.delete(uuid);
+        final S125Dataset s125Dataset = this.datasetService.delete(uuid);
         return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityDeletionAlert("dataset", uuid.toString()))
+                .headers(HeaderUtil.createEntityDeletionAlert("dataset", s125Dataset.getUuid().toString()))
                 .build();
     }
 

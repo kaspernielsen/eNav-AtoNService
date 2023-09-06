@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import jakarta.persistence.EntityManager;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.exceptions.ValidationException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
@@ -35,8 +36,10 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -130,6 +133,7 @@ class DatasetServiceTest {
         for(long i=0; i<10; i++) {
             S125Dataset dataset = new S125Dataset(String.format("Dataset{}", i));
             dataset.setGeometry(this.factory.createPoint(new Coordinate(i, i)));
+            dataset.setCancelled(false);
             this.datasetList.add(dataset);
         }
 
@@ -141,10 +145,12 @@ class DatasetServiceTest {
         this.newDataset.setGeometry(this.factory.createPoint(new Coordinate(51.98, 1.28)));
         this.newDatasetContent = new DatasetContent();
         this.newDatasetContent.setId(BigInteger.ONE);
+        this.newDatasetContent.setSequenceNo(BigInteger.ONE);
         this.newDatasetContent.setContent("New dataset content");
         this.newDatasetContent.setContentLength(BigInteger.valueOf(this.newDatasetContent.getContent().length()));
         this.newDatasetContent.setGeneratedAt(LocalDateTime.now());
         this.newDataset.setDatasetContent(this.newDatasetContent);
+        this.newDataset.setCancelled(false);
 
         // Create a Dataset with a UUID
         this.existingDataset = new S125Dataset("ExistingDataset");
@@ -152,10 +158,12 @@ class DatasetServiceTest {
         this.existingDataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 2.28)));
         this.existingDatasetContent = new DatasetContent();
         this.existingDatasetContent.setId(BigInteger.TWO);
+        this.existingDatasetContent.setSequenceNo(BigInteger.ONE);
         this.existingDatasetContent.setContent("Existing dataset content");
         this.existingDatasetContent.setContentLength(BigInteger.valueOf(this.existingDatasetContent.getContent().length()));
         this.existingDatasetContent.setGeneratedAt(LocalDateTime.now());
         this.existingDataset.setDatasetContent(this.existingDatasetContent);
+        this.existingDataset.setCancelled(false);
     }
 
     /**
@@ -181,6 +189,7 @@ class DatasetServiceTest {
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
         assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+        assertFalse(result.getCancelled());
     }
 
     /**
@@ -234,6 +243,7 @@ class DatasetServiceTest {
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getApplicationProfile(), result.getContent().get(i).getDatasetIdentificationInformation().getApplicationProfile());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getDatasetLanguage(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetLanguage());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getDatasetAbstract(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetAbstract());
+            assertFalse(result.getContent().get(i).getCancelled());
         }
     }
 
@@ -297,6 +307,7 @@ class DatasetServiceTest {
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getApplicationProfile(), result.getContent().get(i).getDatasetIdentificationInformation().getApplicationProfile());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getDatasetLanguage(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetLanguage());
             assertEquals(this.datasetList.get(i).getDatasetIdentificationInformation().getDatasetAbstract(), result.getContent().get(i).getDatasetIdentificationInformation().getDatasetAbstract());
+            assertFalse(result.getContent().get(i).getCancelled());
         }
     }
 
@@ -307,10 +318,7 @@ class DatasetServiceTest {
     @Test
     void testSave() {
         doReturn(this.newDataset).when(this.datasetRepo).save(any());
-
-        // Create a data content generation response to wait for
-        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.completedFuture(this.newDataset);
-        doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
+        doNothing().when(this.datasetService).requestDatasetContentUpdate(any());
 
         // Perform the service call
         S125Dataset result = this.datasetService.save(new S125Dataset());
@@ -331,31 +339,135 @@ class DatasetServiceTest {
         assertNotNull(result.getDatasetContent());
         assertEquals(this.newDataset.getDatasetContent().getContent(), result.getDatasetContent().getContent());
         assertEquals(this.newDataset.getDatasetContent().getContentLength(), result.getDatasetContent().getContentLength());
+        assertFalse(result.getCancelled());
 
-        // Wait until the end and verify that the message was published
-        assertTrue(contentGenerationTask.isDone());
-        verify(this.s125PublicationChannel, timeout(100).times(1)).send(any(Message.class));
+        // Make sure a content generation request was submitted
+        verify(this.datasetService, times(1)).requestDatasetContentUpdate(any());
     }
 
     /**
-     * Test that if the dataset content generation fails, then a log entry will
-     * be generated and no dataset will be published in the publish-subscribe
-     * channels.
+     * Test that we will not allow cancelled datasets to be saved.
      */
     @Test
-    void testSaveNotGenerated() {
-        doReturn(this.newDataset).when(this.datasetRepo).save(any());
-
-        // Create a data content generation response to wait for
-        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.failedFuture(new RuntimeException("something went wrong"));
-        doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
+    void testSaveCancelled() {
+        this.existingDataset.setCancelled(true);
+        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findByUuidAndCancelled(any(), any());
 
         // Perform the service call
-        this.datasetService.save(new S125Dataset());
+        assertThrows(ValidationException.class, () ->
+                this.datasetService.save(this.existingDataset)
+        );
 
-        // Also verify that the message was NOT published
-        assertThrows(RuntimeException.class, contentGenerationTask::join);
-        verify(this.s125PublicationChannel, timeout(100).times(0)).send(any(Message.class));
+        // Verify that the saving function of the repo and the content
+        // generation operation for the dataset in question were never called
+        verify(this.datasetRepo, never()).save(any());
+        verify(this.datasetService, never()).requestDatasetContentUpdate(any());
+    }
+
+    /**
+     * Test that we can cancel correctly an existing dataset entry if all
+     * the validation checks are successful.
+     */
+    @Test
+    void testCancel() {
+        final BigInteger origSequenceNo = this.existingDataset.getDatasetContent().getSequenceNo();
+        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(any());
+        doAnswer((inv) -> inv.getArgument(0)).when(this.datasetRepo).save((any()));
+
+        // Perform the service call
+        S125Dataset result = this.datasetService.cancel(this.existingDataset.getUuid());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingDataset.getUuid(), result.getUuid());
+        assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
+        assertNotNull(result.getDatasetIdentificationInformation());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecification(), result.getDatasetIdentificationInformation().getEncodingSpecification());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getDatasetIdentificationInformation().getEncodingSpecificationEdition());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductIdentifier(),result.getDatasetIdentificationInformation().getProductIdentifier());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductEdition(), result.getDatasetIdentificationInformation().getProductEdition());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
+        assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+        assertNotNull(result.getDatasetContent());
+        assertEquals(this.existingDataset.getDatasetContent().getContent(), result.getDatasetContent().getContent());
+        assertEquals(this.existingDataset.getDatasetContent().getContentLength(), result.getDatasetContent().getContentLength());
+        assertTrue(result.getCancelled());
+
+        // Make sure this operation also increased the sequence number in the content
+        assertEquals(origSequenceNo.add(BigInteger.ONE), result.getDatasetContent().getSequenceNo());
+    }
+
+    /**
+     * Test that if we try to cancel a dataset that doesn't exist, a
+     * DataNotFoundException will be thrown.
+     */
+    @Test
+    void testCancelNotFound() {
+        doReturn(Optional.empty()).when(this.datasetRepo).findById(any());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.datasetService.cancel(UUID.randomUUID())
+        );
+    }
+
+    /**
+     * Test that if we try to cancel a dataset that has already been cancelled,
+     * a ValidationException will be thrown.
+     */
+    @Test
+    void testCancelAlreadyCancelled() {
+        this.existingDataset.setCancelled(true);
+        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(any());
+        doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findByUuidAndCancelled(any(), any());
+
+        // Perform the service call
+        assertThrows(ValidationException.class, () ->
+                this.datasetService.cancel(UUID.randomUUID())
+        );
+    }
+
+    /**
+     * Test that we can cancel replace an existing dataset entry if all
+     * the validation checks are successful. This operation will cancel the
+     * old dataset and create a brand-new entry without any content yet. This
+     * will be generated by the saving operation in good time.
+     */
+    @Test
+    void testReplace() {
+        // Mock the static AopContent current proxy retrieval
+        try (MockedStatic<AopContext> aopContent = mockStatic(AopContext.class)) {
+            aopContent.when(AopContext::currentProxy).thenReturn(this.datasetService);
+
+            // Mock the dataset cancellation
+            this.existingDataset.setCancelled(true);
+            doReturn(this.existingDataset).when(this.datasetService).cancel(any());
+
+            // And mock the replacement dataset saving operation
+            doAnswer((inv) -> inv.getArgument(0)).when(this.datasetService).save(any());
+
+            // Perform the service call
+            S125Dataset result = this.datasetService.replace(this.existingDataset.getUuid());
+
+            // Test the result
+            // Note that this is a branch new entry without any content yet
+            assertNotNull(result);
+            assertNull(result.getUuid());
+            assertEquals(this.existingDataset.getGeometry(), result.getGeometry());
+            assertNotNull(result.getDatasetIdentificationInformation());
+            assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetTitle(), result.getDatasetIdentificationInformation().getDatasetTitle());
+            assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecification(), result.getDatasetIdentificationInformation().getEncodingSpecification());
+            assertEquals(this.existingDataset.getDatasetIdentificationInformation().getEncodingSpecificationEdition(), result.getDatasetIdentificationInformation().getEncodingSpecificationEdition());
+            assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductIdentifier(),result.getDatasetIdentificationInformation().getProductIdentifier());
+            assertEquals(this.existingDataset.getDatasetIdentificationInformation().getProductEdition(), result.getDatasetIdentificationInformation().getProductEdition());
+            assertEquals(this.existingDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
+            assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
+            assertEquals(this.existingDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
+            assertNull(result.getDatasetContent());
+            assertFalse(result.getCancelled());
+        }
     }
 
     /**
@@ -363,11 +475,15 @@ class DatasetServiceTest {
      */
     @Test
     void testDelete() throws DataNotFoundException {
+        final BigInteger origSequenceNo = this.existingDataset.getDatasetContent().getSequenceNo();
         doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(this.existingDataset.getUuid());
         doNothing().when(this.datasetRepo).delete(this.existingDataset);
 
         // Perform the service call
-        this.datasetService.delete(this.existingDataset.getUuid());
+        S125Dataset result = this.datasetService.delete(this.existingDataset.getUuid());
+
+        // Make sure this operation also increased the sequence number in the content
+        assertEquals(origSequenceNo.add(BigInteger.ONE), result.getDatasetContent().getSequenceNo());
 
         // Verify that our message was deleted and sent
         verify(this.datasetRepo, times(1)).delete(any());
@@ -380,12 +496,49 @@ class DatasetServiceTest {
      */
     @Test
     void testDeleteNotFound() {
-        doReturn(Optional.empty()).when(this.datasetRepo).findById(this.existingDataset.getUuid());
+        doReturn(Optional.empty()).when(this.datasetRepo).findById(any());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
-                this.datasetService.delete(this.existingDataset.getUuid())
+                this.datasetService.delete(UUID.randomUUID())
         );
+    }
+
+    /**
+     * Test that we can correctly request a dataset content update from the
+     * dataset content service. This will take place asynchronously so that it
+     * does not hold back the responses of this service.
+     */
+    @Test
+    void testRequestDatasetContentUpdate() {
+        // Create a data content generation response to wait for
+        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.completedFuture(this.newDataset);
+        doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
+
+        // Perform the service call
+        this.datasetService.requestDatasetContentUpdate(new S125Dataset());
+
+        // Wait until the end and verify that the message was published
+        assertTrue(contentGenerationTask.isDone());
+        verify(this.s125PublicationChannel, timeout(100).times(1)).send(any(Message.class));
+    }
+
+    /**
+     * Test that we can correctly request a dataset content update from the
+     * dataset content service and will handle potential failures.
+     */
+    @Test
+    void testRequestDatasetContentUpdateFailure() {
+        // Create a data content generation response to wait for
+        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.failedFuture(new RuntimeException("something went wrong"));
+        doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
+
+        // Perform the service call
+        this.datasetService.requestDatasetContentUpdate(new S125Dataset());
+
+        // Wait until the end and verify that the message was published
+        assertTrue(contentGenerationTask.isCompletedExceptionally());
+        verify(this.s125PublicationChannel, timeout(100).times(0)).send(any(Message.class));
     }
 
 }
