@@ -179,6 +179,14 @@ $(function () {
             }
         }, {
             extend: 'selected', // Bind to Selected row
+            text: '<i class="fa-solid fa-copy"></i>',
+            titleAttr: 'Replace Dataset',
+            name: 'replace',
+            action: (e, dt, node, config) => {
+                replaceDataset(e, dt, node, config);
+            }
+        }, {
+            extend: 'selected', // Bind to Selected row
             text: '<i class="fa-solid fa-trash-can"></i>',
             titleAttr: 'Delete Dataset',
             name: 'delete' // do not change name
@@ -373,6 +381,41 @@ function cancelDataset(event, table, button, config) {
        () => {
           $.ajax({
                 url: `./api/dataset/${datasetId}/cancel`,
+                type: 'PUT',
+                contentType: 'application/json; charset=utf-8',
+                success: (response) => datasetTable.ajax.reload(),
+                error: (response, status, more) => {
+                    showErrorDialog(response.getResponseHeader("X-atonService-error"));
+                }
+          });
+       }
+    );
+}
+
+/**
+ * This function will replace the selected dataset if possible based on its
+ * UUID.
+ *
+ * @param {Event}         event         The event that took place
+ * @param {DataTable}     table         The dataset table
+ * @param {Node}          button        The button node that was pressed
+ * @param {Configuration} config        The table configuration
+ */
+function replaceDataset(event, table, button, config) {
+    var idx = table.cell('.selected', 0).index();
+    var data = table.rows(idx.row).data();
+    var datasetId = data[0].uuid;
+
+    // Show the confirmation dialog
+    showConfirmationDialog(`
+           <p>The selected dataset with UUID:<p>
+           <p class="fw-bold">${datasetId}</p>
+           <p>will be replaces. This action involves cancelling the existing dataset and cannot be undone.<p>
+           <p class="text-danger">Are  you sure you want to proceed?</p>
+       `,
+       () => {
+          $.ajax({
+                url: `./api/dataset/${datasetId}/replace`,
                 type: 'PUT',
                 contentType: 'application/json; charset=utf-8',
                 success: (response) => datasetTable.ajax.reload(),

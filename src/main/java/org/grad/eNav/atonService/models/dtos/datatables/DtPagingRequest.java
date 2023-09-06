@@ -187,13 +187,17 @@ public class DtPagingRequest {
         List<org.apache.lucene.search.SortField> sortFields = this.getOrder().stream()
                 .map(dtOrder -> {
                     String field = this.getColumns().get(dtOrder.getColumn()).getData();
-                    field = Optional.ofNullable(diffSortFields).orElseGet(() -> Collections.emptyList()).contains(field) ? field + "_sort" : field;
-                    if(field.compareTo("id_sort") == 0) {
-                        return new SortedNumericSortField(field, SortField.Type.LONG,  dtOrder.getDir() == DtDirection.asc);
-                    } else if(field.endsWith("At")) {
-                        return new SortedNumericSortField(field, SortField.Type.INT,  dtOrder.getDir() == DtDirection.asc);
+                    field = Optional.ofNullable(diffSortFields)
+                            .orElse(Collections.emptyList())
+                            .contains(field) ? field + "_sort" : field;
+                    if(field.compareTo("id") == 0 || field.compareTo("id_sort") == 0) {
+                        return new SortedNumericSortField(field, SortField.Type.LONG,  dtOrder.getDir() == DtDirection.desc);
+                    } else if(field.endsWith("At") || field.endsWith("At_sort")) {
+                        return new SortedNumericSortField(field, SortField.Type.LONG,  dtOrder.getDir() == DtDirection.desc);
+                    } else if(field.endsWith("No") || field.endsWith("No_sort")) {
+                        return new SortedNumericSortField(field, SortField.Type.INT,  dtOrder.getDir() == DtDirection.desc);
                     } else {
-                        return new SortedSetSortField(field, dtOrder.getDir() == DtDirection.asc);
+                        return new SortedSetSortField(field, dtOrder.getDir() == DtDirection.desc);
                     }
                 })
                 .collect(Collectors.toList());

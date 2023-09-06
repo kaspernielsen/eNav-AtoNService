@@ -49,6 +49,7 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -62,7 +63,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.function.Predicate.not;
 
@@ -216,11 +216,10 @@ public class DatasetService {
         this.cancellationCheck(dataset);
 
         // If not defined, instantiate the dataset UUID for the new dataset
-        final AtomicBoolean isNewDataset = new AtomicBoolean(false);
         Optional.of(dataset)
                 .map(S125Dataset::getUuid)
                 .ifPresentOrElse(
-                        uuid -> isNewDataset.set(true),
+                        uuid -> { },
                         () -> dataset.setUuid(UUID.randomUUID())
                 );
 
@@ -240,7 +239,7 @@ public class DatasetService {
         Optional.of(dataset)
                 .map(S125Dataset::getDatasetContent)
                 .ifPresentOrElse(
-                        datasetContent -> {},
+                        datasetContent -> { },
                         () -> this.datasetRepo.findById(dataset.getUuid())
                                 .map(S125Dataset::getDatasetContent)
                                 .ifPresentOrElse(
@@ -256,20 +255,8 @@ public class DatasetService {
         this.entityManager.flush();
         this.entityManager.refresh(savedDataset);
 
-        // Update the dataset content asynchronously
-        this.datasetContentService.generateDatasetContent(savedDataset)
-                .whenCompleteAsync((result, ex) -> {
-                    if(Objects.nonNull(ex)) {
-                        log.error("Error while generating the content of the dataset with UUID {}: {}", dataset.getUuid(), ex.getMessage());
-                    } else {
-                        log.info("Successfully generated the content of the dataset with UUID {}", result.getUuid());
-                        // Publish the updated dataset to the publication channel
-                        this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
-                                .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
-                                .setHeader("operation", isNewDataset.get() ? DatasetOperation.CREATED : DatasetOperation.UPDATED)
-                                .build());
-                    }
-                });
+        // Request an Update for the dataset content
+        this.requestDatasetContentUpdate(savedDataset);
 
         // And return the object for AOP
         return savedDataset;
@@ -293,7 +280,7 @@ public class DatasetService {
         // TODO: Do we really need to check - maybe not fail after?
         Optional.of(uuid)
                 .map(this::cancellationCheck)
-                .map(cancellationUuid ->true)
+                .map(validUuid -> true)
                 .ifPresent(result::setCancelled);
 
         // Increase the dataset content sequence for logging
@@ -316,6 +303,36 @@ public class DatasetService {
 
         // And return the object for AOP
         return cancelledDataset;
+    }
+
+    /**
+     * Replaces the dataset specified by its UUID with a new one of the
+     * same specification, but with a whole new UUID. This operation
+     * is a mixture of existing functionality and basically will cancel
+     * the old dataset and create a brand new one with the same information.
+     * This operation can be used in cases where an AtoN is deleted. In these
+     * cases S-100 cannot be used to send delta information, hence a deletion
+     * of the old dataset is required.
+     * <p/>
+     * Since the dataset logging operation is handled by AOP, this function
+     * is required to use the service proxy to access the cancellation and
+     * saving functionalities. This may be an anti-pattern but the alternative
+     * would require (in my opinion) a worse implementation so there it is.
+     *
+     * @param uuid the UUID of the dataset
+     */
+    @Transactional
+    public S125Dataset replace(UUID uuid) {
+        log.debug("Request to replace Dataset with UUID : {}", uuid);
+
+        // Get the AOP proxy to invoke the logging functionality
+        final DatasetService aopProxy = (DatasetService) AopContext.currentProxy();
+
+        // At first cancel the dataset
+        final S125Dataset cancelled = aopProxy.cancel(uuid);
+
+        // And save the copy
+        return aopProxy.save(cancelled.copy());
     }
 
     /**
@@ -348,6 +365,35 @@ public class DatasetService {
 
         // And return the object for AOP
         return result;
+    }
+
+    /**
+     * Requests an update of the dataset content. This function is mainly for
+     * internal use but can also be used externally to request a dataset
+     * content update on AtoN entry changes. The content generation is run
+     * asynchronously so the function will handle the result accordingly.
+     * <p/>
+     * In the event where the dataset contents include deletions, the generation
+     * operation will end with an error, which will instruct the function to
+     * cancel the previous dataset and create a new once (replacement).
+     *
+     * @param s125Dataset the dataset to update the content for
+     */
+    public void requestDatasetContentUpdate(S125Dataset s125Dataset) {
+        this.datasetContentService.generateDatasetContent(s125Dataset)
+                .whenCompleteAsync((result, ex) -> {
+                    if(Objects.nonNull(ex)) {
+                        log.error("Error while generating the content of the dataset with UUID {}: {}", s125Dataset.getUuid(), ex.getMessage());
+                    } else {
+                        log.info("Successfully generated the content of the dataset with UUID {}", result.getUuid());
+                        // Publish the updated dataset to the publication channel
+                        this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
+                                .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
+                                .setHeader("operation", s125Dataset.isNew() ?
+                                        DatasetOperation.CREATED : DatasetOperation.UPDATED)
+                                .build());
+                    }
+                });
     }
 
     /**

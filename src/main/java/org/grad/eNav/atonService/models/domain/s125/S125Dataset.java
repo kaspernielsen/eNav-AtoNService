@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.utils.GeometryBinder;
@@ -34,6 +35,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -238,6 +240,40 @@ public class S125Dataset {
      */
     public void setCancelled(Boolean cancelled) {
         this.cancelled = cancelled;
+    }
+
+    /**
+     * This helper function can assist in identifying if a dataset object
+     * seems to be new. This can be indicated by two things:
+     * <ul>
+     *     <li>THs dataset has no UUID</li>
+     *     <li>The created and modified times are the same</li>
+     * </ul>
+     */
+    public boolean isNew() {
+            return Objects.isNull(this.getUuid()) ||
+                    Objects.equals(this.getCreatedAt(), this.getLastUpdatedAt());
+    }
+
+    /**
+     * This helper function will copy all the important information of a
+     * dataset (such as the identification information, and will assign it
+     * to a branch new dataset which will be returned.
+     *
+     * @return the constructed dataset copy
+     */
+    @JsonIgnore
+    public S125Dataset copy() {
+        // Create the copy
+        S125Dataset copy = new S125Dataset();
+        copy.setDatasetIdentificationInformation(this.getDatasetIdentificationInformation().copy());
+        copy.setGeometry(this.getGeometry());
+
+        // Make sure the copy if always NOT cancelled
+        copy.setCancelled(Boolean.FALSE);
+
+        // And return it
+        return copy;
     }
 
 }

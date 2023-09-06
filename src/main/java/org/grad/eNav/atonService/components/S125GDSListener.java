@@ -230,12 +230,20 @@ public class S125GDSListener implements FeatureListener {
                     .orElse(null);
         }
 
-        // Now we should update all datasets that are affected in this area
+        // Now we should update all datasets that are affected in this area.
+        // Note that for updates, a simple save would be sufficient, but for
+        // AtoN deletions we need to replace the whole affected datasets, i.e.
+        // cancel them are replace them with new ones.
         Optional.ofNullable(affectedGeometry)
-                .map(geometry -> this.datasetService.findAll(null, geometry, null, null, Boolean.FALSE, Pageable.unpaged()))
+                .map(geometry -> this.datasetService.findAll(null,
+                        geometry,
+                        null,
+                        null,
+                        Boolean.FALSE,
+                        Pageable.unpaged()))
                 .orElse(Page.empty())
                 .stream()
-                .forEach(this.datasetService::save);
+                .forEach(this.datasetService::requestDatasetContentUpdate);
     }
 
     /**

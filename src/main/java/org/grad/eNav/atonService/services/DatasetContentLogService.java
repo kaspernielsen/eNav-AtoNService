@@ -49,11 +49,11 @@ import java.util.stream.Collectors;
 import static java.util.function.Predicate.not;
 
 /**
- * The S-125 Dataset Content Service.
+ * The S-125 Dataset Content Log Service.
  * <p/>
- * Service Implementation for managing the Dataset Content objects.
+ * Service Implementation for managing the Dataset Content Log objects.
  * <p/>
- * Note that there is no deletion functionality in this service since we want
+ * Note that there is no deletion functionality in this service, since we want
  * to be able to store all the entries for auditing purposes.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
@@ -79,6 +79,15 @@ public class DatasetContentLogService {
      */
     @Autowired
     DatasetContentLogRepo datasetContentLogRepo;
+
+    // Service Variables
+    private final String[] searchFields = new String[] {
+            "uuid",
+            "datasetType",
+            "operation"
+    };
+    private final String[] searchFieldsWithSort = new String[] {
+    };
 
     /**
      * Find one dataset content log by ID.
@@ -182,7 +191,7 @@ public class DatasetContentLogService {
         // Create the search query
         final SearchQuery<DatasetContentLog> searchQuery = this.getDatasetContentLogSearchQueryByText(
                 dtPagingRequest.getSearch().getValue(),
-                dtPagingRequest.getLucenceSort(Collections.emptyList())
+                dtPagingRequest.getLucenceSort(Arrays.asList(this.searchFieldsWithSort))
         );
 
         // Map the results to a paged response
@@ -226,9 +235,9 @@ public class DatasetContentLogService {
         datasetContentLog.setGeometry(s125Dataset.getGeometry());
         datasetContentLog.setOperation(Optional.of(operation)
                 .filter(not(DatasetOperation.AUTO::equals))
-                .orElseGet(() -> // Automatically select the operation
-                        Objects.equals(s125Dataset.getCreatedAt(), s125Dataset.getLastUpdatedAt()) ?
-                        DatasetOperation.CREATED : DatasetOperation.UPDATED));
+                .orElseGet(() -> s125Dataset.isNew() ? // <= Automatically select the operation
+                        DatasetOperation.CREATED : DatasetOperation.UPDATED)
+                );
         datasetContentLog.setSequenceNo(Optional.of(s125Dataset)
                 .map(S125Dataset::getDatasetContent)
                 .map(DatasetContent::getSequenceNo)
@@ -268,6 +277,8 @@ public class DatasetContentLogService {
      * table and will include the following fields:
      * <ul>
      *  <li>uuid</li>
+     *  <li>datasetType</li>
+     *  <li>operation</li>
      * </ul>
      *
      * @param searchText the UUID as text to be searched
@@ -280,7 +291,7 @@ public class DatasetContentLogService {
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
                 .where(f -> f.wildcard()
-                        .fields("uuid")
+                        .fields(this.searchFields)
                         .matching(Optional.ofNullable(searchText).map(st -> "*" + st).orElse("") + "*")
                 )
                 .sort(f -> f.fromLuceneSort(sort))
