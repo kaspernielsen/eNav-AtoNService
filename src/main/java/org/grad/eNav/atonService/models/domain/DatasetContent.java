@@ -236,19 +236,49 @@ public class DatasetContent implements Serializable {
     }
 
     /**
+     * This helper function will completely strip out the content information
+     * from this dataset content object.
+     */
+    public DatasetContent clearContent() {
+        // Clear the content
+        this.content = null;
+        this.contentLength = BigInteger.ZERO;
+
+        // And return the object for easy use
+        return this;
+    }
+
+    /**
+     * This helper function will completely strip out the delta information
+     * from this dataset content object.
+     */
+    public DatasetContent clearDelta() {
+        // Clear the delta
+        //this.content = null;
+        //this.contentLength = BigInteger.ZERO;
+        this.delta = null;
+        this.deltaLength = BigInteger.ZERO;
+
+        // And return the object for easy use
+        return this;
+    }
+
+    /**
      * Whenever a persistence/update operation takes place, the sequence number
      * of the dataset content should be increased.
      * <p/>
-     * NOTE: This function could be annotated with a @PrePersist/@PreUpdate
+     * NOTE: This function is be annotated with a @PrePersist/@PreUpdate
      * annotation, but this is not fired in cases where the updated entry
-     * remains the same. Note a big issue, but we need to be careful so for
-     * the time being this is called manually.
+     * remains the same. Note a big issue, but we need to be careful to create
+     * it even in those cases.
      */
-    //@PrePersist
-    //@PreUpdate
+    @PrePersist
+    @PreUpdate
+    @PreRemove
     public void increaseSequenceNo() {
         this.sequenceNo = Optional.ofNullable(this.sequenceNo)
                 .map(BigInteger.ONE::add)
                 .orElse(BigInteger.ZERO);
     }
+
 }

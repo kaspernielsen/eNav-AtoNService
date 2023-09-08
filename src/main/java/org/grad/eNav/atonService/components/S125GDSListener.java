@@ -50,7 +50,6 @@ import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.*;
@@ -149,7 +148,6 @@ public class S125GDSListener implements FeatureListener {
      *
      * @param featureEvent      The feature event that took place
      */
-    @Transactional
     public void changed(FeatureEvent featureEvent) {
         // We are only interested in Kafka Feature Messages, otherwise don't bother
         if(!(featureEvent instanceof KafkaFeatureEvent)) {
@@ -233,7 +231,9 @@ public class S125GDSListener implements FeatureListener {
         // Now we should update all datasets that are affected in this area.
         // Note that for updates, a simple save would be sufficient, but for
         // AtoN deletions we need to replace the whole affected datasets, i.e.
-        // cancel them are replace them with new ones.
+        // cancel them are replace them with new ones. Since we are NOT in a
+        // transactional content, the best thing we can do to achieve that
+        // is to just call the dataset save function for an update.
         Optional.ofNullable(affectedGeometry)
                 .map(geometry -> this.datasetService.findAll(null,
                         geometry,
@@ -243,7 +243,7 @@ public class S125GDSListener implements FeatureListener {
                         Pageable.unpaged()))
                 .orElse(Page.empty())
                 .stream()
-                .forEach(this.datasetService::requestDatasetContentUpdate);
+                .forEach(this.datasetService::save);
     }
 
     /**

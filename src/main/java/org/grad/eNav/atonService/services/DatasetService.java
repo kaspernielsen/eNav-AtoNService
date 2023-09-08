@@ -31,6 +31,7 @@ import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.exceptions.DeletedAtoNsInDatasetContentGenerationException;
 import org.grad.eNav.atonService.exceptions.ValidationException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
@@ -49,7 +50,6 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
-import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -225,8 +225,7 @@ public class DatasetService {
 
         // If not defined, set a default dataset ISO 19115-1 topic category
         // TODO: Check that this is the right topic to be set
-        Optional.of(dataset)
-                .map(S125Dataset::getDatasetIdentificationInformation)
+        Optional.of(dataset.getDatasetIdentificationInformation())
                 .map(S125DatasetIdentification::getDatasetTopicCategories)
                 .filter(not(List::isEmpty))
                 .ifPresentOrElse(
@@ -235,18 +234,11 @@ public class DatasetService {
                                 .setDatasetTopicCategories(Collections.singletonList(MDTopicCategoryCode.OCEANS))
                 );
 
-        // If not defined, copy the content from the previous entry or create a new one
-        Optional.of(dataset)
+        // Never accept the content from the input, could be wrong. If defined,
+        // copy the content from the previous entry or create a new one.
+        dataset.setDatasetContent(this.datasetRepo.findById(dataset.getUuid())
                 .map(S125Dataset::getDatasetContent)
-                .ifPresentOrElse(
-                        datasetContent -> { },
-                        () -> this.datasetRepo.findById(dataset.getUuid())
-                                .map(S125Dataset::getDatasetContent)
-                                .ifPresentOrElse(
-                                        dataset::setDatasetContent,
-                                        () -> dataset.setDatasetContent(new DatasetContent())
-                                )
-                );
+                .orElse(null));
 
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset savedDataset = this.datasetRepo.save(dataset);
@@ -269,7 +261,7 @@ public class DatasetService {
      */
     @LogDataset(operation = DatasetOperation.CANCELLED)
     @Transactional
-    public S125Dataset cancel(UUID uuid) {
+    public S125Dataset cancel(@NotNull UUID uuid) {
         log.debug("Request to cancel Dataset with UUID : {}", uuid);
 
         // Make sure the dataset exists
@@ -283,10 +275,10 @@ public class DatasetService {
                 .map(validUuid -> true)
                 .ifPresent(result::setCancelled);
 
-        // Increase the dataset content sequence for logging
+        // Clear the content deltas for logging
         Optional.of(result)
                 .map(S125Dataset::getDatasetContent)
-                .ifPresent(DatasetContent::increaseSequenceNo);
+                .ifPresent(DatasetContent::clearDelta);
 
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset cancelledDataset = this.datasetRepo.save(result);
@@ -306,53 +298,23 @@ public class DatasetService {
     }
 
     /**
-     * Replaces the dataset specified by its UUID with a new one of the
-     * same specification, but with a whole new UUID. This operation
-     * is a mixture of existing functionality and basically will cancel
-     * the old dataset and create a brand new one with the same information.
-     * This operation can be used in cases where an AtoN is deleted. In these
-     * cases S-100 cannot be used to send delta information, hence a deletion
-     * of the old dataset is required.
-     * <p/>
-     * Since the dataset logging operation is handled by AOP, this function
-     * is required to use the service proxy to access the cancellation and
-     * saving functionalities. This may be an anti-pattern but the alternative
-     * would require (in my opinion) a worse implementation so there it is.
-     *
-     * @param uuid the UUID of the dataset
-     */
-    @Transactional
-    public S125Dataset replace(UUID uuid) {
-        log.debug("Request to replace Dataset with UUID : {}", uuid);
-
-        // Get the AOP proxy to invoke the logging functionality
-        final DatasetService aopProxy = (DatasetService) AopContext.currentProxy();
-
-        // At first cancel the dataset
-        final S125Dataset cancelled = aopProxy.cancel(uuid);
-
-        // And save the copy
-        return aopProxy.save(cancelled.copy());
-    }
-
-    /**
      * Delete the dataset specified by its UUID.
      *
      * @param uuid the UUID of the dataset
      */
     @LogDataset(operation = DatasetOperation.DELETED)
     @Transactional
-    public S125Dataset delete(UUID uuid) {
+    public S125Dataset delete(@NotNull UUID uuid) {
         log.debug("Request to delete Dataset with UUID : {}", uuid);
 
         // Make sure the dataset exists
         final S125Dataset result = this.datasetRepo.findById(uuid)
                 .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
 
-        // Increase the dataset content sequence for logging
+        // Clear the content deltas for logging
         Optional.of(result)
                 .map(S125Dataset::getDatasetContent)
-                .ifPresent(DatasetContent::increaseSequenceNo);
+                .ifPresent(DatasetContent::clearDelta);
 
         // Now delete the dataset
         this.datasetRepo.delete(result);
@@ -368,6 +330,29 @@ public class DatasetService {
     }
 
     /**
+     * Replaces the dataset specified by its UUID with a new one of the
+     * same specification, but with a whole new UUID. This operation
+     * is a mixture of existing functionality and basically will cancel
+     * the old dataset and create a brand new one with the same information.
+     * This operation can be used in cases where an AtoN is deleted. In these
+     * cases S-100 cannot be used to send delta information, hence a deletion
+     * of the old dataset is required.
+     *
+     * @param uuid the UUID of the dataset to be replaced
+     */
+    @Transactional
+    public S125Dataset replace(@NotNull UUID uuid) {
+        log.debug("Request to replace Dataset with UUID : {}", uuid);
+
+        // Get the AOP proxy to invoke the logging functionality
+        return this.datasetRepo.findById(uuid)
+                .map(S125Dataset::getDatasetContent)
+                .map(this.datasetContentService::replace)
+                .map(DatasetContent::getDataset)
+                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
+    }
+
+    /**
      * Requests an update of the dataset content. This function is mainly for
      * internal use but can also be used externally to request a dataset
      * content update on AtoN entry changes. The content generation is run
@@ -379,13 +364,20 @@ public class DatasetService {
      *
      * @param s125Dataset the dataset to update the content for
      */
-    public void requestDatasetContentUpdate(S125Dataset s125Dataset) {
+    public void requestDatasetContentUpdate(@NotNull S125Dataset s125Dataset) {
         this.datasetContentService.generateDatasetContent(s125Dataset)
                 .whenCompleteAsync((result, ex) -> {
                     if(Objects.nonNull(ex)) {
-                        log.error("Error while generating the content of the dataset with UUID {}: {}", s125Dataset.getUuid(), ex.getMessage());
+                        if(ex.getCause() instanceof DeletedAtoNsInDatasetContentGenerationException) {
+                            log.warn("Warning while generating the content of the dataset with UUID {}: {}",
+                                    s125Dataset.getUuid(), ex.getMessage());
+                        } else {
+                            log.error("Error while generating the content of the dataset with UUID {}: {}",
+                                    s125Dataset.getUuid(), ex.getMessage());
+                        }
                     } else {
-                        log.info("Successfully generated the content of the dataset with UUID {}", result.getUuid());
+                        log.info("Successfully generated the content of the dataset with UUID {}",
+                                result.getUuid());
                         // Publish the updated dataset to the publication channel
                         this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
                                 .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)

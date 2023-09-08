@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.models.dtos.s125;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
@@ -51,6 +52,7 @@ public class S125DataSetDto {
 
     private LocalDateTime lastUpdatedAt;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private DatasetContentDto datasetContent;
 
     private boolean cancelled;

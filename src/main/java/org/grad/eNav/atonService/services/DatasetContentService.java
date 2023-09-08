@@ -23,7 +23,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.aspects.LogDataset;
-import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.exceptions.DeletedAtoNsInDatasetContentGenerationException;
 import org.grad.eNav.atonService.exceptions.SavingFailedException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
@@ -33,6 +33,7 @@ import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
@@ -77,6 +78,10 @@ public class DatasetContentService {
     @Autowired
     AidsToNavigationService aidsToNavigationService;
 
+    @Lazy
+    @Autowired
+    DatasetService datasetService;
+
     /**
      * The Dataset Content Repo.
      */
@@ -95,20 +100,68 @@ public class DatasetContentService {
         log.debug("Request to save Dataset Content : {}", datasetContent);
 
         // Sanity Check
-        Optional.of(datasetContent)
+        final S125Dataset s125Dataset = Optional.of(datasetContent)
                 .map(DatasetContent::getDataset)
-                .map(S125Dataset::getUuid)
                 .orElseThrow(() -> new SavingFailedException("Cannot save a dataset content entity without it being linked to an actual dataset"));
 
-        // Save the new/updated dataset content
+        // Save the new/updated dataset content and assign it to the dataset
         final DatasetContent savedDatasetContent = this.datasetContentRepo.save(datasetContent);
 
         // Refresh the savedDatasetContent object to fetch the updated values
         this.entityManager.flush();
         this.entityManager.refresh(savedDatasetContent);
 
+        // Finally make sure the link between the dataset and the content exists
+        s125Dataset.setDatasetContent(savedDatasetContent);
+        this.entityManager.persist(s125Dataset);
+
         // Return the updated dataset content
         return savedDatasetContent;
+    }
+
+    /**
+     * Replacing a dataset content with a completely new one is only possible
+     * if the respective dataset is first cancelled and then recreated for the
+     * current specification. This functionality can be used for example to
+     * handle deletions of AtoNs from a specific dataset.
+     *
+     * @param datasetContent the dataset content entity to be saved
+     * @return the replaced dataset content entity
+     */
+    @Transactional
+    public DatasetContent replace(@NotNull DatasetContent datasetContent) {
+        log.debug("Request to replace Dataset Content : {}", datasetContent);
+
+        // Cancel and replace the dataset
+        final S125Dataset replaced =  Optional.of(datasetContent)
+                .map(DatasetContent::getDataset)
+                .map(S125Dataset::getUuid)
+                .map(this.datasetService::cancel)
+                .map(S125Dataset::copy)
+                .map(this.datasetService::save)
+                .orElseThrow(() -> new SavingFailedException(String.format("An" +
+                        "unknown error occurred while attempting to replace the" +
+                        "dataset content of the dataset with UUID %s .",
+                        datasetContent.getDataset().getUuid())
+                ));
+
+        //====================================================================//
+        //                            THIS IS A HACK                          //
+        //====================================================================//
+        // Since the saving operation doesn't populate the content we will just
+        // create a dummy content object and assign our new dataset
+        final DatasetContent dummyDatasetContent = new DatasetContent();
+        dummyDatasetContent.setDataset(replaced);
+        //====================================================================//
+
+        // Return the replacement dataset content
+        return dummyDatasetContent;
+    }
+
+
+    @Transactional
+    public DatasetContent testTransaction(@NotNull S125Dataset s125Dataset) {
+        return s125Dataset.getDatasetContent();
     }
 
     /**
@@ -126,8 +179,13 @@ public class DatasetContentService {
     public CompletableFuture<S125Dataset> generateDatasetContent(@NotNull S125Dataset s125Dataset) {
         log.debug("Request to generate the content for Dataset with UUID: {}", s125Dataset.getUuid());
 
-        // Get all the previously included Aids to Navigation - if we have the old content
-        final Set<String> origAtonNumbers = Optional.of(s125Dataset)
+        // Make sure we have a valid dataset content entry to populate
+        final DatasetContent datasetContent = Optional.of(s125Dataset)
+                .map(S125Dataset::getDatasetContent)
+                .orElseGet(DatasetContent::new);
+
+        // Get all the previously matching Aids to Navigation - if we have the old content
+        final List<AidsToNavigationType> origAtonList = Optional.of(s125Dataset)
                 .map(S125Dataset::getDatasetContent)
                 .map(DatasetContent::getContent)
                 .map(xml -> {
@@ -138,10 +196,12 @@ public class DatasetContentService {
                 .stream()
                 .filter(AidsToNavigationType.class::isInstance)
                 .map(AidsToNavigationType.class::cast)
+                .toList();
+        final Set<String> origAtonNumbers = origAtonList.stream()
                 .map(AidsToNavigationType::getAtonNumber)
                 .collect(Collectors.toSet());
 
-        // Get all the new matching Aids to Navigation - if we have a geometry at least
+        // Get all the new matching Aids to Navigation - if we have a geometry
         final List<AidsToNavigation> atonList = Optional.of(s125Dataset)
                 .map(S125Dataset::getGeometry)
                 .map(geometry ->
@@ -149,6 +209,34 @@ public class DatasetContentService {
                 )
                 .orElseGet(Page::empty)
                 .getContent();
+        final Set<String> atonNumbers = atonList.stream()
+                .map(AidsToNavigation::getAtonNumber)
+                .collect(Collectors.toSet());
+
+        // ================================================================== //
+        //                    IMPORTANT VALIDATION STEP                       //
+        // ================================================================== //
+        // In cases where any of the original AtoNs is not found in the current
+        // list, this means that a new content will be invalid since there has
+        // been a removal. Therefore, a ValidationException should be thrown.
+        if(!atonNumbers.containsAll(origAtonNumbers)) {
+            // Create a response that something went wrong
+            CompletableFuture<S125Dataset> exFuture = CompletableFuture.failedFuture(new DeletedAtoNsInDatasetContentGenerationException(
+                    String.format("Deleted AtoNs detected during the generation " +
+                            "of the content of dataset with UUID %s. This " +
+                            "dataset must be cancelled and replaced to " +
+                            "continue...", s125Dataset.getUuid())
+            ));
+            // ---------------------  The Important bit  ---------------------//
+            // On completion of this we need to try and replace the old dataset
+            // with a new one. This should be NOT done asynchronously so that
+            // we keep the current database session in place.
+            exFuture.whenComplete((result, ex) -> this.replace(s125Dataset.getDatasetContent()));
+            // ---------------------------------------------------------------//
+            // Stop the execution and inform the calling component on what happened
+            return exFuture;
+        }
+        // ================================================================== //
 
         // Filter the new/updated Aids to Navigation entries - CAREFUL keel only
         // the unique items cause some might be included in both cases.
@@ -178,27 +266,24 @@ public class DatasetContentService {
 
             // Marshall the contents into XML
             final String datasetXML = S125Utils.marshalS125(dataset, Boolean.FALSE);
+            // Marshall the delta into XML - but only if it's not cancelled/deleted
             final String deltaXML = S125Utils.marshalS125(delta, Boolean.FALSE);
 
-            // Populate the new content/delta
-            final DatasetContent datasetContent = Optional.of(s125Dataset)
-                    .map(S125Dataset::getDatasetContent)
-                    .orElseThrow(() -> new DataNotFoundException(
-                            String.format(
-                                    "Cannot generate the dataset content if none define for dataset with UUID: %s",
-                                    s125Dataset.getUuid()
-                            )
-                    ));
-
             // Increase the dataset sequence number
-            datasetContent.increaseSequenceNo();
+            //datasetContent.increaseSequenceNo();
 
-            // Populate the dataset content
-            datasetContent.setDataset(s125Dataset);
+            // Populate the dataset content/delta
+            datasetContent.setDataset(this.datasetService.findOne(s125Dataset.getUuid()));
             datasetContent.setContent(datasetXML);
-            datasetContent.setContentLength(BigInteger.valueOf(datasetXML.length()));
+            datasetContent.setContentLength(Optional.ofNullable(datasetXML)
+                    .map(String::length)
+                    .map(BigInteger::valueOf)
+                    .orElse(BigInteger.ZERO));
             datasetContent.setDelta(deltaXML);
-            datasetContent.setDeltaLength(BigInteger.valueOf(deltaXML.length()));
+            datasetContent.setDeltaLength(Optional.ofNullable(deltaXML)
+                    .map(String::length)
+                    .map(BigInteger::valueOf)
+                    .orElse(BigInteger.ZERO));
 
             // And finally perform the saving operation
             s125Dataset.setDatasetContent(this.save(datasetContent));
