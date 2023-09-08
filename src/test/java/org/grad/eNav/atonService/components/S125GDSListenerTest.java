@@ -224,7 +224,7 @@ class S125GDSListenerTest {
         // Verify that our message was saved and sent
         verify(this.atonPublicationChannel, times(1)).send(any(Message.class));
         verify(this.datasetService, times(1)).findAll(isNull(), any(), isNull(), isNull(), any(), any());
-        verify(this.datasetService, times(1)).requestDatasetContentUpdate(eq(this.s125DataSet));
+        verify(this.datasetService, times(1)).save(eq(this.s125DataSet));
     }
 
     /**
@@ -260,7 +260,7 @@ class S125GDSListenerTest {
         // Verify that our message was not saved or sent
         verify(this.atonPublicationChannel, never()).send(any(Message.class));
         verify(this.datasetService, never()).findAll(any(), any(), any(), any(), any(), any());
-        verify(this.datasetService, never()).requestDatasetContentUpdate(any());
+        verify(this.datasetService, never()).save(any());
 
     }
 
@@ -297,7 +297,7 @@ class S125GDSListenerTest {
         // Make sure the evaluation works
         verify(this.atonDeletionChannel, times(1)).send(any(Message.class));
         verify(this.datasetService, times(1)).findAll(isNull(), any(), isNull(), isNull(), any(), any());
-        verify(this.datasetService, times(1)).requestDatasetContentUpdate(eq(this.s125DataSet));
+        verify(this.datasetService, times(1)).save(eq(this.s125DataSet));
     }
 
     /**

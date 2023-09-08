@@ -16,7 +16,9 @@
 
 package org.grad.eNav.atonService.components;
 
-import jakarta.transaction.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
@@ -31,9 +33,7 @@ import org.hibernate.search.util.common.SearchException;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 
@@ -63,7 +63,7 @@ public class HibernateSearchInit implements ApplicationListener<ApplicationReady
      */
     @Override
     @Transactional
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    public void onApplicationEvent(@NotNull ApplicationReadyEvent event) {
         // Once the application has booted up, access the search session
         SearchSession searchSession = Search.session( entityManager );
 
