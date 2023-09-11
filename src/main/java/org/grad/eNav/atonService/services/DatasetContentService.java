@@ -106,14 +106,14 @@ public class DatasetContentService {
                         "dataset content entity without it being linked to an " +
                         "actual dataset"));
 
-        // Save the new/updated dataset content and assign it to the dataset
+        // Save the new/updated dataset content
         final DatasetContent savedDatasetContent = this.datasetContentRepo.save(datasetContent);
 
         // Refresh the savedDatasetContent object to fetch the updated values
         this.entityManager.flush();
         this.entityManager.refresh(savedDatasetContent);
 
-        // Return the updated dataset content
+        // Return the saved dataset content
         return savedDatasetContent;
     }
 

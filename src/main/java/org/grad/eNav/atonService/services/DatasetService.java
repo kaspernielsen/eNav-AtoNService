@@ -19,7 +19,6 @@ package org.grad.eNav.atonService.services;
 
 import _int.iho.s100.gml.base._5_0.MDTopicCategoryCode;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
@@ -240,19 +239,19 @@ public class DatasetService {
         // copy the content from the previous entry or create a new one.
         dataset.setDatasetContent(this.datasetRepo.findById(dataset.getUuid())
                 .map(S125Dataset::getDatasetContent)
-                .orElse(null));
+                .orElse(new DatasetContent()));
 
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset savedDataset = this.datasetRepo.save(dataset);
 
         // Refresh the savedDataset object to fetch the updated values
         this.entityManager.flush();
-        this.entityManager.refresh(savedDataset, LockModeType.READ);
+        this.entityManager.refresh(savedDataset);
 
         // Request an Update for the dataset content
         this.requestDatasetContentUpdate(savedDataset);
 
-        // And return the object for AOP
+        // And return the saved dataset
         return savedDataset;
     }
 
@@ -287,7 +286,7 @@ public class DatasetService {
 
         // Refresh the savedDataset object to fetch the updated values
         this.entityManager.flush();
-        this.entityManager.refresh(cancelledDataset, LockModeType.READ);
+        this.entityManager.refresh(cancelledDataset);
 
         // Publish the cancelled dataset to the deleted channel
         this.s125RemovalChannel.send(MessageBuilder.withPayload(result)
