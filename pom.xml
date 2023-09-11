@@ -289,6 +289,10 @@
 
 		<!-- S-125 -->
 		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.grad.eNav</groupId>
 			<artifactId>S100Catalogue</artifactId>
 			<version>0.5.1</version>

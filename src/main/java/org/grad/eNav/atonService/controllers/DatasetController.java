@@ -116,7 +116,7 @@ public class DatasetController {
      * @param dataSetDto the dataset to create
      * @return the ResponseEntity with status 201 (Created) and with body the new instance, or with status 400 (Bad Request) if the instance has already an ID
      */
-    @Transactional // <- We need this to read the update content for the first time
+    @Transactional // <- We need this to read the updated content (lazy loading)
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> createDataset(@RequestBody S125DataSetDto dataSetDto) {
         log.debug("REST request to save Dataset : {}", dataSetDto);
@@ -145,6 +145,7 @@ public class DatasetController {
      * @param dataSetDto the dataset to update
      * @return the ResponseEntity with status 200 (OK) and with body the updated instance
      */
+    @Transactional // <- We need this to read the updated content (lazy loading)
     @PutMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> updateDataset(@PathVariable UUID uuid, @Valid @RequestBody S125DataSetDto dataSetDto) {
         log.debug("REST request to update Dataset : {}", dataSetDto);
