@@ -239,20 +239,15 @@ public class DatasetService {
         // copy the content from the previous entry or create a new one.
         dataset.setDatasetContent(this.datasetRepo.findById(dataset.getUuid())
                 .map(S125Dataset::getDatasetContent)
-                .orElse(new DatasetContent()));
+                .orElse(null));
 
         // Now save the dataset - Merge to pick up all the latest changes
-        final S125Dataset savedDataset = this.datasetRepo.save(dataset);
-
-        // Refresh the savedDataset object to fetch the updated values
-        this.entityManager.flush();
-        this.entityManager.refresh(savedDataset);
+        final S125Dataset savedDataset = this.datasetRepo.saveAndFlush(dataset);
 
         // Request an Update for the dataset content
         this.requestDatasetContentUpdate(savedDataset);
 
         // And return the saved dataset
-        this.entityManager.detach(savedDataset);
         return savedDataset;
     }
 
@@ -283,11 +278,7 @@ public class DatasetService {
                 .ifPresent(DatasetContent::clearDelta);
 
         // Now save the dataset - Merge to pick up all the latest changes
-        final S125Dataset cancelledDataset = this.datasetRepo.save(result);
-
-        // Refresh the savedDataset object to fetch the updated values
-        this.entityManager.flush();
-        this.entityManager.refresh(cancelledDataset);
+        final S125Dataset cancelledDataset = this.datasetRepo.saveAndFlush(result);
 
         // Publish the cancelled dataset to the deleted channel
         this.s125RemovalChannel.send(MessageBuilder.withPayload(result)
@@ -374,7 +365,12 @@ public class DatasetService {
      *
      * @param s125Dataset the dataset to update the content for
      */
+    @Transactional
     public void requestDatasetContentUpdate(@NotNull S125Dataset s125Dataset) {
+        // Reload the object straight from the database
+        this.entityManager.refresh(s125Dataset);
+
+        // And request the dataset content generation asynchronously
         this.datasetContentService.generateDatasetContent(s125Dataset)
                 .whenCompleteAsync((result, ex) -> {
                     if(Objects.nonNull(ex)) {
