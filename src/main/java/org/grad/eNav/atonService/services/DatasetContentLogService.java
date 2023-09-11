@@ -212,8 +212,15 @@ public class DatasetContentLogService {
     public DatasetContentLog save(@NotNull DatasetContentLog datasetContentLog) {
         log.debug("Request to save Dataset Content Log: {}", datasetContentLog);
 
-        // Save and return the dataset
-        return this.datasetContentLogRepo.save(datasetContentLog);
+        // Save the dataset content log entry
+        final DatasetContentLog savedDatasetContentLog = this.datasetContentLogRepo.save(datasetContentLog);
+
+        // Refresh the savedDatasetContentLog object to fetch the updated values
+        this.entityManager.flush();
+        this.entityManager.refresh(savedDatasetContentLog);
+
+        // Return the saved dataset content log
+        return savedDatasetContentLog;
     }
 
     /**
