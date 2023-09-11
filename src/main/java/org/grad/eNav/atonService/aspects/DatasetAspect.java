@@ -24,6 +24,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.services.DatasetContentLogService;
+import org.grad.eNav.atonService.services.DatasetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +45,13 @@ import java.util.concurrent.CompletableFuture;
 public class DatasetAspect {
 
     /**
-     * The Dataset Content Service.
+     * The Dataset Service.
+     */
+    @Autowired
+    DatasetService datasetService;
+
+    /**
+     * The Dataset Content Log Service.
      */
     @Autowired
     DatasetContentLogService datasetContentLogService;
@@ -100,14 +107,34 @@ public class DatasetAspect {
         else if(Optional.ofNullable(proceed).filter(S125Dataset.class::isInstance).isPresent()) {
             Optional.of(proceed)
                     .map(S125Dataset.class::cast)
-                    .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
+                    .map(d -> {
+                        // In case this is caused by a dataset replacement
+                        if((DatasetOperation.AUTO.equals(operation) && d.isNew()) || DatasetOperation.CREATED.equals(operation)) {
+                            Optional.of(d)
+                                    .map(S125Dataset::getReplaces)
+                                    .map(this.datasetService::findOne)
+                                    .map(replaced -> this.datasetContentLogService.generateDatasetContentLog(replaced, DatasetOperation.CANCELLED))
+                                    .ifPresent(this.datasetContentLogService::save);
+                        }
+                        return this.datasetContentLogService.generateDatasetContentLog(d, operation);
+                    })
                     .ifPresent(this.datasetContentLogService::save);
         }
         // Handle if the object is an S-125 Dataset collection
         else if(Optional.ofNullable(proceed).filter(p -> isObjectCollectionOfClass(p, S125Dataset.class)).isPresent()) {
             ((Collection<?>) proceed).stream()
                     .map(S125Dataset.class::cast)
-                    .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
+                    .map(d -> {
+                        // In case this is caused by a dataset replacement
+                        if((DatasetOperation.AUTO.equals(operation) && d.isNew()) || DatasetOperation.CREATED.equals(operation)) {
+                            Optional.of(d)
+                                    .map(S125Dataset::getReplaces)
+                                    .map(this.datasetService::findOne)
+                                    .map(replaced -> this.datasetContentLogService.generateDatasetContentLog(replaced, DatasetOperation.CANCELLED))
+                                    .ifPresent(this.datasetContentLogService::save);
+                        }
+                        return this.datasetContentLogService.generateDatasetContentLog(d, operation);
+                    })
                     .forEach(this.datasetContentLogService::save);
         }
     }

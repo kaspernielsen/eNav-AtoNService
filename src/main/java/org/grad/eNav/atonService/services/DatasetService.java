@@ -32,6 +32,7 @@ import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.aspects.LogDataset;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.exceptions.DeletedAtoNsInDatasetContentGenerationException;
+import org.grad.eNav.atonService.exceptions.SavingFailedException;
 import org.grad.eNav.atonService.exceptions.ValidationException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
@@ -337,19 +338,27 @@ public class DatasetService {
      * This operation can be used in cases where an AtoN is deleted. In these
      * cases S-100 cannot be used to send delta information, hence a deletion
      * of the old dataset is required.
+     * <p/>
+     * Note that since we are using AOP for the dataset content logging, the
+     * saving and update functionality will not generate any logs since we
+     * are in the same component. Therefore, this function is also annotated
+     * with the `@LogDataset` annotation and the respective aspect is able to
+     * handle the replacing operations.
      *
      * @param uuid the UUID of the dataset to be replaced
      */
+    @LogDataset
     @Transactional
     public S125Dataset replace(@NotNull UUID uuid) {
         log.debug("Request to replace Dataset with UUID : {}", uuid);
-
-        // Get the AOP proxy to invoke the logging functionality
-        return this.datasetRepo.findById(uuid)
-                .map(S125Dataset::getDatasetContent)
-                .map(this.datasetContentService::replace)
-                .map(DatasetContent::getDataset)
-                .orElseThrow(() -> new DataNotFoundException(String.format("The requested dataset with UUID %s was not found", uuid)));
+        return Optional.of(uuid)
+                .map(this::cancel)
+                .map(S125Dataset::replace)
+                .map(this::save)
+                .orElseThrow(() -> new SavingFailedException(String.format("An" +
+                        "unknown error occurred while attempting to replace the " +
+                        "dataset content of the dataset with UUID %s .", uuid))
+                );
     }
 
     /**
