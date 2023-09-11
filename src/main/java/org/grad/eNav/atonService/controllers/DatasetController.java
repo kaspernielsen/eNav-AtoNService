@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -115,6 +116,7 @@ public class DatasetController {
      * @param dataSetDto the dataset to create
      * @return the ResponseEntity with status 201 (Created) and with body the new instance, or with status 400 (Bad Request) if the instance has already an ID
      */
+    @Transactional // <- We need this to read the update content for the first time
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> createDataset(@RequestBody S125DataSetDto dataSetDto) {
         log.debug("REST request to save Dataset : {}", dataSetDto);
