@@ -16,6 +16,7 @@
 
 package org.grad.eNav.atonService.services;
 
+import jakarta.persistence.EntityManager;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
@@ -62,6 +63,12 @@ class DatasetContentLogServiceTest {
     @InjectMocks
     @Spy
     DatasetContentLogService datasetContentLogService;
+
+    /**
+     * The Entity Manager mock.
+     */
+    @Mock
+    EntityManager entityManager;
 
     /**
      * The Dataset Service mock.
