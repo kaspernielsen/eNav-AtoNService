@@ -240,7 +240,7 @@ public class DatasetService {
         // copy the content from the previous entry or create a new one.
         dataset.setDatasetContent(this.datasetRepo.findById(dataset.getUuid())
                 .map(S125Dataset::getDatasetContent)
-                .orElse(new DatasetContent()));
+                .orElse(null));
 
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset savedDataset = this.datasetRepo.save(dataset);
@@ -253,7 +253,6 @@ public class DatasetService {
         this.requestDatasetContentUpdate(savedDataset);
 
         // And return the object for AOP
-        this.entityManager.detach(savedDataset);
         return savedDataset;
     }
 
@@ -288,7 +287,7 @@ public class DatasetService {
 
         // Refresh the savedDataset object to fetch the updated values
         this.entityManager.flush();
-        this.entityManager.refresh(cancelledDataset);
+        this.entityManager.refresh(cancelledDataset, LockModeType.READ);
 
         // Publish the cancelled dataset to the deleted channel
         this.s125RemovalChannel.send(MessageBuilder.withPayload(result)

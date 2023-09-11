@@ -135,9 +135,7 @@ public class DatasetContentService {
         // Make sure we have a valid dataset content entry to populate
         final DatasetContent datasetContent = Optional.of(s125Dataset)
                 .map(S125Dataset::getDatasetContent)
-                .orElseThrow(() -> new SavingFailedException("Cannot generate " +
-                        "a dataset content entity without it being linked to " +
-                        "an actual dataset"));
+                .orElseGet(DatasetContent::new);
 
         // Get all the previously matching Aids to Navigation - if we have the old content
         final List<AidsToNavigationType> origAtonList = Optional.of(s125Dataset)
