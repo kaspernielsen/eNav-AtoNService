@@ -74,7 +74,7 @@ public class S125Dataset {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "dataset_identification_id", referencedColumnName = "id")
-    @IndexedEmbedded(includeEmbeddedObjectId = false)
+    @IndexedEmbedded(includeEmbeddedObjectId = true)
     private S125DatasetIdentification datasetIdentificationInformation;
 
     @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
@@ -94,7 +94,7 @@ public class S125Dataset {
                     { @JoinColumn(name = "dataset_uuid", referencedColumnName = "uuid", unique = true) },
             inverseJoinColumns =
                     { @JoinColumn(name = "dataset_content_id", referencedColumnName = "id", unique = true) })
-    @IndexedEmbedded(includeEmbeddedObjectId = false)
+    @IndexedEmbedded(includeEmbeddedObjectId = true)
     private DatasetContent datasetContent;
 
     @GenericField(sortable = Sortable.YES)
