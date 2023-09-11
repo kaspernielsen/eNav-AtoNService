@@ -371,7 +371,7 @@ class DatasetServiceTest {
     void testCancel() {
         final BigInteger origSequenceNo = this.existingDataset.getDatasetContent().getSequenceNo();
         doReturn(Optional.of(this.existingDataset)).when(this.datasetRepo).findById(any());
-        doAnswer((inv) -> inv.getArgument(0)).when(this.datasetRepo).save((any()));
+        doAnswer((inv) -> inv.getArgument(0)).when(this.datasetRepo).saveAndFlush((any()));
 
         // Perform the service call
         S125Dataset result = this.datasetService.cancel(this.existingDataset.getUuid());
