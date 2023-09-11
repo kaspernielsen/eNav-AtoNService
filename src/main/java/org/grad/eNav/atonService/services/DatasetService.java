@@ -252,6 +252,7 @@ public class DatasetService {
         this.requestDatasetContentUpdate(savedDataset);
 
         // And return the saved dataset
+        this.entityManager.detach(savedDataset);
         return savedDataset;
     }
 
