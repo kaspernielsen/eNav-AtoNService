@@ -239,7 +239,7 @@ public class DatasetService {
         // copy the content from the previous entry or create a new one.
         dataset.setDatasetContent(this.datasetRepo.findById(dataset.getUuid())
                 .map(S125Dataset::getDatasetContent)
-                .orElse(null));
+                .orElse(new DatasetContent()));
 
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset savedDataset = this.datasetRepo.save(dataset);

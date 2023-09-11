@@ -100,9 +100,11 @@ public class DatasetContentService {
         log.debug("Request to save Dataset Content : {}", datasetContent);
 
         // Sanity Check
-        final S125Dataset s125Dataset = Optional.of(datasetContent)
+        Optional.of(datasetContent)
                 .map(DatasetContent::getDataset)
-                .orElseThrow(() -> new SavingFailedException("Cannot save a dataset content entity without it being linked to an actual dataset"));
+                .orElseThrow(() -> new SavingFailedException("Cannot save a " +
+                        "dataset content entity without it being linked to an " +
+                        "actual dataset"));
 
         // Save the new/updated dataset content and assign it to the dataset
         final DatasetContent savedDatasetContent = this.datasetContentRepo.save(datasetContent);
@@ -110,10 +112,6 @@ public class DatasetContentService {
         // Refresh the savedDatasetContent object to fetch the updated values
         this.entityManager.flush();
         this.entityManager.refresh(savedDatasetContent);
-
-        // Finally make sure the link between the dataset and the content exists
-        s125Dataset.setDatasetContent(savedDatasetContent);
-        this.entityManager.persist(s125Dataset);
 
         // Return the updated dataset content
         return savedDatasetContent;
@@ -137,7 +135,9 @@ public class DatasetContentService {
         // Make sure we have a valid dataset content entry to populate
         final DatasetContent datasetContent = Optional.of(s125Dataset)
                 .map(S125Dataset::getDatasetContent)
-                .orElseGet(DatasetContent::new);
+                .orElseThrow(() -> new SavingFailedException("Cannot generate " +
+                        "a dataset content entity without it being linked to " +
+                        "an actual dataset"));
 
         // Get all the previously matching Aids to Navigation - if we have the old content
         final List<AidsToNavigationType> origAtonList = Optional.of(s125Dataset)
