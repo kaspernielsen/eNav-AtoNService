@@ -290,6 +290,12 @@
 		<!-- S-125 -->
 		<dependency>
 			<groupId>org.grad.eNav</groupId>
+			<artifactId>S100Catalogue</artifactId>
+			<version>0.5.1</version>
+			<classifier>jakarta</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.grad.eNav</groupId>
 			<artifactId>S125</artifactId>
 			<version>0.5.43</version>
 			<classifier>jakarta</classifier>
