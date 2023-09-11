@@ -149,7 +149,7 @@ class DatasetServiceTest {
         this.newDatasetContent.setContent("New dataset content");
         this.newDatasetContent.setContentLength(BigInteger.valueOf(this.newDatasetContent.getContent().length()));
         this.newDatasetContent.setGeneratedAt(LocalDateTime.now());
-        this.newDataset.setDatasetContent(this.newDatasetContent);
+        this.newDataset.setDatasetContent(null);
         this.newDataset.setCancelled(false);
 
         // Create a Dataset with a UUID
@@ -318,7 +318,7 @@ class DatasetServiceTest {
      */
     @Test
     void testSave() {
-        doReturn(this.newDataset).when(this.datasetRepo).save(any());
+        doReturn(this.newDataset).when(this.datasetRepo).saveAndFlush(any());
         doNothing().when(this.datasetService).requestDatasetContentUpdate(any());
 
         // Perform the service call
@@ -337,9 +337,7 @@ class DatasetServiceTest {
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getApplicationProfile(), result.getDatasetIdentificationInformation().getApplicationProfile());
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetLanguage(), result.getDatasetIdentificationInformation().getDatasetLanguage());
         assertEquals(this.newDataset.getDatasetIdentificationInformation().getDatasetAbstract(), result.getDatasetIdentificationInformation().getDatasetAbstract());
-        assertNotNull(result.getDatasetContent());
-        assertEquals(this.newDataset.getDatasetContent().getContent(), result.getDatasetContent().getContent());
-        assertEquals(this.newDataset.getDatasetContent().getContentLength(), result.getDatasetContent().getContentLength());
+        assertNull(result.getDatasetContent());
         assertFalse(result.getCancelled());
 
         // Make sure a content generation request was submitted

@@ -100,18 +100,18 @@ public class DatasetContentService {
         log.debug("Request to save Dataset Content : {}", datasetContent);
 
         // Sanity Check
-        Optional.of(datasetContent)
+        final S125Dataset s125Dataset = Optional.of(datasetContent)
                 .map(DatasetContent::getDataset)
                 .orElseThrow(() -> new SavingFailedException("Cannot save a " +
                         "dataset content entity without it being linked to an " +
                         "actual dataset"));
 
         // Save the new/updated dataset content
-        final DatasetContent savedDatasetContent = this.datasetContentRepo.save(datasetContent);
+        final DatasetContent savedDatasetContent = this.datasetContentRepo.saveAndFlush(datasetContent);
 
-        // Refresh the savedDatasetContent object to fetch the updated values
-        this.entityManager.flush();
-        this.entityManager.refresh(savedDatasetContent);
+        // Finally make sure the link between the dataset and the content exists
+        s125Dataset.setDatasetContent(savedDatasetContent);
+        this.entityManager.persist(s125Dataset);
 
         // Return the saved dataset content
         return savedDatasetContent;
@@ -126,8 +126,8 @@ public class DatasetContentService {
      * @param s125Dataset the dataset to generate the content for
      * @return the dataset with the newly generated dataset content object
      */
-    @LogDataset
     @Async
+    @LogDataset
     @Transactional
     public CompletableFuture<S125Dataset> generateDatasetContent(@NotNull S125Dataset s125Dataset) {
         log.debug("Request to generate the content for Dataset with UUID: {}", s125Dataset.getUuid());
@@ -221,9 +221,6 @@ public class DatasetContentService {
             final String datasetXML = S125Utils.marshalS125(dataset, Boolean.FALSE);
             // Marshall the delta into XML - but only if it's not cancelled/deleted
             final String deltaXML = S125Utils.marshalS125(delta, Boolean.FALSE);
-
-            // Increase the dataset sequence number
-            //datasetContent.increaseSequenceNo();
 
             // Populate the dataset content/delta
             datasetContent.setDataset(this.datasetService.findOne(s125Dataset.getUuid()));
