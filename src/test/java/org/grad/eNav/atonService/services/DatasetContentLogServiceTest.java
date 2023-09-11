@@ -323,7 +323,7 @@ class DatasetContentLogServiceTest {
     void testFindLatestIfNotExists() {
         doReturn(Collections.emptyList()).when(this.datasetContentLogRepo).findLatestForUuid(any(), any(), any());
         doReturn(this.s125Dataset).when(this.datasetService).findOne(eq(this.s125Dataset.getUuid()));
-        doReturn(this.existingDatasetContentLog).when(this.datasetContentLogRepo).save(any());
+        doReturn(this.existingDatasetContentLog).when(this.datasetContentLogRepo).saveAndFlush(any());
 
         // Perform the service call
         DatasetContentLog result = this.datasetContentLogService.findLatest(this.s125Dataset.getUuid(), LocalDateTime.now());
@@ -441,7 +441,7 @@ class DatasetContentLogServiceTest {
      */
     @Test
     void testSave() {
-        doReturn(this.newDatasetContentLog).when(this.datasetContentLogRepo).save(any());
+        doReturn(this.newDatasetContentLog).when(this.datasetContentLogRepo).saveAndFlush(any());
 
         // Perform the service call
         DatasetContentLog result = this.datasetContentLogService.save(this.newDatasetContentLog);
