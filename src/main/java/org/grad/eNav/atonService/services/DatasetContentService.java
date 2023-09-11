@@ -120,51 +120,6 @@ public class DatasetContentService {
     }
 
     /**
-     * Replacing a dataset content with a completely new one is only possible
-     * if the respective dataset is first cancelled and then recreated for the
-     * current specification. This functionality can be used for example to
-     * handle deletions of AtoNs from a specific dataset.
-     *
-     * @param datasetContent the dataset content entity to be saved
-     * @return the replaced dataset content entity
-     */
-    @Transactional
-    public DatasetContent replace(@NotNull DatasetContent datasetContent) {
-        log.debug("Request to replace Dataset Content : {}", datasetContent);
-
-        // Cancel and replace the dataset
-        final S125Dataset replaced =  Optional.of(datasetContent)
-                .map(DatasetContent::getDataset)
-                .map(S125Dataset::getUuid)
-                .map(this.datasetService::cancel)
-                .map(S125Dataset::copy)
-                .map(this.datasetService::save)
-                .orElseThrow(() -> new SavingFailedException(String.format("An" +
-                        "unknown error occurred while attempting to replace the" +
-                        "dataset content of the dataset with UUID %s .",
-                        datasetContent.getDataset().getUuid())
-                ));
-
-        //====================================================================//
-        //                            THIS IS A HACK                          //
-        //====================================================================//
-        // Since the saving operation doesn't populate the content we will just
-        // create a dummy content object and assign our new dataset
-        final DatasetContent dummyDatasetContent = new DatasetContent();
-        dummyDatasetContent.setDataset(replaced);
-        //====================================================================//
-
-        // Return the replacement dataset content
-        return dummyDatasetContent;
-    }
-
-
-    @Transactional
-    public DatasetContent testTransaction(@NotNull S125Dataset s125Dataset) {
-        return s125Dataset.getDatasetContent();
-    }
-
-    /**
      * Provided a valid dataset this function will build the respective
      * dataset content and populate it with all entries that match its
      * geographical boundaries. The resulting object will then be marshalled
@@ -231,7 +186,7 @@ public class DatasetContentService {
             // On completion of this we need to try and replace the old dataset
             // with a new one. This should be NOT done asynchronously so that
             // we keep the current database session in place.
-            exFuture.whenComplete((result, ex) -> this.replace(s125Dataset.getDatasetContent()));
+            exFuture.whenComplete((result, ex) -> this.datasetService.replace(s125Dataset.getUuid()));
             // ---------------------------------------------------------------//
             // Stop the execution and inform the calling component on what happened
             return exFuture;

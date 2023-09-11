@@ -97,6 +97,9 @@ public class S125Dataset {
     @IndexedEmbedded(includeEmbeddedObjectId = false)
     private DatasetContent datasetContent;
 
+    @GenericField(sortable = Sortable.YES)
+    private UUID replaces;
+
     @GenericField()
     private Boolean cancelled;
 
@@ -216,6 +219,24 @@ public class S125Dataset {
     }
 
     /**
+     * Gets cancels.
+     *
+     * @return the cancels
+     */
+    public UUID getReplaces() {
+        return replaces;
+    }
+
+    /**
+     * Sets cancels.
+     *
+     * @param replaces the cancels
+     */
+    public void setReplaces(UUID replaces) {
+        this.replaces = replaces;
+    }
+
+    /**
      * Sets dataset content.
      *
      * @param datasetContent the dataset content
@@ -252,6 +273,7 @@ public class S125Dataset {
      */
     public boolean isNew() {
             return Objects.isNull(this.getUuid()) ||
+                    Objects.isNull(this.getCreatedAt()) ||
                     Objects.equals(this.getCreatedAt(), this.getLastUpdatedAt());
     }
 
@@ -265,7 +287,7 @@ public class S125Dataset {
     @JsonIgnore
     public S125Dataset copy() {
         // Create the copy
-        S125Dataset copy = new S125Dataset();
+        final S125Dataset copy = new S125Dataset();
         copy.setDatasetIdentificationInformation(this.getDatasetIdentificationInformation().copy());
         copy.setGeometry(this.getGeometry());
 
@@ -274,6 +296,18 @@ public class S125Dataset {
 
         // And return it
         return copy;
+    }
+
+    /**
+     * A helper function which extends the copy functionality to actually
+     * record the copied dataset as a replacement for the original one.
+     *
+     * @return he constructed dataset copy with a replacement record
+     */
+    public S125Dataset replace() {
+        final S125Dataset copied = this.copy();
+        copied.setReplaces(this.getUuid());
+        return copied;
     }
 
 }

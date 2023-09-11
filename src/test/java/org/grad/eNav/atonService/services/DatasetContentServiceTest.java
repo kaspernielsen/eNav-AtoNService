@@ -206,57 +206,6 @@ class DatasetContentServiceTest {
     }
 
     /**
-     * Test that if the service is asked to replace the content of a specific
-     * dataset, then this will use the existing dataset functionality of
-     * cancelling the existing dataset and re-creating a brand-new one based
-     * on a copy.
-     */
-    @Test
-    void replace() {
-        // Create a copy of the existing dataset to mock the replacing functionality
-        S125Dataset replacedDataset = this.existingDataset.copy();
-        replacedDataset.setDatasetContent(new DatasetContent());
-
-        // Mock the service calls
-        doReturn(this.existingDataset).when(this.datasetService).cancel(any());
-        doReturn(replacedDataset).when(this.datasetService).save(any());
-
-        // Perform the service call
-        DatasetContent result = this.datasetContentService.replace(this.existingDatasetContent);
-
-        // Test the result - Hasn't been generated yet so should be blank
-        assertNotNull(result);
-        assertNull(result.getId());
-        assertNull(result.getGeneratedAt());
-        assertNull(result.getSequenceNo());
-        assertNull(result.getContent());
-        assertNull(result.getContentLength());
-        assertNull(result.getDelta());
-        assertNull(result.getDeltaLength());
-    }
-
-    /**
-     * Test that if the service is asked to replace the content of a specific
-     * dataset, and for some reason in the replacement process the saving
-     * operation returned null, a SavingFailedException will be thrown.
-     */
-    @Test
-    void replaceWithoutContent() {
-        // Create a copy of the existing dataset to mock the replacing functionality
-        S125Dataset replacedDataset = this.existingDataset.copy();
-        replacedDataset.setDatasetContent(null);
-
-        // Mock the service calls
-        doReturn(this.existingDataset).when(this.datasetService).cancel(any());
-        doReturn(null).when(this.datasetService).save(any());
-
-        // Perform the service call
-        assertThrows(SavingFailedException.class, () ->
-            this.datasetContentService.replace(this.existingDatasetContent)
-        );
-    }
-
-    /**
      * Test that we can successfully generate the content of a dataset provided
      * that we can access its respective member entries. In the current case
      * this should be an S-125 dataset with the same number of members in the
@@ -330,7 +279,7 @@ class DatasetContentServiceTest {
 
         // Mock the service calls
         doReturn(new PageImpl<>(Collections.emptyList())).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
-        doAnswer((inv) -> inv.getArgument(0)).when(this.datasetContentService).replace(any());
+        doReturn(this.newDataset).when(this.datasetService).replace(any());
 
         // Perform the service call
         CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset);
@@ -349,7 +298,7 @@ class DatasetContentServiceTest {
         }
 
         // Make also sure that we tried to replace the content, not save/publish
-        verify(this.datasetContentService, times(1)).replace(any());
+        verify(this.datasetService, times(1)).replace(any());
         verify(this.datasetContentRepo, never()).save(any(DatasetContent.class));
     }
 
