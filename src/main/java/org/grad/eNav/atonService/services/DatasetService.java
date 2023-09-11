@@ -19,6 +19,7 @@ package org.grad.eNav.atonService.services;
 
 import _int.iho.s100.gml.base._5_0.MDTopicCategoryCode;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
@@ -246,12 +247,13 @@ public class DatasetService {
 
         // Refresh the savedDataset object to fetch the updated values
         this.entityManager.flush();
-        this.entityManager.refresh(savedDataset);
+        this.entityManager.refresh(savedDataset, LockModeType.READ);
 
         // Request an Update for the dataset content
         this.requestDatasetContentUpdate(savedDataset);
 
         // And return the object for AOP
+        this.entityManager.detach(savedDataset);
         return savedDataset;
     }
 
