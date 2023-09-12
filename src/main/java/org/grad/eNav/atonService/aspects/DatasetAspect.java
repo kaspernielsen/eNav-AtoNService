@@ -23,8 +23,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
+import org.grad.eNav.atonService.repos.DatasetRepo;
 import org.grad.eNav.atonService.services.DatasetContentLogService;
-import org.grad.eNav.atonService.services.DatasetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,7 +48,7 @@ public class DatasetAspect {
      * The Dataset Service.
      */
     @Autowired
-    DatasetService datasetService;
+    DatasetRepo datasetRepo;
 
     /**
      * The Dataset Content Log Service.
@@ -112,8 +112,7 @@ public class DatasetAspect {
                         if((DatasetOperation.AUTO.equals(operation) && d.isNew()) || DatasetOperation.CREATED.equals(operation)) {
                             Optional.of(d)
                                     .map(S125Dataset::getReplaces)
-                                    .map(this.datasetService::findOne)
-                                    .map(replaced -> this.datasetContentLogService.generateDatasetContentLog(replaced, DatasetOperation.CANCELLED))
+                                    .map(uuid -> this.datasetContentLogService.generateDatasetContentLogByUuid(uuid, DatasetOperation.CANCELLED))
                                     .ifPresent(this.datasetContentLogService::save);
                         }
                         return this.datasetContentLogService.generateDatasetContentLog(d, operation);
@@ -129,8 +128,7 @@ public class DatasetAspect {
                         if((DatasetOperation.AUTO.equals(operation) && d.isNew()) || DatasetOperation.CREATED.equals(operation)) {
                             Optional.of(d)
                                     .map(S125Dataset::getReplaces)
-                                    .map(this.datasetService::findOne)
-                                    .map(replaced -> this.datasetContentLogService.generateDatasetContentLog(replaced, DatasetOperation.CANCELLED))
+                                    .map(uuid -> this.datasetContentLogService.generateDatasetContentLogByUuid(uuid, DatasetOperation.CANCELLED))
                                     .ifPresent(this.datasetContentLogService::save);
                         }
                         return this.datasetContentLogService.generateDatasetContentLog(d, operation);

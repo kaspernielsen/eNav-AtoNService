@@ -333,13 +333,12 @@ public class DatasetService {
      * <p/>
      * Note that since we are using AOP for the dataset content logging, the
      * saving and update functionality will not generate any logs since we
-     * are in the same component. Therefore, this function is also annotated
-     * with the `@LogDataset` annotation and the respective aspect is able to
-     * handle the replacing operations.
+     * are in the same component. Therefore, the new dataset content generation
+     * will need to handle both the logs for the cancellation of the original
+     * dataset and the creation of the replacement one.
      *
      * @param uuid the UUID of the dataset to be replaced
      */
-    @LogDataset
     @Transactional
     public S125Dataset replace(@NotNull UUID uuid) {
         log.debug("Request to replace Dataset with UUID : {}", uuid);

@@ -220,14 +220,40 @@ public class DatasetContentLogService {
     }
 
     /**
+     * Provided with a valid UUID this function will use the original dataset
+     * content log generation method to build a dataset content log entry.
+     *
+     * @param uuid the UUID of the S-125 dataset to generate the log for
+     * @param operation the dataset operation parameter
+     * @return the dataset content log entry
+     */
+    @Transactional(readOnly = true)
+    public DatasetContentLog generateDatasetContentLogByUuid(@NotNull UUID uuid, @NotNull DatasetOperation operation) {
+        // Try to access the dataset by its UUID
+        // If anything goes wrong just log and don't continue
+        final S125Dataset s125Dataset;
+        try {
+            s125Dataset = this.datasetService.findOne(uuid);
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+            return null;
+        }
+
+        // And then generate the content as usual
+        return this.generateDatasetContentLog(s125Dataset, operation);
+    }
+
+    /**
      * Provided a valid dataset this function will build the respective
-     * dataset content and populate it with all entries that match its
+     * dataset content log and populate it with all entries that match its
      * geographical boundaries. The resulting object will then be marshalled
      * into an XML string and returned.
      *
-     * @param s125Dataset the UUID of the dataset
+     * @param s125Dataset the S-125 dataset to generate the content log for
+     * @param operation the dataset operation parameter
      * @return the dataset content log entry
      */
+    @Transactional(readOnly = true)
     public DatasetContentLog generateDatasetContentLog(@NotNull S125Dataset s125Dataset, @NotNull DatasetOperation operation) {
         log.debug("Request to retrieve the content for Dataset with UUID : {}", s125Dataset.getUuid());
 
