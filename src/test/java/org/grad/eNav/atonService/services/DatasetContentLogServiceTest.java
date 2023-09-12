@@ -461,6 +461,50 @@ class DatasetContentLogServiceTest {
 
     /**
      * Test that we can successfully generate the content log of a dataset
+     * provided the already existing UUID is provided, and it already
+     * has a content generated. This test will just check that the function
+     * check for the correct UUID but will not go into details on the
+     * content generation implementation as this is covered by the next
+     * tests.
+     */
+    @Test
+    void testGenerateDatasetContentLogByUuid() {
+        doReturn(s125Dataset).when(this.datasetService).findOne(eq(s125Dataset.getUuid()));
+        doReturn(this.newDatasetContentLog).when(this.datasetContentLogService).generateDatasetContentLog(any(), any());
+
+        // Perform the service call
+        DatasetContentLog result = this.datasetContentLogService.generateDatasetContentLogByUuid(this.s125Dataset.getUuid(), DatasetOperation.OTHER);
+
+        // Test the result
+        assertNotNull(result);
+        assertNull(result.getId());
+        assertEquals(this.newDatasetContentLog.getUuid(), result.getUuid());
+        assertEquals(this.newDatasetContentLog.getDatasetType(), result.getDatasetType());
+        assertEquals(this.newDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
+        assertEquals(this.newDatasetContentLog.getGeometry(), result.getGeometry());
+        assertEquals(this.newDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.newDatasetContentLog.getSequenceNo(), result.getSequenceNo());
+        assertEquals(this.newDatasetContentLog.getContent(), result.getContent());
+    }
+
+    /**
+     * Test that when the provided UUID is not valid (hence not found) the
+     * generation function will just return null, and not crash... there is
+     * just no log...
+     */
+    @Test
+    void testGenerateDatasetContentLogByUuidNotFound() {
+        doThrow(DataNotFoundException.class).when(this.datasetService).findOne(eq(s125Dataset.getUuid()));
+
+        // Perform the service call
+        DatasetContentLog result = this.datasetContentLogService.generateDatasetContentLogByUuid(this.s125Dataset.getUuid(), DatasetOperation.OTHER);
+
+        // Test the result
+        assertNull(result);
+    }
+
+    /**
+     * Test that we can successfully generate the content log of a dataset
      * provided it already has a content generated. Note that the dataset
      * ID is set to null since this is a new content object and hasn't been
      * store in the database yet.
