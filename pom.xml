@@ -301,7 +301,7 @@
 		<dependency>
 			<groupId>org.grad.eNav</groupId>
 			<artifactId>S125</artifactId>
-			<version>0.5.43</version>
+			<version>0.5.44</version>
 			<classifier>jakarta</classifier>
 		</dependency>
 
