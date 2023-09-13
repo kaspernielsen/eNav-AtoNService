@@ -105,8 +105,8 @@ public class DatasetContentService {
             s125Dataset.setDatasetContent(datasetContent);
         }
 
-        // Return the new/updated dataset content
-        return this.datasetContentRepo.saveAndFlush(datasetContent);
+        // Return the new/updated dataset content - no need to flush
+        return this.datasetContentRepo.save(datasetContent);
     }
 
     /**
