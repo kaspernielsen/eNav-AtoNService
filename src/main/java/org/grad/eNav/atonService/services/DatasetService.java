@@ -53,6 +53,7 @@ import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -77,6 +78,12 @@ import static java.util.function.Predicate.not;
 @Service
 @Slf4j
 public class DatasetService {
+
+    /**
+     * The Application Content
+     */
+    @Autowired
+    ApplicationContext applicationContext;
 
     /**
      * The Entity Manager.
@@ -245,7 +252,7 @@ public class DatasetService {
         final S125Dataset savedDataset = this.datasetRepo.saveAndFlush(dataset);
 
         // Request an Update for the dataset content
-        this.requestDatasetContentUpdate(savedDataset);
+        this.requestDatasetContentUpdate(savedDataset.getUuid());
 
         // And return the saved dataset
         return savedDataset;
@@ -342,10 +349,22 @@ public class DatasetService {
     @Transactional
     public S125Dataset replace(@NotNull UUID uuid) {
         log.debug("Request to replace Dataset with UUID : {}", uuid);
+
+        //====================================================================//
+        //                            IMPORTANT POINT                         //
+        //====================================================================//
+        // To activate the AOP, use the application context to access the     //
+        // service. Otherwise, the LogDataset and other annotations will not  //
+        // work as expected.                                                  //
+        //====================================================================//
+        final DatasetService self = this.applicationContext.getBean(DatasetService.class);
+        //====================================================================//
+
+        // And perform the replacing operation
         return Optional.of(uuid)
-                .map(this::cancel)
+                .map(self::cancel)
                 .map(S125Dataset::replace)
-                .map(this::save)
+                .map(self::save)
                 .orElseThrow(() -> new SavingFailedException(String.format("An" +
                         "unknown error occurred while attempting to replace the " +
                         "dataset content of the dataset with UUID %s .", uuid))
@@ -362,23 +381,21 @@ public class DatasetService {
      * operation will end with an error, which will instruct the function to
      * cancel the previous dataset and create a new once (replacement).
      *
-     * @param s125Dataset the dataset to update the content for
+     * @param uuid the UUID of the dataset to update the content for
      */
-    @Transactional
-    public void requestDatasetContentUpdate(@NotNull S125Dataset s125Dataset) {
-        // Reload the object straight from the database
-        this.entityManager.refresh(s125Dataset);
-
+    public void requestDatasetContentUpdate(@NotNull UUID uuid) {
         // And request the dataset content generation asynchronously
-        this.datasetContentService.generateDatasetContent(s125Dataset)
+        this.datasetContentService.generateDatasetContent(uuid)
                 .whenCompleteAsync((result, ex) -> {
                     if(Objects.nonNull(ex)) {
                         if(ex.getCause() instanceof DeletedAtoNsInDatasetContentGenerationException) {
                             log.warn("Warning while generating the content of the dataset with UUID {}: {}",
-                                    s125Dataset.getUuid(), ex.getMessage());
+                                    uuid, ex.getMessage());
+                            // Now perform the replacement operation
+                            this.replace(uuid);
                         } else {
                             log.error("Error while generating the content of the dataset with UUID {}: {}",
-                                    s125Dataset.getUuid(), ex.getMessage());
+                                    uuid, ex.getMessage());
                         }
                     } else {
                         log.info("Successfully generated the content of the dataset with UUID {}",
@@ -386,7 +403,7 @@ public class DatasetService {
                         // Publish the updated dataset to the publication channel
                         this.s125PublicationChannel.send(MessageBuilder.withPayload(result)
                                 .setHeader(MessageHeaders.CONTENT_TYPE, SECOM_DataProductType.S125)
-                                .setHeader("operation", s125Dataset.isNew() ?
+                                .setHeader("operation", result.isNew() ?
                                         DatasetOperation.CREATED : DatasetOperation.UPDATED)
                                 .build());
                     }

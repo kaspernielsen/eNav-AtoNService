@@ -18,7 +18,6 @@ package org.grad.eNav.atonService.services;
 
 import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
 import _int.iala_aism.s125.gml._0_0.Dataset;
-import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +37,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
@@ -65,12 +65,6 @@ public class DatasetContentService {
      */
     @Autowired
     ModelMapper modelMapper;
-
-    /**
-     * The Entity Manager.
-     */
-    @Autowired
-    EntityManager entityManager;
 
     /**
      * The Aids to Navigation Service.
@@ -106,15 +100,13 @@ public class DatasetContentService {
                         "dataset content entity without it being linked to an " +
                         "actual dataset"));
 
-        // Save the new/updated dataset content
-        final DatasetContent savedDatasetContent = this.datasetContentRepo.saveAndFlush(datasetContent);
+        // Make sure the content is assign to the dataset as well
+        if(Objects.isNull(s125Dataset.getDatasetContent())) {
+            s125Dataset.setDatasetContent(datasetContent);
+        }
 
-        // Finally make sure the link between the dataset and the content exists
-        s125Dataset.setDatasetContent(savedDatasetContent);
-        this.entityManager.persist(s125Dataset);
-
-        // Return the saved dataset content
-        return savedDatasetContent;
+        // Return the new/updated dataset content
+        return this.datasetContentRepo.saveAndFlush(datasetContent);
     }
 
     /**
@@ -123,16 +115,17 @@ public class DatasetContentService {
      * geographical boundaries. The resulting object will then be marshalled
      * into an XML string and returned.
      *
-     * @param s125Dataset the dataset to generate the content for
+     * @param uuid the dataset of the dataset to generate the content for
      * @return the dataset with the newly generated dataset content object
      */
-    @Async
     @LogDataset
-    @Transactional
-    public CompletableFuture<S125Dataset> generateDatasetContent(@NotNull S125Dataset s125Dataset) {
-        log.debug("Request to generate the content for Dataset with UUID: {}", s125Dataset.getUuid());
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Async
+    public CompletableFuture<S125Dataset> generateDatasetContent(@NotNull UUID uuid) {
+        log.debug("Request to generate the content for Dataset with UUID: {}", uuid);
 
         // Make sure we have a valid dataset content entry to populate
+        final S125Dataset s125Dataset = this.datasetService.findOne(uuid);
         final DatasetContent datasetContent = Optional.of(s125Dataset)
                 .map(S125Dataset::getDatasetContent)
                 .orElseGet(DatasetContent::new);
@@ -180,12 +173,6 @@ public class DatasetContentService {
                             "dataset must be cancelled and replaced to " +
                             "continue...", s125Dataset.getUuid())
             ));
-            // ---------------------  The Important bit  ---------------------//
-            // On completion of this we need to try and replace the old dataset
-            // with a new one. This should be NOT done asynchronously so that
-            // we keep the current database session in place.
-            exFuture.whenComplete((result, ex) -> this.datasetService.replace(s125Dataset.getUuid()));
-            // ---------------------------------------------------------------//
             // Stop the execution and inform the calling component on what happened
             return exFuture;
         }
