@@ -174,7 +174,7 @@ class DatasetContentServiceTest {
      */
     @Test
     void testSave() {
-        doReturn(this.newDatasetContent).when(this.datasetContentRepo).saveAndFlush(any());
+        doReturn(this.newDatasetContent).when(this.datasetContentRepo).save(any());
 
         // Perform the service call
         DatasetContent result = this.datasetContentService.save(this.newDatasetContent);
