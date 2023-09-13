@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * @param <T>   The TO object type
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Transactional
+@Transactional(readOnly = true)
 @Component
 public class DomainDtoMapper<F, T> {
 

@@ -217,11 +217,12 @@ class DatasetContentServiceTest {
         final Page<AidsToNavigation> aidsToNavigationPage = new PageImpl<>(this.aidsToNavigationList.subList(0, numOfAtons), Pageable.ofSize(5), this.aidsToNavigationList.size());
 
         // Mock the service calls
+        doReturn(this.existingDataset).when(this.datasetService).findOne(eq(this.existingDataset.getUuid()));
         doReturn(aidsToNavigationPage).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
         doAnswer((inv) -> inv.getArgument(0)).when(this.datasetContentService).save(any());
 
         // Perform the service call
-        CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset);
+        CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset.getUuid());
 
         // Test the result
         assertNotNull(result);
@@ -250,11 +251,12 @@ class DatasetContentServiceTest {
         final Page<AidsToNavigation> aidsToNavigationPage = new PageImpl<>(this.aidsToNavigationList.subList(0, numOfAtons), Pageable.ofSize(5), this.aidsToNavigationList.size());
 
         // Mock the service calls
+        doReturn(this.existingDataset).when(this.datasetService).findOne(eq(this.existingDataset.getUuid()));
         doReturn(aidsToNavigationPage).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
         doThrow(new MappingException(Collections.emptyList())).when(this.modelMapper).map(any(), any());
 
         // Perform the service call
-        CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset);
+        CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset.getUuid());
 
         // Test the result
         assertNotNull(result);
@@ -278,11 +280,11 @@ class DatasetContentServiceTest {
         this.existingDataset.getDatasetContent().setContent(IOUtils.toString(in, StandardCharsets.UTF_8));
 
         // Mock the service calls
+        doReturn(this.existingDataset).when(this.datasetService).findOne(eq(this.existingDataset.getUuid()));
         doReturn(new PageImpl<>(Collections.emptyList())).when(this.aidsToNavigationService).findAll(any(), any(), any(), any(), any());
-        doReturn(this.newDataset).when(this.datasetService).replace(any());
 
         // Perform the service call
-        CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset);
+        CompletableFuture<S125Dataset> result = this.datasetContentService.generateDatasetContent(this.existingDataset.getUuid());
 
         // Test the result
         assertNotNull(result);
@@ -297,8 +299,7 @@ class DatasetContentServiceTest {
             assertTrue(ex.getCause() instanceof DeletedAtoNsInDatasetContentGenerationException);
         }
 
-        // Make also sure that we tried to replace the content, not save/publish
-        verify(this.datasetService, times(1)).replace(any());
+        // Make also sure that did not try to save/publish
         verify(this.datasetContentRepo, never()).save(any(DatasetContent.class));
     }
 

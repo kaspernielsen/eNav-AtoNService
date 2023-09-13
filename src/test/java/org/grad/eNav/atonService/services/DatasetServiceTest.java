@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import jakarta.persistence.EntityManager;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
+import org.grad.eNav.atonService.exceptions.DeletedAtoNsInDatasetContentGenerationException;
 import org.grad.eNav.atonService.exceptions.SavingFailedException;
 import org.grad.eNav.atonService.exceptions.ValidationException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
@@ -39,6 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +51,7 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -64,6 +67,12 @@ class DatasetServiceTest {
     @InjectMocks
     @Spy
     DatasetService datasetService;
+
+    /**
+     * The Application Context mock.
+     */
+    @Mock
+    ApplicationContext applicationContext;
 
     /**
      * The Entity Manager mock.
@@ -472,11 +481,12 @@ class DatasetServiceTest {
      * existing dataset and re-creating a brand-new one based on a copy.
      */
     @Test
-    void replace() {
+    void testReplace() {
         // Cancel the existing dataset
         this.existingDataset.setCancelled(Boolean.TRUE);
 
         // Mock the service calls
+        doReturn(this.datasetService).when(this.applicationContext).getBean(eq(DatasetService.class));
         doReturn(this.existingDataset).when(this.datasetService).cancel(any());
         doReturn(this.existingDataset.replace()).when(this.datasetService).save(any());
 
@@ -508,11 +518,12 @@ class DatasetServiceTest {
      * null, a SavingFailedException will be thrown.
      */
     @Test
-    void replaceFailed() {
+    void testReplaceFailed() {
         // Cancel the existing dataset
         this.existingDataset.setCancelled(Boolean.TRUE);
 
         // Mock the service calls
+        doReturn(this.datasetService).when(this.applicationContext).getBean(eq(DatasetService.class));
         doReturn(this.existingDataset).when(this.datasetService).cancel(any());
         doReturn(null).when(this.datasetService).save(any());
 
@@ -534,11 +545,34 @@ class DatasetServiceTest {
         doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
 
         // Perform the service call
-        this.datasetService.requestDatasetContentUpdate(new S125Dataset());
+        this.datasetService.requestDatasetContentUpdate(UUID.randomUUID());
 
         // Wait until the end and verify that the message was published
         assertTrue(contentGenerationTask.isDone());
         verify(this.s125PublicationChannel, timeout(100).times(1)).send(any(Message.class));
+    }
+
+    /**
+     * Test that if we request a dataset content update from the dataset content
+     * service and for this dataset deleted AtoNs were detected, then the
+     * default response would be to replace that dataset with a brand-new one.
+     */
+    @Test
+    void testRequestDatasetContentUpdateDeletedAtons() {
+        // Create a data content generation response to wait for
+        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.failedFuture(
+                new CompletionException(new DeletedAtoNsInDatasetContentGenerationException("deleted AtoNs detected"))
+        );
+        doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
+        doReturn(this.newDataset).when(this.datasetService).replace(any());
+
+        // Perform the service call
+        this.datasetService.requestDatasetContentUpdate(this.existingDataset.getUuid());
+
+        // Wait until the end and verify that the message was published
+        assertTrue(contentGenerationTask.isCompletedExceptionally());
+        verify(this.datasetService, timeout(100).times(1)).replace(eq(this.existingDataset.getUuid()));
+        verify(this.s125PublicationChannel, timeout(100).times(0)).send(any(Message.class));
     }
 
     /**
@@ -549,14 +583,17 @@ class DatasetServiceTest {
     @Test
     void testRequestDatasetContentUpdateFailure() {
         // Create a data content generation response to wait for
-        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.failedFuture(new RuntimeException("something went wrong"));
+        CompletableFuture<S125Dataset> contentGenerationTask = CompletableFuture.failedFuture(
+                new CompletionException(new RuntimeException("something went wrong"))
+        );
         doReturn(contentGenerationTask).when(this.datasetContentService).generateDatasetContent(any());
 
         // Perform the service call
-        this.datasetService.requestDatasetContentUpdate(new S125Dataset());
+        this.datasetService.requestDatasetContentUpdate(this.existingDataset.getUuid());
 
         // Wait until the end and verify that the message was published
         assertTrue(contentGenerationTask.isCompletedExceptionally());
+        verify(this.datasetService, never()).replace(any());
         verify(this.s125PublicationChannel, timeout(100).times(0)).send(any(Message.class));
     }
 
