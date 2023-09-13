@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
  * @param <T>   The TO object type
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
+@Transactional
 @Component
 public class DomainDtoMapper<F, T> {
 
@@ -61,7 +62,6 @@ public class DomainDtoMapper<F, T> {
      * @param clazz             The class to map the FROM objects to
      * @return the mapped TO object datatables page
      */
-    @Transactional
     public DtPage<T> convertToDtPage(Page<F> page, DtPagingRequest dtPagingRequest, Class<T> clazz) {
         return new DtPage<>(this.convertToPage(page, clazz), dtPagingRequest);
     }
@@ -73,7 +73,6 @@ public class DomainDtoMapper<F, T> {
      * @param clazz             The class to map the FROM objects to
      * @return the mapped TO object page
      */
-    @Transactional
     public Page<T> convertToPage(Page<F> page, Class<T> clazz) {
         return page.map(obj -> this.convertTo(obj, clazz));
     }
@@ -85,7 +84,6 @@ public class DomainDtoMapper<F, T> {
      * @param clazz             The class to map the FROM objects to
      * @return the mapped TO object list
      */
-    @Transactional
     public List<T> convertToList(List<F> list, Class<T> clazz) {
         return list.stream()
                 .map(obj -> this.convertTo(obj, clazz))
@@ -99,7 +97,6 @@ public class DomainDtoMapper<F, T> {
      * @param clazz             The class to map the FROM object to
      * @return the mapped TO object
      */
-    @Transactional
     public T convertTo(F fromObj, Class<T> clazz) {
         return this.modelMapper.map(fromObj, clazz);
     }
