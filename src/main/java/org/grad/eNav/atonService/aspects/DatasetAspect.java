@@ -107,32 +107,14 @@ public class DatasetAspect {
         else if(Optional.ofNullable(proceed).filter(S125Dataset.class::isInstance).isPresent()) {
             Optional.of(proceed)
                     .map(S125Dataset.class::cast)
-                    .map(d -> {
-                        // In case this is caused by a dataset replacement
-                        if((DatasetOperation.CREATED.equals(operation) || DatasetOperation.AUTO.equals(operation) && d.isNew())) {
-                            Optional.of(d)
-                                    .map(S125Dataset::getReplaces)
-                                    .map(uuid -> this.datasetContentLogService.generateDatasetContentLogByUuid(uuid, DatasetOperation.CANCELLED))
-                                    .ifPresent(this.datasetContentLogService::save);
-                        }
-                        return this.datasetContentLogService.generateDatasetContentLog(d, operation);
-                    })
+                    .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
                     .ifPresent(this.datasetContentLogService::save);
         }
         // Handle if the object is an S-125 Dataset collection
         else if(Optional.ofNullable(proceed).filter(p -> isObjectCollectionOfClass(p, S125Dataset.class)).isPresent()) {
             ((Collection<?>) proceed).stream()
                     .map(S125Dataset.class::cast)
-                    .map(d -> {
-                        // In case this is caused by a dataset replacement
-                        if((DatasetOperation.CREATED.equals(operation) || DatasetOperation.AUTO.equals(operation) && d.isNew())) {
-                            Optional.of(d)
-                                    .map(S125Dataset::getReplaces)
-                                    .map(uuid -> this.datasetContentLogService.generateDatasetContentLogByUuid(uuid, DatasetOperation.CANCELLED))
-                                    .ifPresent(this.datasetContentLogService::save);
-                        }
-                        return this.datasetContentLogService.generateDatasetContentLog(d, operation);
-                    })
+                    .map(d -> this.datasetContentLogService.generateDatasetContentLog(d, operation))
                     .forEach(this.datasetContentLogService::save);
         }
     }
