@@ -109,7 +109,7 @@ public class DatasetAspect {
                     .map(S125Dataset.class::cast)
                     .map(d -> {
                         // In case this is caused by a dataset replacement
-                        if((DatasetOperation.AUTO.equals(operation) && d.isNew()) || DatasetOperation.CREATED.equals(operation)) {
+                        if((DatasetOperation.CREATED.equals(operation) || DatasetOperation.AUTO.equals(operation) && d.isNew())) {
                             Optional.of(d)
                                     .map(S125Dataset::getReplaces)
                                     .map(uuid -> this.datasetContentLogService.generateDatasetContentLogByUuid(uuid, DatasetOperation.CANCELLED))
@@ -125,7 +125,7 @@ public class DatasetAspect {
                     .map(S125Dataset.class::cast)
                     .map(d -> {
                         // In case this is caused by a dataset replacement
-                        if((DatasetOperation.AUTO.equals(operation) && d.isNew()) || DatasetOperation.CREATED.equals(operation)) {
+                        if((DatasetOperation.CREATED.equals(operation) || DatasetOperation.AUTO.equals(operation) && d.isNew())) {
                             Optional.of(d)
                                     .map(S125Dataset::getReplaces)
                                     .map(uuid -> this.datasetContentLogService.generateDatasetContentLogByUuid(uuid, DatasetOperation.CANCELLED))

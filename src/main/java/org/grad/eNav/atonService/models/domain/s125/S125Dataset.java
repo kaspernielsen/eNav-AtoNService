@@ -33,6 +33,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -273,6 +274,8 @@ public class S125Dataset {
      */
     public boolean isNew() {
             return Objects.isNull(this.getUuid()) ||
+                    Objects.isNull(this.getDatasetContent()) ||
+                    Objects.equals(this.getDatasetContent().getSequenceNo(), BigInteger.ZERO) ||
                     Objects.isNull(this.getCreatedAt()) ||
                     Objects.equals(this.getCreatedAt(), this.getLastUpdatedAt());
     }
