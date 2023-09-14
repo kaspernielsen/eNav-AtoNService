@@ -38,6 +38,7 @@ public interface CKeeperClient {
 
     @RequestMapping(method = RequestMethod.GET, value = "/api/signature/certificate", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     SignatureCertificateDto getSignatureCertificate(@RequestParam("entityName") String entityName,
+                                                    @RequestParam(value = "version", required = false) String version,
                                                     @RequestParam(value = "mmsi", required = false) String mmsi,
                                                     @RequestParam(value = "entityType", required = false) String entityType);
 
