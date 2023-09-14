@@ -289,10 +289,6 @@
 
 		<!-- S-125 -->
 		<dependency>
-			<groupId>org.glassfish.jaxb</groupId>
-			<artifactId>jaxb-runtime</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.grad.eNav</groupId>
 			<artifactId>S100Catalogue</artifactId>
 			<version>0.5.1</version>
@@ -309,12 +305,12 @@
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-core-jakarta</artifactId>
-			<version>0.0.23</version>
+			<version>0.0.24</version>
 		</dependency>
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-springboot3</artifactId>
-			<version>0.0.23</version>
+			<version>0.0.24</version>
 		</dependency>
 
 		<!-- Bouncy Castle -->

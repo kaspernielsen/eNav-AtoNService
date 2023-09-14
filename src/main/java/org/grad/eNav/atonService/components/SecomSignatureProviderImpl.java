@@ -30,7 +30,6 @@ import org.grad.secom.core.base.SecomSignatureProvider;
 import org.grad.secom.core.models.enums.DigitalSignatureAlgorithmEnum;
 import org.grad.secom.core.utils.SecomPemUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -55,12 +54,6 @@ import java.util.Optional;
 @Component
 @Slf4j
 public class SecomSignatureProviderImpl implements SecomSignatureProvider {
-
-    /**
-     * The Application Name.
-     */
-    @Value("${spring.application.name:aton-service}")
-    String appName;
 
     /**
      * The cKeeper Feign Client.

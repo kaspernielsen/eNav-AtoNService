@@ -46,7 +46,7 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
     /**
      * The Application Name.
      */
-    @Value("${spring.application.name:aton-service}")
+    @Value("${gla.rad.aton-service.info.name:AtoN Service}")
     String appName;
 
     /**
