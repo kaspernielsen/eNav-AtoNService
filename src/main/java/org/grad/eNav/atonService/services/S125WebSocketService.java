@@ -55,7 +55,7 @@ public class S125WebSocketService implements MessageHandler {
     /**
      * The General Destination Prefix
      */
-    @Value("${gla.rad.vdes-ctrl.web-socket.prefix:topic}")
+    @Value("${gla.rad.aton-service.web-socket.prefix:topic}")
     String prefix;
 
     /**

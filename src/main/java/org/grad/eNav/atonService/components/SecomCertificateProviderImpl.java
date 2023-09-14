@@ -50,6 +50,12 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
     String appName;
 
     /**
+     * The Application Name.
+     */
+    @Value("${gla.rad.aton-service.info.version:0.0.1}")
+    String appVersion;
+
+    /**
      * The cKeeper Feign Client.
      */
     @Autowired
@@ -72,6 +78,7 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
         // Get the signature certificate from cKeeper
         final SignatureCertificateDto response = this.cKeeperClient.getSignatureCertificate(
                 appName,
+                appVersion,
                 null,
                 McpEntityType.SERVICE.getValue());
 
