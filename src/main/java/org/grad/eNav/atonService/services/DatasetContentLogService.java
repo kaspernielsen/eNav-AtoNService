@@ -36,15 +36,15 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
 
@@ -86,8 +86,21 @@ public class DatasetContentLogService {
             "datasetType",
             "operation"
     };
-    private final String[] searchFieldsWithSort = new String[] {
-    };
+    private final String[] searchFieldsWithSort = new String[] { };
+
+    /**
+     * Get all the dataset content logs in a pageable search.
+     *
+     * @param pageable  The pageable result output
+     * @return The matching dataset content logs in a paged response
+     */
+    @Transactional(readOnly = true)
+    public Page<DatasetContentLog> findAll(Pageable pageable) {
+        log.debug("Request to get Datasets Content Logs in a pageable search");
+
+        // Return the query result
+        return this.datasetContentLogRepo.findAll(pageable);
+    }
 
     /**
      * Find one dataset content log by ID.
@@ -108,25 +121,9 @@ public class DatasetContentLogService {
      * @return the dataset content
      */
     @Transactional(readOnly = true)
-    public DatasetContentLog findOriginal(@NotNull UUID uuid) {
-        return this.datasetContentLogRepo.findOriginalForUuid(uuid)
+    public DatasetContentLog findInitialForUuid(@NotNull UUID uuid) {
+        return this.datasetContentLogRepo.findInitialForUuid(uuid)
                 .orElse(null);
-    }
-
-    /**
-     * Returns the sorted list of dataset content log entries for a specific
-     * UUID that contain all the updates in the dataset but not the original
-     * content, i.e. the deltas.
-     *
-     * @param uuid the UUID of the dataset
-     * @return the list of the dataset content log entries that contain the deltas
-     */
-    public List<DatasetContentLog> findDeltas(@NotNull UUID uuid) {
-        return this.datasetContentLogRepo.findByUuid(uuid)
-                .stream()
-                .filter(log -> log.getSequenceNo().compareTo(BigInteger.ZERO) > 0)
-                .sorted(Comparator.comparing(DatasetContentLog::getSequenceNo))
-                .collect(Collectors.toList());
     }
 
     /**
@@ -136,8 +133,8 @@ public class DatasetContentLogService {
      * @return the dataset content
      */
     @Transactional(readOnly = true)
-    public DatasetContentLog findLatest(@NotNull UUID uuid) {
-        return this.findLatest(uuid, LocalDateTime.now());
+    public DatasetContentLog findLatestForUuid(@NotNull UUID uuid) {
+        return this.findLatestForUuid(uuid, LocalDateTime.now());
     }
 
     /**
@@ -148,11 +145,10 @@ public class DatasetContentLogService {
      * @return the dataset content
      */
     @Transactional(readOnly = true)
-    public DatasetContentLog findLatest(@NotNull UUID uuid, LocalDateTime localDateTime) {
+    public DatasetContentLog findLatestForUuid(@NotNull UUID uuid, LocalDateTime localDateTime) {
         return this.datasetContentLogRepo.findLatestForUuid(
                         uuid,
-                        Optional.ofNullable(localDateTime).orElseGet(LocalDateTime::now),
-                        PageRequest.of(0, 1)
+                        Optional.ofNullable(localDateTime).orElseGet(LocalDateTime::now)
                 )
                 .stream()
                 .findFirst()
@@ -164,17 +160,40 @@ public class DatasetContentLogService {
     }
 
     /**
-     * Get all the dataset content logs in a pageable search.
+     * Returns the sorted list of dataset content log entries for a specific
+     * UUID that contain all the updates in the dataset.
      *
-     * @param pageable  The pageable result output
-     * @return The matching dataset content logs in a paged response
+     * @param uuid the UUID of the dataset
+     * @return the list of the dataset content log entries that contain the deltas
+     */
+    public List<DatasetContentLog> findForUuid(@NotNull UUID uuid) {
+        return this.findForUuidDuring(uuid, null, null);
+    }
+
+    /**
+     * Returns the sorted list of dataset content log entries for a specific
+     * UUID that contain all the updates in the dataset during a specific
+     * date-time duration.
+     * <p/>
+     * Null values can also be provided in both the "from" and "to" date-time
+     * values to disable the filtering. In this case the default "from" value
+     * will be the beginning of year 1970 while the end value will be the
+     * current time.
+     *
+     * @param uuid the UUID of the dataset
+     * @param generatedFrom the "from" generation local date-time
+     * @param generatedTo the "to" generation local date-time
+     * @return the dataset content
      */
     @Transactional(readOnly = true)
-    public Page<DatasetContentLog> findAll(Pageable pageable) {
-        log.debug("Request to get Datasets Content Logs in a pageable search");
-
-        // Return the query result
-        return this.datasetContentLogRepo.findAll(pageable);
+    public List<DatasetContentLog> findForUuidDuring(@NotNull UUID uuid, LocalDateTime generatedFrom, LocalDateTime generatedTo) {
+        return this.datasetContentLogRepo.findDuringForUuid(
+                uuid,
+                Optional.ofNullable(generatedFrom)
+                        .orElse(LocalDateTime.of(LocalDate.EPOCH, LocalTime.MIN)),
+                Optional.ofNullable(generatedTo)
+                        .orElse(LocalDateTime.now())
+        );
     }
 
     /**

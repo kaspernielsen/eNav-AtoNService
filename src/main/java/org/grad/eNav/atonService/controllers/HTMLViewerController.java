@@ -16,15 +16,16 @@
 
 package org.grad.eNav.atonService.controllers;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.grad.eNav.atonService.models.domain.s100.ServiceInformationConfig;
 import org.grad.eNav.atonService.models.enums.DatasetType;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -39,40 +40,10 @@ import java.util.stream.Collectors;
 public class HTMLViewerController {
 
     /**
-     * The Application Name Information.
+     * The Service Information Config.
      */
-    @Value("${gla.rad.aton-service.info.name:AtoN Service}")
-    private String appName;
-
-    /**
-     * The Application Version Information.
-     */
-    @Value("${gla.rad.aton-service.info.version:0.0.0}")
-    private String appVersion;
-
-    /**
-     * The Application Operator Name Information.
-     */
-    @Value("${gla.rad.aton-service.info.operatorName:Unknown}")
-    private String appOperatorName;
-
-    /**
-     * The Application Operator Contact Information.
-     */
-    @Value("${gla.rad.aton-service.info.operatorContact:Unknown}")
-    private String appOperatorContact;
-
-    /**
-     * The Application Operator URL Information.
-     */
-    @Value("${gla.rad.aton-service.info.operatorUrl:}")
-    private String appOperatorUrl;
-
-    /**
-     * The Application Copyright Information.
-     */
-    @Value("${gla.rad.aton-service.info.copyright:}")
-    private String appCopyright;
+    @Autowired
+    ServiceInformationConfig serviceInformationConfig;
 
     /**
      * The home page of the AtoN Service Application.
@@ -87,9 +58,9 @@ public class HTMLViewerController {
                 .collect(Collectors.toList()));
 
         // Add the properties to the UI model
-        model.addAttribute("appName", this.appName);
-        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
-        model.addAttribute("appCopyright", this.appCopyright);
+        model.addAttribute("appName", this.serviceInformationConfig.name());
+        model.addAttribute("appOperatorUrl", this.serviceInformationConfig.url());
+        model.addAttribute("appCopyright", this.serviceInformationConfig.copyright());
         // Return the rendered index
         return "index";
     }
@@ -102,9 +73,9 @@ public class HTMLViewerController {
      */
     @GetMapping("/datasets")
     public String datasets(Model model) {
-        model.addAttribute("appName", this.appName);
-        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
-        model.addAttribute("appCopyright", this.appCopyright);
+        model.addAttribute("appName", this.serviceInformationConfig.name());
+        model.addAttribute("appOperatorUrl", this.serviceInformationConfig.url());
+        model.addAttribute("appCopyright", this.serviceInformationConfig.copyright());
         return "datasets";
     }
 
@@ -116,9 +87,9 @@ public class HTMLViewerController {
      */
     @GetMapping("/atons")
     public String atons(Model model) {
-        model.addAttribute("appName", this.appName);
-        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
-        model.addAttribute("appCopyright", this.appCopyright);
+        model.addAttribute("appName", this.serviceInformationConfig.name());
+        model.addAttribute("appOperatorUrl", this.serviceInformationConfig.url());
+        model.addAttribute("appCopyright", this.serviceInformationConfig.copyright());
         return "atons";
     }
 
@@ -130,9 +101,9 @@ public class HTMLViewerController {
      */
     @GetMapping("/logs")
     public String logs(Model model) {
-        model.addAttribute("appName", this.appName);
-        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
-        model.addAttribute("appCopyright", this.appCopyright);
+        model.addAttribute("appName", this.serviceInformationConfig.name());
+        model.addAttribute("appOperatorUrl", this.serviceInformationConfig.url());
+        model.addAttribute("appCopyright", this.serviceInformationConfig.copyright());
         return "datasetContentLogs";
     }
 
@@ -144,12 +115,12 @@ public class HTMLViewerController {
      */
     @GetMapping("/about")
     public String about(Model model) {
-        model.addAttribute("appName", this.appName);
-        model.addAttribute("appVersion", this.appVersion);
-        model.addAttribute("appOperatorName", this.appOperatorName);
-        model.addAttribute("appOperatorContact", this.appOperatorContact);
-        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
-        model.addAttribute("appCopyright", this.appCopyright);
+        model.addAttribute("appName", this.serviceInformationConfig.name());
+        model.addAttribute("appVersion", this.serviceInformationConfig.version());
+        model.addAttribute("appOperatorName", this.serviceInformationConfig.organization());
+        model.addAttribute("appOperatorContact", Arrays.toString(this.serviceInformationConfig.electronicMailAddresses().toArray()));
+        model.addAttribute("appOperatorUrl", this.serviceInformationConfig.url());
+        model.addAttribute("appCopyright", this.serviceInformationConfig.copyright());
         return "about";
     }
 

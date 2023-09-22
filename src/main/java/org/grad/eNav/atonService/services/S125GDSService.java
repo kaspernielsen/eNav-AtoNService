@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.geotools.data.DataStore;
 import org.grad.eNav.atonService.components.S125GDSListener;
 import org.grad.eNav.atonService.models.GeomesaS125;
-import org.grad.eNav.atonService.utils.WKTUtil;
+import org.grad.eNav.atonService.utils.WKTUtils;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -92,8 +92,8 @@ public class S125GDSService {
         this.gdsListener = this.applicationContext.getBean(S125GDSListener.class);
         try {
             gdsListener.init(this.consumer,
-                    new GeomesaS125(WKTUtil.convertWKTtoGeometry(this.geometryWKT)),
-                    WKTUtil.convertWKTtoGeometry(this.geometryWKT));
+                    new GeomesaS125(WKTUtils.convertWKTtoGeometry(this.geometryWKT)),
+                    WKTUtils.convertWKTtoGeometry(this.geometryWKT));
         } catch (IOException | ParseException e) {
             log.error(e.getMessage());
         }

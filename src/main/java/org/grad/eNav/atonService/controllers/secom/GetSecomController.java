@@ -17,24 +17,28 @@
 package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
+import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.services.DatasetService;
+import org.grad.eNav.atonService.services.S100ExchangeSetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
-import org.grad.eNav.atonService.utils.WKTUtil;
+import org.grad.eNav.atonService.utils.WKTUtils;
 import org.grad.secom.core.interfaces.GetSecomInterface;
 import org.grad.secom.core.models.DataResponseObject;
 import org.grad.secom.core.models.GetResponseObject;
 import org.grad.secom.core.models.PaginationObject;
+import org.grad.secom.core.models.SECOM_ExchangeMetadataObject;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.locationtech.jts.geom.Geometry;
@@ -42,12 +46,14 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -67,6 +73,12 @@ public class GetSecomController implements GetSecomInterface {
      */
     @Autowired
     DatasetService datasetService;
+
+    /**
+     * The SECOM Exchange Set Service.
+     */
+    @Autowired
+    S100ExchangeSetService s100ExchangeSetService;
 
     /**
      * The UN/LOCODE Service.
@@ -101,13 +113,13 @@ public class GetSecomController implements GetSecomInterface {
                                  @QueryParam("productVersion") String productVersion,
                                  @QueryParam("geometry") String geometry,
                                  @QueryParam("unlocode") @Pattern(regexp = "[A-Z]{5}") String unlocode,
-                                 @QueryParam("validFrom") @Parameter(hidden = true) LocalDateTime validFrom,
-                                 @QueryParam("validTo") @Parameter(hidden = true) LocalDateTime validTo,
+                                 @QueryParam("validFrom") @Parameter(example = "20200101T123000", schema = @Schema(implementation = String.class, pattern = "(\\d{8})T(\\d{6})")) LocalDateTime validFrom,
+                                 @QueryParam("validTo") @Parameter(example = "20200101T123000", schema = @Schema(implementation = String.class, pattern = "(\\d{8})T(\\d{6})")) LocalDateTime validTo,
                                  @QueryParam("page") @Min(0) Integer page,
                                  @QueryParam("pageSize") @Min(0) Integer pageSize) {
         log.debug("SECOM request to get page of Dataset");
         Optional.ofNullable(dataReference).ifPresent(v -> log.debug("Data Reference specified as: {}", dataReference));
-        Optional.ofNullable(containerType).ifPresent(v -> log.debug("Coontainer Type specified as: {}", containerType));
+        Optional.ofNullable(containerType).ifPresent(v -> log.debug("Container Type specified as: {}", containerType));
         Optional.ofNullable(dataProductType).ifPresent(v -> log.debug("Data Product Type specified as: {}", dataProductType));
         Optional.ofNullable(geometry).ifPresent(v -> log.debug("Geometry specified as: {}", geometry));
         Optional.ofNullable(unlocode).ifPresent(v -> log.debug("UNLOCODE specified as: {}", unlocode));
@@ -128,7 +140,7 @@ public class GetSecomController implements GetSecomInterface {
                 .orElse(SECOM_DataProductType.S125);
         if(Objects.nonNull(geometry)) {
             try {
-                jtsGeometry = GeometryUtils.joinGeometries(jtsGeometry, WKTUtil.convertWKTtoGeometry(geometry));
+                jtsGeometry = GeometryUtils.joinGeometries(jtsGeometry, WKTUtils.convertWKTtoGeometry(geometry));
             } catch (ParseException ex) {
                 throw new ValidationException(ex.getMessage());
             }
@@ -140,31 +152,55 @@ public class GetSecomController implements GetSecomInterface {
                     .orElseGet(() -> this.geometryFactory.createEmpty(0)));
         }
 
-        // We only support S-100 Datasets here
+        // Initialise the data response object list
         final List<DataResponseObject> dataResponseObjectList = new ArrayList<>();
-        if(reqContainerType == ContainerTypeEnum.S100_DataSet) {
-            // We only support specifically S-125 Datasets
-            if(reqDataProductType == SECOM_DataProductType.S125) {
-                try {
-                    // Retrieve all matching datasets
-                    this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, Boolean.FALSE, pageable)
-                            .stream()
-                            .map(S125Dataset::getDatasetContent)
-                            .filter(Objects::nonNull)
-                            .map(DatasetContent::getContent)
-                            .map(String::getBytes)
-                            .map(bytes -> {
-                                // Create and populate the data response object
-                                DataResponseObject dataResponseObject = new DataResponseObject();
-                                dataResponseObject.setData(bytes);
 
-                                // And return the data response object
-                                return dataResponseObject;
-                            })
-                            .forEach(dataResponseObjectList::add);
-                } catch (Exception ex) {
+        // We only support specifically S-125 Datasets
+        if(reqDataProductType == SECOM_DataProductType.S125) {
+            // Retrieve all matching datasets
+            Page<S125Dataset> result;
+            try {
+                result = this.datasetService.findAll(dataReference, jtsGeometry, validFrom, validTo, Boolean.FALSE, pageable);
+            } catch (Exception ex) {
+                log.error("Error while retrieving the dataset query results: {} ", ex.getMessage());
+                throw new ValidationException(ex.getMessage());
+            }
+
+            // Package as S100 Datasets
+            if(reqContainerType == ContainerTypeEnum.S100_DataSet) {
+                result.stream()
+                        .map(S125Dataset::getDatasetContent)
+                        .filter(Objects::nonNull)
+                        .map(DatasetContent::getContent)
+                        .map(String::getBytes)
+                        .map(bytes -> {
+                            // Create and populate the data response object
+                            final DataResponseObject dataResponseObject = new DataResponseObject();
+                            dataResponseObject.setData(bytes);
+
+                            // And return the data response object
+                            return dataResponseObject;
+                        })
+                        .forEach(dataResponseObjectList::add);
+
+            }
+            // Package as S100 Exchange Sets
+            else if(reqContainerType == ContainerTypeEnum.S100_ExchangeSet) {
+                // Create and populate the data response object
+                final DataResponseObject dataResponseObject = new DataResponseObject();
+                try {
+                    dataResponseObject.setData(this.s100ExchangeSetService.packageToExchangeSet(result.getContent(), validFrom, validTo));
+                } catch (IOException | JAXBException ex) {
+                    log.error("Error while packaging the exchange set response: {} ", ex.getMessage());
                     throw new ValidationException(ex.getMessage());
                 }
+
+                // Flag that this is compressed in the exchange metadata
+                dataResponseObject.setExchangeMetadata(new SECOM_ExchangeMetadataObject());
+                dataResponseObject.getExchangeMetadata().setCompressionFlag(Boolean.TRUE);
+
+                // And add it to the data response list
+                dataResponseObjectList.add(dataResponseObject);
             }
         }
 

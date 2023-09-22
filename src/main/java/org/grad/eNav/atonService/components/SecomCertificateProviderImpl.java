@@ -18,13 +18,13 @@ package org.grad.eNav.atonService.components;
 
 import lombok.extern.slf4j.Slf4j;
 import org.grad.eNav.atonService.feign.CKeeperClient;
+import org.grad.eNav.atonService.models.domain.s100.ServiceInformationConfig;
 import org.grad.eNav.atonService.models.dtos.McpEntityType;
 import org.grad.eNav.atonService.models.dtos.SignatureCertificateDto;
 import org.grad.secom.core.base.DigitalSignatureCertificate;
 import org.grad.secom.core.base.SecomCertificateProvider;
 import org.grad.secom.core.utils.SecomPemUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
@@ -44,16 +44,10 @@ import java.security.cert.CertificateException;
 public class SecomCertificateProviderImpl implements SecomCertificateProvider {
 
     /**
-     * The Application Name.
+     * The Service Information Config.
      */
-    @Value("${gla.rad.aton-service.info.name:AtoN Service}")
-    String appName;
-
-    /**
-     * The Application Name.
-     */
-    @Value("${gla.rad.aton-service.info.version:0.0.1}")
-    String appVersion;
+    @Autowired
+    ServiceInformationConfig serviceInformationConfig;
 
     /**
      * The cKeeper Feign Client.
@@ -77,8 +71,8 @@ public class SecomCertificateProviderImpl implements SecomCertificateProvider {
 
         // Get the signature certificate from cKeeper
         final SignatureCertificateDto response = this.cKeeperClient.getSignatureCertificate(
-                appName,
-                appVersion,
+                this.serviceInformationConfig.name(),
+                this.serviceInformationConfig.version(),
                 null,
                 McpEntityType.SERVICE.getValue());
 

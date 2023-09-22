@@ -17,15 +17,14 @@
 package org.grad.eNav.atonService.repos;
 
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Spring Data JPA repository for the S-125 Dataset Content Log entities.
@@ -43,14 +42,14 @@ public interface DatasetContentLogRepo extends JpaRepository<DatasetContentLog, 
     List<DatasetContentLog> findByUuid(UUID uuid);
 
     /**
-     * Retrieves the original dataset content entry (i.e. the one with sequence
+     * Retrieves the initial dataset content entry (i.e. the one with sequence
      * number equal to ZERO (0)) for the provided UUID.
      *
      * @param uuid              The UUID of the dataset
      * @return the original dataset content log entry if it exists
      */
     @Query("select d from DatasetContentLog d where d.uuid = :uuid AND d.sequenceNo = 0")
-    Optional<DatasetContentLog> findOriginalForUuid(UUID uuid);
+    Optional<DatasetContentLog> findInitialForUuid(UUID uuid);
 
     /**
      * Retrieves the latest dataset content entries for a specific UUID. It
@@ -62,6 +61,19 @@ public interface DatasetContentLogRepo extends JpaRepository<DatasetContentLog, 
      * @return the latest dataset content log entry if it exists
      */
     @Query("select d from DatasetContentLog d where d.uuid = :uuid AND d.generatedAt <= :generatedAt ORDER BY d.generatedAt DESC")
-    List<DatasetContentLog> findLatestForUuid(UUID uuid, LocalDateTime generatedAt, Pageable pageable);
+    List<DatasetContentLog> findLatestForUuid(UUID uuid, LocalDateTime generatedAt);
+
+    /**
+     * Retrieves the latest dataset content entries for a specific UUID. It
+     * also accepts a pageable argument to provide only a subset of the
+     * matching entries (e.g. just the last one).
+     *
+     * @param uuid              The UUID of the dataset
+     * @param generatedFrom     The "from" date-time to select the content logs for
+     * @param generatedTo       The "to" date-time to select the content logs for
+     * @return the latest dataset content log entry if it exists
+     */
+    @Query("select d from DatasetContentLog d where d.uuid = :uuid AND d.generatedAt >= :generatedFrom AND d.generatedAt <= :generatedTo ORDER BY d.generatedAt ASC")
+    List<DatasetContentLog> findDuringForUuid(UUID uuid, LocalDateTime generatedFrom, LocalDateTime generatedTo);
 
 }

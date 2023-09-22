@@ -35,3 +35,6 @@ build/
 ### Lucence Index ###
 /lucene/
 /lucene-test/
+
+### Scripts ###
+/scripts/

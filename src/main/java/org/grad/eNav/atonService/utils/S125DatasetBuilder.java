@@ -17,10 +17,16 @@
 package org.grad.eNav.atonService.utils;
 
 import _int.iala_aism.s125.gml._0_0.*;
+import _int.iho.s100.gml.base._5_0.CurveProperty;
+import _int.iho.s100.gml.base._5_0.MultiPointProperty;
+import _int.iho.s100.gml.base._5_0.PointProperty;
+import _int.iho.s100.gml.base._5_0.SurfaceProperty;
 import _net.opengis.gml.profiles.BoundingShapeType;
 import _net.opengis.gml.profiles.EnvelopeType;
 import _net.opengis.gml.profiles.Pos;
+import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.JAXBElement;
+import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
@@ -30,6 +36,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class S125DatasetBuilder {
 
@@ -56,20 +63,29 @@ public class S125DatasetBuilder {
      * @param s125Dataset   The S-125 local dataset object
      * @param atons         The list of S-125 local AtoN object list
      */
-    public Dataset packageToDataset(S125Dataset s125Dataset, List<AidsToNavigation> atons) {
+    public Dataset packageToDataset(@NotNull S125Dataset s125Dataset, List<AidsToNavigation> atons) {
         // Initialise the dataset
         Dataset dataset = this.modelMapper.map(s125Dataset, Dataset.class);
 
         // Always use a UUID as an ID
         if(Objects.isNull(dataset.getId())) {
-            dataset.setId(Optional.ofNullable(s125Dataset).map(S125Dataset::getUuid).orElse(UUID.randomUUID()).toString());
+            dataset.setId(Optional.ofNullable(s125Dataset)
+                    .map(S125Dataset::getUuid)
+                    .orElse(UUID.randomUUID())
+                    .toString());
         }
+
+        // Add the content update sequence to the dataset identification information
+        Optional.of(s125Dataset)
+                .map(S125Dataset::getDatasetContent)
+                .map(DatasetContent::getSequenceNo)
+                .ifPresent(dataset.getDatasetIdentificationInformation()::setUpdateNumber);
 
         //====================================================================//
         //                       BOUNDED BY SECTION                           //
         //====================================================================//
         dataset.setBoundedBy(this.generateBoundingShape(atons));
-        /*dataset.setPointsAndMultiPointsAndCurves(Optional.ofNullable(s125Dataset)
+        dataset.setPointsAndMultiPointsAndCurves(Optional.of(s125Dataset)
                 .map(d -> new GeometryS125Converter().geometryToS125PointCurveSurfaceGeometry(d.getGeometry()))
                 .orElse(Collections.emptyList())
                 .stream()
@@ -86,7 +102,7 @@ public class S125DatasetBuilder {
                     return null;
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList()));*/
+                .collect(Collectors.toList()));
 
         //====================================================================//
         //                      DATASET MEMBERS SECTION                       //

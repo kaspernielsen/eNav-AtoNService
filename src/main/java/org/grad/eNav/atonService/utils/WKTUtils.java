@@ -23,14 +23,14 @@ import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 
 /**
- * The WKTUtil class.
- *
+ * The WKTUtils class.
+ * <p/>
  * A helper utility that manipulates the WKT geometry strings.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Slf4j
-public class WKTUtil {
+public class WKTUtils {
 
     /**
      * Converts a WKT geometry into a JTS geometry
@@ -53,7 +53,7 @@ public class WKTUtil {
      * @throws ParseException if the WKT geometry was invalid
      */
     public static JsonNode convertWKTtoGeoJson(String geometryAsWKT) throws ParseException {
-        return GeometryJSONConverter.convertFromGeometry(WKTUtil.convertWKTtoGeometry(geometryAsWKT));
+        return GeometryJSONConverter.convertFromGeometry(WKTUtils.convertWKTtoGeometry(geometryAsWKT));
     }
 
 }
