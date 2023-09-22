@@ -32,7 +32,7 @@ import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ZipUtilTest {
+class ZipUtilsTest {
 
     // Test Variables
     private ZipOutputStream zipOutputStream;
@@ -64,7 +64,7 @@ class ZipUtilTest {
         final String fileName = "qwerty.txt";
 
         // Perform the zipping operation
-        ZipUtil.zipFile(this.testFile, fileName, zipOutputStream);
+        ZipUtils.zipFile(this.testFile, fileName, zipOutputStream);
         this.zipOutputStream.close();
 
         // Assert that the zip contains one entry with the correct file name
@@ -81,7 +81,7 @@ class ZipUtilTest {
         final String folderName = "asdfgh/";
 
         // Perform the zipping operation
-        ZipUtil.zipFile(this.testFolder, folderName, this.zipOutputStream);
+        ZipUtils.zipFile(this.testFolder, folderName, this.zipOutputStream);
         this.zipOutputStream.close();
 
         // Assert that the zip contains two entries, one for the folder and one for the file inside

@@ -26,13 +26,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * The ZipUtil class.
+ * The ZipUtils class.
  * <p/>
  * A helper utility that allows easier zip generation operations.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class ZipUtil {
+public class ZipUtils {
 
     /**
      * This utility function can be used to easily zip a file or a folder

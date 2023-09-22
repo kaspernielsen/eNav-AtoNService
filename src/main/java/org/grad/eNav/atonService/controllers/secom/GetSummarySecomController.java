@@ -17,6 +17,7 @@
 package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.Min;
@@ -30,7 +31,7 @@ import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.eNav.atonService.utils.GeometryUtils;
-import org.grad.eNav.atonService.utils.WKTUtil;
+import org.grad.eNav.atonService.utils.WKTUtils;
 import org.grad.secom.core.interfaces.GetSummarySecomInterface;
 import org.grad.secom.core.models.GetSummaryResponseObject;
 import org.grad.secom.core.models.PaginationObject;
@@ -104,8 +105,8 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
                                                @QueryParam("productVersion") String productVersion,
                                                @QueryParam("geometry") String geometry,
                                                @QueryParam("unlocode") @Pattern(regexp = "[A-Z]{5}") String unlocode,
-                                               @QueryParam("validFrom") @Parameter(hidden = true) LocalDateTime validFrom,
-                                               @QueryParam("validTo") @Parameter(hidden = true) LocalDateTime validTo,
+                                               @QueryParam("validFrom") @Parameter(example = "20200101T123000", schema = @Schema(implementation = String.class, pattern = "(\\d{8})T(\\d{6})")) LocalDateTime validFrom,
+                                               @QueryParam("validTo") @Parameter(example = "20200101T123000", schema = @Schema(implementation = String.class, pattern = "(\\d{8})T(\\d{6})")) LocalDateTime validTo,
                                                @QueryParam("page") @Min(0) Integer page,
                                                @QueryParam("pageSize") @Min(0) Integer pageSize) {
         log.debug("SECOM request to get page of Dataset Summary");
@@ -130,7 +131,7 @@ public class GetSummarySecomController implements GetSummarySecomInterface {
                 .orElse(SECOM_DataProductType.S125);
         if(Objects.nonNull(geometry)) {
             try {
-                jtsGeometry = WKTUtil.convertWKTtoGeometry(geometry);
+                jtsGeometry = WKTUtils.convertWKTtoGeometry(geometry);
             } catch (ParseException ex) {
                 throw new ValidationException(ex.getMessage());
             }

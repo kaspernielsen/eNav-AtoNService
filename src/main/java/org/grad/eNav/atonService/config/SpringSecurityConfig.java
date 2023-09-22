@@ -179,14 +179,14 @@ class SpringSecurityConfig {
         http.oauth2Login(login -> login
                 .loginPage("/oauth2/authorization/keycloak")
 //                .authorizationEndpoint().baseUri("/oauth2/authorization/keycloak")
-//                .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository());
+//                .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository())
         );
         // Also, logout at the OpenID Connect provider
         http.logout(logout -> logout
                 .deleteCookies("JSESSIONID")
                 .addLogoutHandler(keycloakLogoutHandler(restTemplate))
                 .logoutSuccessUrl("/")
-//                .logoutSuccessHandler(new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository)));
+//                .logoutSuccessHandler(new OidcClientInitiatedLogoutSuccessHandler(clientRegistrationRepository)))
         );
         // Require authentication for all requests
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests

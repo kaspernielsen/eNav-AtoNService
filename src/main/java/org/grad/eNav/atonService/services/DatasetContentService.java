@@ -135,7 +135,7 @@ public class DatasetContentService {
                 .map(S125Dataset::getDatasetContent)
                 .map(DatasetContent::getContent)
                 .map(xml -> {
-                    try { return S125Utils.getS125Members(xml); }
+                    try { return S125Utils.getDatasetMembers(xml); }
                     catch (JAXBException ex) { return null; }
                 })
                 .orElseGet(Collections::emptyList)

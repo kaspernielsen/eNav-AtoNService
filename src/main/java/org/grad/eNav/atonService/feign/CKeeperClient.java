@@ -45,7 +45,7 @@ public interface CKeeperClient {
     @RequestMapping(method = RequestMethod.POST, value = "/api/signature/certificate/{certificateId}", consumes = MediaType.TEXT_PLAIN_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
     Response generateCertificateSignature(@PathVariable BigInteger certificateId,
                                           @RequestParam(value="algorithm", required = false) String algorithm,
-                                          @RequestBody byte[] signaturePayload);
+                                          @RequestBody byte[] payload);
 
     @RequestMapping(method = RequestMethod.POST, value = "/api/signature/entity/verify/{entityName}",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     Response verifyEntitySignature(@PathVariable String entityName,

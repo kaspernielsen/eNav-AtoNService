@@ -28,6 +28,7 @@ import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
+import org.grad.eNav.atonService.services.S100ExchangeSetService;
 import org.grad.eNav.atonService.services.secom.SecomSubscriptionService;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.s125.utils.S125Utils;
@@ -107,6 +108,12 @@ class SecomControllerTest {
      */
     @MockBean
     DatasetService datasetService;
+
+    /**
+     * The SECOM Exchange Set Service.
+     */
+    @MockBean
+    S100ExchangeSetService s100ExchangeSetService;
 
     /**
      * The UN/LOCODE Service mock.
@@ -453,6 +460,80 @@ class SecomControllerTest {
                     } catch (JAXBException ex) {
                         fail(ex);
                     }
+                });
+    }
+
+    /**
+     * Test that the SECOM Get interface is configured properly and also
+     * supports S-100 Exchange Sets if requested.
+     */
+    @Test
+    void testGetExchangeSet() throws CertificateEncodingException, IOException, JAXBException {
+        // Mock the SECOM library certificate and signature providers
+        X509Certificate mockCertificate = mock(X509Certificate.class);
+        doReturn("certificate".getBytes()).when(mockCertificate).getEncoded();
+        PublicKey mockPublicKey = mock(PublicKey.class);
+        doReturn(mockPublicKey).when(mockCertificate).getPublicKey();
+        X509Certificate mockRootCertificate = mock(X509Certificate.class);
+        doReturn("rootCertificate".getBytes()).when(mockRootCertificate).getEncoded();
+        DigitalSignatureCertificate digitalSignatureCertificate = new DigitalSignatureCertificate();
+        digitalSignatureCertificate.setCertificateAlias("secom");
+        digitalSignatureCertificate.setCertificate(mockCertificate);
+        digitalSignatureCertificate.setPublicKey(mockPublicKey);
+        digitalSignatureCertificate.setRootCertificate(mockRootCertificate);
+        doReturn(digitalSignatureCertificate).when(this.secomCertificateProvider).getDigitalSignatureCertificate();
+        doReturn(DigitalSignatureAlgorithmEnum.ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
+        doReturn("signature".getBytes()).when(this.secomSignatureProvider).generateSignature(any(), any(), any());
+
+        // Mock the rest
+        doReturn(new PageImpl<>(Collections.singletonList(this.s125DataSet), Pageable.ofSize(this.queryPageSize), 1))
+                .when(this.datasetService).findAll(any(), any(), any(), any(), any(), any());
+        doReturn("packagedExchangeSet".getBytes()).when(this.s100ExchangeSetService).packageToExchangeSet(any(), any(), any());
+
+        // Set the container type to Exchange Set
+        this.queryContainerType = ContainerTypeEnum.S100_ExchangeSet;
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/secom" + GET_INTERFACE_PATH)
+                        .queryParam("dataReference", this.queryDataReference)
+                        .queryParam("containerType", this.queryContainerType.getValue())
+                        .queryParam("dataProductType", this.queryDataProductType)
+                        .queryParam("productVersion", this.queryProductVersion)
+                        .queryParam("geometry", this.queryGeometry)
+                        .queryParam("unlocode", this.queryUnlocode)
+                        .queryParam("validFrom", DateTimeFormatter.ofPattern(SECOM_DATE_TIME_FORMAT).format(this.queryValidFrom))
+                        .queryParam("validTo", DateTimeFormatter.ofPattern(SECOM_DATE_TIME_FORMAT).format(this.queryValidTo))
+                        .queryParam("page", this.queryPage)
+                        .queryParam("pageSize", this.queryPageSize)
+                        .build())
+                .header(SecomRequestHeaders.MRN_HEADER, "mrn")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(GetResponseObject.class)
+                .consumeWith(response -> {
+                    GetResponseObject getResponseObject = response.getResponseBody();
+                    assertNotNull(getResponseObject);
+                    assertNotNull(getResponseObject.getDataResponseObject());
+                    assertNotNull(getResponseObject.getPagination());
+                    assertEquals(1, getResponseObject.getDataResponseObject().size());
+                    assertNotNull(getResponseObject.getDataResponseObject().get(0));
+                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getData());
+                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getExchangeMetadata());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDataProtection());
+                    assertEquals(Boolean.TRUE, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getCompressionFlag());
+                    assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getProtectionScheme());
+                    assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureReference());
+                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue());
+                    assertEquals(DatatypeConverter.printHexBinary("signature".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
+                    assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
+                    assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
+                    assertEquals(Integer.MAX_VALUE, getResponseObject.getPagination().getMaxItemsPerPage());
+                    assertEquals(1, getResponseObject.getPagination().getTotalItems());
+
+                    // Try to parse the incoming data
+                    String exchangeSetBytes = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().get(0).getData()));
+                    assertEquals("packagedExchangeSet", exchangeSetBytes);
                 });
     }
 

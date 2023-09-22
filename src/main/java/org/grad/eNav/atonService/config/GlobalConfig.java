@@ -20,6 +20,7 @@ import _int.iala_aism.s125.gml._0_0.*;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.text.CaseUtils;
+import org.grad.eNav.atonService.models.domain.s100.ServiceInformationConfig;
 import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
@@ -27,7 +28,7 @@ import org.grad.eNav.atonService.models.enums.ReferenceTypeRole;
 import org.grad.eNav.atonService.utils.GeometryS125Converter;
 import org.grad.eNav.atonService.utils.ReferenceTypeS125Converter;
 import org.grad.eNav.atonService.utils.S125DatasetBuilder;
-import org.grad.eNav.atonService.utils.WKTUtil;
+import org.grad.eNav.atonService.utils.WKTUtils;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.models.SubscriptionRequestObject;
 import org.locationtech.jts.io.ParseException;
@@ -39,6 +40,7 @@ import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
 import org.springframework.boot.actuate.web.exchanges.InMemoryHttpExchangeRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -56,6 +58,7 @@ import java.util.stream.Collectors;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Configuration
+@EnableConfigurationProperties(ServiceInformationConfig.class)
 @Slf4j
 public class GlobalConfig {
 
@@ -233,7 +236,7 @@ public class GlobalConfig {
                     mapper.using(ctx -> Optional.of(ctx)
                             .map(MappingContext::getSource)
                             .map(String.class::cast)
-                            .map(g -> {try {return WKTUtil.convertWKTtoGeometry(g);} catch (ParseException ex) {return null;}})
+                            .map(g -> {try {return WKTUtils.convertWKTtoGeometry(g);} catch (ParseException ex) {return null;}})
                             .orElse(null))
                             .map(SubscriptionRequestObject::getGeometry, SubscriptionRequest::setGeometry);
                 });

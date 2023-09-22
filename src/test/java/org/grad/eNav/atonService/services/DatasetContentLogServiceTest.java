@@ -44,7 +44,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -52,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class DatasetContentLogServiceTest {
@@ -165,6 +166,39 @@ class DatasetContentLogServiceTest {
     }
 
     /**
+     * Test that we can search for all the datasets currently present in the
+     * database and matching the provided criteria, through a paged call.
+     */
+    @Test
+    void testFindAllPaged() {
+        // Mock the repository query
+        doAnswer((inv) -> new PageImpl<>(this.datasetContentLogList, this.pageable, this.datasetContentLogList.size()))
+                .when(this.datasetContentLogRepo)
+                .findAll(any(Pageable.class));
+
+        // Perform the service call
+        Page<DatasetContentLog> result = this.datasetContentLogService.findAll(pageable);
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(5, result.getSize());
+
+        // Test each of the result entries
+        for(int i=0; i < result.getSize(); i++){
+            assertNotNull(result.getContent().get(i));
+            assertEquals(this.datasetContentLogList.get(i).getId(), result.getContent().get(i).getId());
+            assertEquals(this.datasetContentLogList.get(i).getUuid(), result.getContent().get(i).getUuid());
+            assertEquals(this.datasetContentLogList.get(i).getDatasetType(), result.getContent().get(i).getDatasetType());
+            assertEquals(this.datasetContentLogList.get(i).getGeneratedAt(), result.getContent().get(i).getGeneratedAt());
+            assertEquals(this.datasetContentLogList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
+            assertEquals(this.datasetContentLogList.get(i).getOperation(), result.getContent().get(i).getOperation());
+            assertEquals(this.datasetContentLogList.get(i).getSequenceNo(), result.getContent().get(i).getSequenceNo());
+            assertEquals(this.datasetContentLogList.get(i).getContent(), result.getContent().get(i).getContent());
+            assertEquals(this.datasetContentLogList.get(i).getContentLength(), result.getContent().get(i).getContentLength());
+        }
+    }
+
+    /**
      * Test that we can successfully retrieve a specific dataset content log
      * if the log's ID is provided.
      */
@@ -204,16 +238,16 @@ class DatasetContentLogServiceTest {
     }
 
     /**
-     * Test that we can successfully retrieve the original dataset content log
+     * Test that we can successfully retrieve the initial dataset content log
      * (i.e. the one with sequence number equal to ZERO (0)), by providing an
      * existing UUID identifier.
      */
     @Test
-    void testFindOriginal() {
-        doReturn(Optional.of(this.existingDatasetContentLog)).when(this.datasetContentLogRepo).findOriginalForUuid(any());
+    void testFindInitialForUuid() {
+        doReturn(Optional.of(this.existingDatasetContentLog)).when(this.datasetContentLogRepo).findInitialForUuid(any());
 
         // Perform the service call
-        DatasetContentLog result = this.datasetContentLogService.findOriginal(this.s125Dataset.getUuid());
+        DatasetContentLog result = this.datasetContentLogService.findInitialForUuid(this.s125Dataset.getUuid());
 
         // Test the result
         assertNotNull(result);
@@ -229,34 +263,107 @@ class DatasetContentLogServiceTest {
     }
 
     /**
-     * Test that if we request the optional entry of the content log for an
+     * Test that if we request the initial entry of the content log for an
      * invalid UUID, then the service will return null.
      */
     @Test
-    void testFindOriginalNotFound() {
-        doReturn(Optional.empty()).when(this.datasetContentLogRepo).findOriginalForUuid(any());
+    void testFindInitialForUuidNotFound() {
+        doReturn(Optional.empty()).when(this.datasetContentLogRepo).findInitialForUuid(any());
 
         // Perform the service call
-        DatasetContentLog result = this.datasetContentLogService.findOriginal(this.s125Dataset.getUuid());
+        DatasetContentLog result = this.datasetContentLogService.findInitialForUuid(this.s125Dataset.getUuid());
 
         // Test the result
         assertNull(result);
     }
 
     /**
-     * Test that we can correctly retrieve the delta dataset content log
-     * entries, i.e. the entries that have a sequence number larger than
-     * ZERO (0).
+     * Test that we can find the latest content log of a dataset specified by
+     * its dataset UUID, without requiring a reference date-time.
      */
     @Test
-    void testFindDeltas() {
+    void testFindLatestForUuid() {
+        doReturn(Collections.singletonList(this.existingDatasetContentLog)).when(this.datasetContentLogRepo).findLatestForUuid(any(), any());
+
+        // Perform the service call
+        DatasetContentLog result = this.datasetContentLogService.findLatestForUuid(this.s125Dataset.getUuid());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingDatasetContentLog.getId(), result.getId());
+        assertEquals(this.existingDatasetContentLog.getUuid(), result.getUuid());
+        assertEquals(this.existingDatasetContentLog.getDatasetType(), result.getDatasetType());
+        assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
+        assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
+        assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
+        assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
+        assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
+    }
+
+    /**
+     * Test that we can find the latest content log of a dataset specified by
+     * its dataset UUID, as well as a reference date-time.
+     */
+    @Test
+    void testFindLatestForUuidWithReferenceDateTime() {
+        doReturn(Collections.singletonList(this.existingDatasetContentLog)).when(this.datasetContentLogRepo).findLatestForUuid(any(), any());
+
+        // Perform the service call
+        DatasetContentLog result = this.datasetContentLogService.findLatestForUuid(this.s125Dataset.getUuid(), LocalDateTime.now());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingDatasetContentLog.getId(), result.getId());
+        assertEquals(this.existingDatasetContentLog.getUuid(), result.getUuid());
+        assertEquals(this.existingDatasetContentLog.getDatasetType(), result.getDatasetType());
+        assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
+        assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
+        assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
+        assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
+        assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
+    }
+    /**
+     * Test that we can find the latest content log of a dataset specified by
+     * its dataset UUID, even if it does not exist, since it will be
+     * autogenerated on the fly.
+     */
+    @Test
+    void testFindLatestForUuidWithReferenceDateTimeIfNotExists() {
+        doReturn(Collections.emptyList()).when(this.datasetContentLogRepo).findLatestForUuid(any(), any());
+        doReturn(this.s125Dataset).when(this.datasetService).findOne(eq(this.s125Dataset.getUuid()));
+        doReturn(this.existingDatasetContentLog).when(this.datasetContentLogRepo).saveAndFlush(any());
+
+        // Perform the service call
+        DatasetContentLog result = this.datasetContentLogService.findLatestForUuid(this.s125Dataset.getUuid(), LocalDateTime.now());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingDatasetContentLog.getId(), result.getId());
+        assertEquals(this.existingDatasetContentLog.getUuid(), result.getUuid());
+        assertEquals(this.existingDatasetContentLog.getDatasetType(), result.getDatasetType());
+        assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
+        assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
+        assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
+        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
+        assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
+        assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
+    }
+
+    /**
+     * Test that we can correctly retrieve all the dataset content log entries
+     * for a specific and valid UUID.
+     */
+    @Test
+    void testFindForUuid() {
         doReturn(Arrays.asList(
                 this.existingDatasetContentLog,
                 this.deltaDatasetContentLog)
-        ).when(this.datasetContentLogRepo).findByUuid(any());
+        ).when(this.datasetContentLogService).findForUuidDuring(eq(this.s125Dataset.getUuid()), isNull(), isNull());
 
         // Perform the service call
-        List<DatasetContentLog> result = this.datasetContentLogService.findDeltas(this.s125Dataset.getUuid());
+        List<DatasetContentLog> result = this.datasetContentLogService.findForUuid(this.s125Dataset.getUuid());
 
         // Test the result
         assertNotNull(result);
@@ -267,111 +374,48 @@ class DatasetContentLogServiceTest {
     }
 
     /**
-     * Test that we can find the latest content log of a dataset specified by its
-     * dataset UUID, without requiring a reference date-time.
+     * Test that we can correctly retrieve all the dataset content log entries
+     * for a specific and valid UUID, and also filter the results for a specific
+     * date-time duration.
      */
     @Test
-    void testFindLatest() {
-        doReturn(Collections.singletonList(this.existingDatasetContentLog)).when(this.datasetContentLogRepo).findLatestForUuid(any(), any(), any());
+    void testFindForUuidDuring() {
+        doReturn(Arrays.asList(
+                this.existingDatasetContentLog,
+                this.deltaDatasetContentLog)
+        ).when(this.datasetContentLogRepo).findDuringForUuid(eq(this.s125Dataset.getUuid()), notNull(), notNull());
 
         // Perform the service call
-        DatasetContentLog result = this.datasetContentLogService.findLatest(this.s125Dataset.getUuid());
+        List<DatasetContentLog> result = this.datasetContentLogService.findForUuidDuring(this.s125Dataset.getUuid(), LocalDateTime.now(), LocalDateTime.now());
 
         // Test the result
         assertNotNull(result);
-        assertEquals(this.existingDatasetContentLog.getId(), result.getId());
-        assertEquals(this.existingDatasetContentLog.getUuid(), result.getUuid());
-        assertEquals(this.existingDatasetContentLog.getDatasetType(), result.getDatasetType());
-        assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
-        assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
-        assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
-        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
-        assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
-        assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
+        assertFalse(result.isEmpty());
+        assertEquals(2, result.size());
+        assertEquals(BigInteger.ONE, result.get(0).getSequenceNo());
+        assertEquals(BigInteger.TWO, result.get(1).getSequenceNo());
     }
 
     /**
-     * Test that we can find the latest content log of a dataset specified by its
-     * dataset UUID, as well as a reference date-time.
+     * Test that we can correctly retrieve all the dataset content log entries
+     * for a specific and valid UUID, even if there are no provided dates.
      */
     @Test
-    void testFindLatestWithReferenceDateTime() {
-        doReturn(Collections.singletonList(this.existingDatasetContentLog)).when(this.datasetContentLogRepo).findLatestForUuid(any(), any(), any());
+    void testFindForUuidDuringNoDuration() {
+        doReturn(Arrays.asList(
+                this.existingDatasetContentLog,
+                this.deltaDatasetContentLog)
+        ).when(this.datasetContentLogRepo).findDuringForUuid(eq(this.s125Dataset.getUuid()), eq(LocalDateTime.of(LocalDate.EPOCH, LocalTime.MIN)), notNull());
 
         // Perform the service call
-        DatasetContentLog result = this.datasetContentLogService.findLatest(this.s125Dataset.getUuid(), LocalDateTime.now());
+        List<DatasetContentLog> result = this.datasetContentLogService.findForUuidDuring(this.s125Dataset.getUuid(), null, null);
 
         // Test the result
         assertNotNull(result);
-        assertEquals(this.existingDatasetContentLog.getId(), result.getId());
-        assertEquals(this.existingDatasetContentLog.getUuid(), result.getUuid());
-        assertEquals(this.existingDatasetContentLog.getDatasetType(), result.getDatasetType());
-        assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
-        assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
-        assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
-        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
-        assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
-        assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
-    }
-
-    /**
-     * Test that we can find the latest content log of a dataset specified by its
-     * dataset UUID, even if it does not exist, since it will be autogenerated
-     * on the fly.
-     */
-    @Test
-    void testFindLatestIfNotExists() {
-        doReturn(Collections.emptyList()).when(this.datasetContentLogRepo).findLatestForUuid(any(), any(), any());
-        doReturn(this.s125Dataset).when(this.datasetService).findOne(eq(this.s125Dataset.getUuid()));
-        doReturn(this.existingDatasetContentLog).when(this.datasetContentLogRepo).saveAndFlush(any());
-
-        // Perform the service call
-        DatasetContentLog result = this.datasetContentLogService.findLatest(this.s125Dataset.getUuid(), LocalDateTime.now());
-
-        // Test the result
-        assertNotNull(result);
-        assertEquals(this.existingDatasetContentLog.getId(), result.getId());
-        assertEquals(this.existingDatasetContentLog.getUuid(), result.getUuid());
-        assertEquals(this.existingDatasetContentLog.getDatasetType(), result.getDatasetType());
-        assertEquals(this.existingDatasetContentLog.getGeneratedAt(), result.getGeneratedAt());
-        assertEquals(this.existingDatasetContentLog.getGeometry(), result.getGeometry());
-        assertEquals(this.existingDatasetContentLog.getOperation(), result.getOperation());
-        assertEquals(this.existingDatasetContentLog.getSequenceNo(), result.getSequenceNo());
-        assertEquals(this.existingDatasetContentLog.getContent(), result.getContent());
-        assertEquals(this.existingDatasetContentLog.getContentLength(), result.getContentLength());
-    }
-
-    /**
-     * Test that we can search for all the datasets currently present in the
-     * database and matching the provided criteria, through a paged call.
-     */
-    @Test
-    void testFindAllPaged() {
-        // Mock the repository query
-        doAnswer((inv) -> new PageImpl<>(this.datasetContentLogList, this.pageable, this.datasetContentLogList.size()))
-                .when(this.datasetContentLogRepo)
-                .findAll(any(Pageable.class));
-
-        // Perform the service call
-        Page<DatasetContentLog> result = this.datasetContentLogService.findAll(pageable);
-
-        // Test the result
-        assertNotNull(result);
-        assertEquals(5, result.getSize());
-
-        // Test each of the result entries
-        for(int i=0; i < result.getSize(); i++){
-            assertNotNull(result.getContent().get(i));
-            assertEquals(this.datasetContentLogList.get(i).getId(), result.getContent().get(i).getId());
-            assertEquals(this.datasetContentLogList.get(i).getUuid(), result.getContent().get(i).getUuid());
-            assertEquals(this.datasetContentLogList.get(i).getDatasetType(), result.getContent().get(i).getDatasetType());
-            assertEquals(this.datasetContentLogList.get(i).getGeneratedAt(), result.getContent().get(i).getGeneratedAt());
-            assertEquals(this.datasetContentLogList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
-            assertEquals(this.datasetContentLogList.get(i).getOperation(), result.getContent().get(i).getOperation());
-            assertEquals(this.datasetContentLogList.get(i).getSequenceNo(), result.getContent().get(i).getSequenceNo());
-            assertEquals(this.datasetContentLogList.get(i).getContent(), result.getContent().get(i).getContent());
-            assertEquals(this.datasetContentLogList.get(i).getContentLength(), result.getContent().get(i).getContentLength());
-        }
+        assertFalse(result.isEmpty());
+        assertEquals(2, result.size());
+        assertEquals(BigInteger.ONE, result.get(0).getSequenceNo());
+        assertEquals(BigInteger.TWO, result.get(1).getSequenceNo());
     }
 
     /**

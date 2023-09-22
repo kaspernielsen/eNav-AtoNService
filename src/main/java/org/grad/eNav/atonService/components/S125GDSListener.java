@@ -259,7 +259,7 @@ public class S125GDSListener implements FeatureListener {
                 .map(S125Node::getContent)
                 .map(xml -> {
                     try {
-                        return S125Utils.getS125Members(xml);
+                        return S125Utils.getDatasetMembers(xml);
                     } catch (JAXBException ex) {
                         log.error(ex.getMessage());
                         return null;
