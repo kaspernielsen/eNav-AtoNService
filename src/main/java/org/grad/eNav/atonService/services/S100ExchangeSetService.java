@@ -79,10 +79,10 @@ public class S100ExchangeSetService {
     /**
      * The General Destination Prefix
      */
-    @Value("${gla.rad.aton-service.s100.exchangeSet.dir:/tmp}")
+    @Value("${gla.rad.service.s100.exchangeSet.dir:/tmp}")
     String s100ExchangeSetDir;
 
-    @Value("${gla.rad.aton-service.s100.exchangeSet.prefix:S125ExchangeSet}")
+    @Value("${gla.rad.service.s100.exchangeSet.prefix:S125ExchangeSet}")
     String s100ExchangeSetPrefix;
 
     /**
