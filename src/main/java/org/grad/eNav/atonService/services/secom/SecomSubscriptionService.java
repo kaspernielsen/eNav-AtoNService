@@ -46,6 +46,7 @@ import org.grad.secom.core.models.enums.SubscriptionEventEnum;
 import org.grad.secom.springboot3.components.SecomClient;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
+import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep;
 import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
@@ -191,7 +192,7 @@ public class SecomSubscriptionService implements MessageHandler {
             // Get the payload of the incoming message
 
             // A simple debug message
-            log.debug(String.format("SECOM Subscription Service received an S125 dataset %s for UUID number: %s.",
+            log.debug(String.format("SECOM Subscription Service received an S125 dataset %s with UUID: %s.",
                     datasetOperation.getOperation(),
                     s125Dataset.getUuid()));
 
@@ -397,57 +398,57 @@ public class SecomSubscriptionService implements MessageHandler {
         SearchSession searchSession = Search.session( this.entityManager );
         SearchScope<SubscriptionRequest> scope = searchSession.scope( SubscriptionRequest.class );
         return searchSession.search( scope )
-                .where( f -> f.bool(b -> {
-                    b.must(f.matchAll());
-                    Optional.ofNullable(containerType).ifPresent(v -> b.must(
-                            f.bool(b1 -> {
-                                b1.should(f.match()
-                                        .field("containerType")
-                                        .matching(v.name()));
-                                b1.should(f.match()
-                                        .field("containerType")
-                                        .matching("NULL"));
-                            })
-                    ));
-                    Optional.ofNullable(dataProductType).ifPresent(v -> b.must(
-                            f.bool(b1 -> {
-                                b1.should(f.match()
-                                        .field("dataProductType")
-                                        .matching(v.name()));
-                                b1.should(f.match()
-                                        .field("dataProductType")
-                                        .matching("NULL"));
-                            })
-                    ));
-                    Optional.ofNullable(productVersion).ifPresent(v -> b.must(
-                            f.bool(b1 -> {
-                                b1.should(f.match()
-                                        .field("productVersion")
-                                        .matching(v));
-                                b1.should(f.match()
-                                        .field("productVersion")
-                                        .matching("NULL"));
-                            })
-                    ));
-                    Optional.ofNullable(dataReference).ifPresent(v -> b.must(
-                            f.bool(b1 -> {
-                                b1.should(f.match()
-                                        .field("dataReference")
-                                        .matching(v.toString()));
-                                b1.should(f.match()
-                                        .field("dataReference")
-                                        .matching("NULL"));
-                            })
-                    ));
-                    Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
-                            .fromLuceneQuery(createGeoSpatialQuery(g))));
-                    Optional.ofNullable(timestamp).ifPresent(v -> b.must(f.range()
-                            .field("subscriptionPeriodStart")
-                            .atMost(timestamp)));
-                    Optional.ofNullable(timestamp).ifPresent(v -> b.must(f.range()
-                            .field("subscriptionPeriodEnd")
-                            .atLeast(timestamp)));
-                }))
+                .where( f -> {
+                    BooleanPredicateClausesStep<?> step = f.bool()
+                        .must(f.matchAll());
+                    Optional.ofNullable(containerType).ifPresent(v -> {
+                        step.should(f.match()
+                                .field("containerType")
+                                .matching(v.name()));
+                        step.should(f.match()
+                                .field("containerType")
+                                .matching("NULL"));
+                    });
+                    Optional.ofNullable(dataProductType).ifPresent(v -> {
+                        step.should(f.match()
+                                .field("dataProductType")
+                                .matching(v.name()));
+                        step.should(f.match()
+                                .field("dataProductType")
+                                .matching("NULL"));
+                    });
+                    Optional.ofNullable(productVersion).ifPresent(v -> {
+                        step.should(f.match()
+                                .field("productVersion")
+                                .matching(v));
+                        step.should(f.match()
+                                .field("productVersion")
+                                .matching("NULL"));
+                    });
+                    Optional.ofNullable(dataReference).ifPresent(v -> {
+                        step.should(f.match()
+                                .field("dataReference")
+                                .matching(v.toString()));
+                        step.should(f.match()
+                                .field("dataReference")
+                                .matching("NULL"));
+                    });
+                    Optional.ofNullable(geometry).ifPresent(g -> {
+                        step.must(f.extension(LuceneExtension.get())
+                                .fromLuceneQuery(createGeoSpatialQuery(g)));
+                    });
+                    Optional.ofNullable(timestamp).ifPresent(v -> {
+                        step.must(f.range()
+                                .field("subscriptionPeriodStart")
+                                .atMost(timestamp));
+                    });
+                    Optional.ofNullable(timestamp).ifPresent(v -> {
+                        step.must(f.range()
+                                .field("subscriptionPeriodEnd")
+                                .atLeast(timestamp));
+                    });
+                    return step;
+                })
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
                 .toQuery();
     }
