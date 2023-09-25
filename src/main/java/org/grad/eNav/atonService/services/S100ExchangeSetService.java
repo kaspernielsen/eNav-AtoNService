@@ -22,6 +22,7 @@ import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.LocaleUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.grad.eNav.atonService.exceptions.ValidationException;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
@@ -310,7 +311,7 @@ public class S100ExchangeSetService {
                     .setDataCoverages(delta.getGeometry())
                     .setComment("Generated for testing by the GRA Research & Development Directorate")
                     .setMetadataDateStamp(LocalDate.now())
-                    .setReplacedData(dataset.getCancelled())
+                    .setReplacedData(Optional.of(dataset).map(S125Dataset::getCancelled).orElse(false))
                     .setNavigationPurposes(Collections.singletonList(S100NavigationPurpose.OVERVIEW))
                     .setMaintenanceFrequency(MaintenanceFrequency.CONTINUAL)
                     .setDigitalSignatureReference(S100SEDigitalSignatureReference.ECDSA_256_SHA_2_256)
@@ -352,8 +353,8 @@ public class S100ExchangeSetService {
         return String.format("%s%s%s.%s",
                 productCodeNo,
                 this.serviceInformationConfig.ihoProducerCode(),
-                uniqueId,
-                extension);
+                Optional.ofNullable(uniqueId).filter(Strings::isNotEmpty).orElse(""),
+                Optional.ofNullable(extension).filter(Strings::isNotEmpty).orElse("XML"));
     }
 
     /**
