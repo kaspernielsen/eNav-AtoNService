@@ -70,6 +70,7 @@ public class RemoveSubscriptionSecomController implements RemoveSubscriptionSeco
     public RemoveSubscriptionResponseObject removeSubscription(@Valid RemoveSubscriptionObject removeSubscriptionObject) {
         final UUID subscriptionIdentifier = Optional.ofNullable(removeSubscriptionObject)
                 .map(dto -> this.removeSubscriptionDomainMapper.convertTo(dto, RemoveSubscription.class))
+                .map(RemoveSubscription::getSubscriptionIdentifier)
                 .map(this.secomSubscriptionService::delete)
                 .orElseThrow(() -> new SecomNotFoundException(removeSubscriptionObject.getSubscriptionIdentifier().toString()));
 
