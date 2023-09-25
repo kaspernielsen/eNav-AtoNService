@@ -20,6 +20,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.validation.constraints.NotNull;
+import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -30,10 +32,10 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
-import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
+import org.grad.eNav.atonService.services.S100ExchangeSetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
@@ -65,11 +67,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * The SECOM Subscription Service Class.
@@ -107,6 +107,12 @@ public class SecomSubscriptionService implements MessageHandler {
      */
     @Autowired
     SecomSubscriptionNotificationService secomSubscriptionNotificationService;
+
+    /**
+     * The S-100 Exchange Set Service.
+     */
+    @Autowired
+    S100ExchangeSetService s100ExchangeSetService;
 
     /**
      * The SECOM Subscription Repo.
@@ -215,7 +221,7 @@ public class SecomSubscriptionService implements MessageHandler {
                                 null,
                                 null)
                         .stream()
-                        .map(this::constructRemoveSubscription)
+                        .map(SubscriptionRequest::getUuid)
                         .forEach(this::delete);
             }
         }
@@ -273,11 +279,6 @@ public class SecomSubscriptionService implements MessageHandler {
         Optional.ofNullable(mrn)
                 .orElseThrow(() -> new SecomValidationException("Cannot raise new subscription requests without a provided client MRN"));
 
-        // See if a duplicate subscription request already exists
-        this.secomSubscriptionRepo.findByClientMrn(mrn)
-                .map(this::constructRemoveSubscription)
-                .ifPresent(this::delete);
-
         // Populate the subscription dataset and geometry
         subscriptionRequest.setClientMrn(mrn);
         subscriptionRequest.updateSubscriptionGeometry(this.unLoCodeService);
@@ -298,17 +299,16 @@ public class SecomSubscriptionService implements MessageHandler {
      * Removes and existing SECOM subscription from the persisted entries in
      * the database if found and return an output message.
      *
-     * @param removeSubscription the remove subscription
+     * @param uuid the UUID of the subscription to be removed
      * @return the subscription identifier UUID removed
      */
-    public UUID delete(RemoveSubscription removeSubscription) {
-        log.debug("Request to delete SECOM subscription : {}", removeSubscription);
+    public UUID delete(@NotNull UUID uuid) {
+        log.debug("Request to delete SECOM subscription with UUID : {}", uuid);
 
         // Look for the subscription and delete it if found
-        final SubscriptionRequest subscriptionRequest = Optional.of(removeSubscription)
-                .map(RemoveSubscription::getSubscriptionIdentifier)
+        final SubscriptionRequest subscriptionRequest = Optional.of(uuid)
                 .flatMap(this.secomSubscriptionRepo::findById)
-                .orElseThrow(() -> new SecomNotFoundException(removeSubscription.getSubscriptionIdentifier().toString()));
+                .orElseThrow(() -> new SecomNotFoundException(uuid.toString()));
 
         // Delete the subscription
         this.secomSubscriptionRepo.delete(subscriptionRequest);
@@ -319,7 +319,7 @@ public class SecomSubscriptionService implements MessageHandler {
                 SubscriptionEventEnum.SUBSCRIPTION_REMOVED);
 
         // If all OK, then return the subscription UUID
-        return removeSubscription.getSubscriptionIdentifier();
+        return subscriptionRequest.getUuid();
     }
 
     /**
@@ -343,32 +343,39 @@ public class SecomSubscriptionService implements MessageHandler {
         // Identify the subscription client if possible through the client MRN
         final SecomClient secomClient = this.secomService.getClient(subscriptionRequest.getClientMrn());
 
-        // Build the upload object
-        UploadObject uploadObject = new UploadObject();
+        // Build the data envelope
         EnvelopeUploadObject envelopeUploadObject = new EnvelopeUploadObject();
-        envelopeUploadObject.setContainerType(ContainerTypeEnum.S100_DataSet);
         envelopeUploadObject.setDataProductType(SECOM_DataProductType.S125);
-        envelopeUploadObject.setData(s125Dataset.getDatasetContent().getContent().getBytes());
         envelopeUploadObject.setFromSubscription(true);
         envelopeUploadObject.setAckRequest(AckRequestEnum.DELIVERED_ACK_REQUESTED);
         envelopeUploadObject.setTransactionIdentifier(UUID.randomUUID());
+
+        // Package the data according to the container (exchange-set or dataset by default)
+        if(ContainerTypeEnum.S100_ExchangeSet.equals(subscriptionRequest.getContainerType())) {
+            envelopeUploadObject.setContainerType(ContainerTypeEnum.S100_DataSet);
+            try {
+                envelopeUploadObject.setData(this.s100ExchangeSetService.packageToExchangeSet(
+                        Collections.singletonList(s125Dataset),
+                        subscriptionRequest.getUpdatedAt(),
+                        LocalDateTime.now()));
+            } catch (IOException | JAXBException ex) {
+                log.error(ex.getMessage());
+                return;
+            }
+        } else {
+            envelopeUploadObject.setContainerType(ContainerTypeEnum.S100_DataSet);
+            envelopeUploadObject.setData(s125Dataset.getDatasetContent().getContent().getBytes());
+        }
+
+        // Set the envelope to the upload object
+        UploadObject uploadObject = new UploadObject();
         uploadObject.setEnvelope(envelopeUploadObject);
 
         // Now upload the message to the subscription client
         secomClient.upload(uploadObject);
-    }
 
-    /**
-     * A helper function that quickly constructs a RemoveSubscription request
-     * based on the provided subscription Identifier.
-     *
-     * @param subscriptionRequest the subscription request
-     * @return the remove subscription request
-     */
-    protected RemoveSubscription constructRemoveSubscription(SubscriptionRequest subscriptionRequest) {
-        RemoveSubscription removeSubscription = new RemoveSubscription();
-        removeSubscription.setSubscriptionIdentifier(subscriptionRequest.getUuid());
-        return removeSubscription;
+        // Update the subscription timestamp tp keep track of the updates
+        this.updateSubscriptionTimestamp(subscriptionRequest);
     }
 
     /**
@@ -473,6 +480,22 @@ public class SecomSubscriptionService implements MessageHandler {
                 .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false , true)))
                 .map(strategy::makeQuery)
                 .orElse(null);
+    }
+
+    /**
+     * This helper function will update the timestamp of a subscription request
+     * to demonstrate when that subscription was last informed on any changes.
+     * This will be used to only send the dataset delta in case the exchange
+     * set container has been selected.
+     *
+     * @param subscriptionRequest The subscription request to be updated
+     */
+    protected void updateSubscriptionTimestamp(SubscriptionRequest subscriptionRequest) {
+        // Update the timestamp of the subscription
+        subscriptionRequest.setUpdatedAt(LocalDateTime.now());
+
+        // And save it in the database
+        this.secomSubscriptionRepo.save(subscriptionRequest);
     }
 
 }

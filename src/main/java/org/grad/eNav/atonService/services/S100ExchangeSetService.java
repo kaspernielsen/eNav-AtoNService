@@ -85,11 +85,14 @@ import java.util.zip.ZipOutputStream;
 public class S100ExchangeSetService {
 
     /**
-     * The General Destination Prefix
+     * The General Exchange Set Directory Prefix.
      */
     @Value("${gla.rad.service.s100.exchangeSet.dir:/tmp}")
     String s100ExchangeSetDir;
 
+    /**
+     * The General Exchange Set File Prefix.
+     */
     @Value("${gla.rad.service.s100.exchangeSet.prefix:S125ExchangeSet}")
     String s100ExchangeSetPrefix;
 
@@ -417,9 +420,6 @@ public class S100ExchangeSetService {
                                BigInteger certificateId,
                                String certificatePem,
                                S125Dataset dataset,
-                               DatasetContentLog delta)
-    {
-        // It's a record so we can't much anything here
-    }
+                               DatasetContentLog delta) {}
 
 }

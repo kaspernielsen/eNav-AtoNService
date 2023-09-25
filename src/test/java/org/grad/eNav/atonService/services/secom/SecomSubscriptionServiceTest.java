@@ -19,12 +19,13 @@ package org.grad.eNav.atonService.services.secom;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.xml.bind.JAXBException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
-import org.grad.eNav.atonService.models.domain.secom.RemoveSubscription;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
+import org.grad.eNav.atonService.services.S100ExchangeSetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.grad.secom.core.exceptions.SecomNotFoundException;
 import org.grad.secom.core.exceptions.SecomValidationException;
@@ -56,6 +57,7 @@ import org.springframework.messaging.MessageHeaders;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -82,22 +84,28 @@ class SecomSubscriptionServiceTest {
     EntityManagerFactory entityManagerFactory;
 
     /**
-     * The UN/LoCode Service mock.
-     */
-    @Mock
-    UnLoCodeService unLoCodeService;
-
-    /**
      * The SECOM Service mock.
      */
     @Mock
     SecomService secomService;
 
     /**
+     * The UN/LoCode Service mock.
+     */
+    @Mock
+    UnLoCodeService unLoCodeService;
+
+    /**
      * The SECOM Subscription Notification Service mock.
      */
     @Mock
     SecomSubscriptionNotificationService secomSubscriptionNotificationService;
+
+    /**
+     * The S-100 Exchange Set Service mock.
+     */
+    @Mock
+    S100ExchangeSetService s100ExchangeSetService;
 
     /**
      * The SECOM Subscription Repo mock.
@@ -120,7 +128,6 @@ class SecomSubscriptionServiceTest {
     // Test Variables
     private SubscriptionRequest newSubscriptionRequest;
     private SubscriptionRequest existingSubscriptionRequest;
-    private RemoveSubscription removeSubscription;
     private S125Dataset s125Dataset;
     private DatasetContent datasetContent;
 
@@ -149,10 +156,6 @@ class SecomSubscriptionServiceTest {
         this.existingSubscriptionRequest.setSubscriptionPeriodEnd(LocalDateTime.now());
         this.existingSubscriptionRequest.setGeometry(factory.createPoint(new Coordinate(52.98, 1.28)));
         this.existingSubscriptionRequest.setClientMrn("urn:mrn:org:test");
-
-        // Create a remove subscription object
-        this.removeSubscription = new RemoveSubscription();
-        this.removeSubscription.setSubscriptionIdentifier(this.existingSubscriptionRequest.getUuid());
 
         // Create a new AtoN message
         this.s125Dataset = new S125Dataset("S-125 Dataset");
@@ -308,12 +311,12 @@ class SecomSubscriptionServiceTest {
         assertEquals(this.s125Dataset.getUuid(), uuidArgument.getValue());
 
         // Verify that we try to inform the registered clients for the deletion
-        ArgumentCaptor<RemoveSubscription> removeSubscriptionArgument = ArgumentCaptor.forClass(RemoveSubscription.class);
+        ArgumentCaptor<UUID> removeSubscriptionArgument = ArgumentCaptor.forClass(UUID.class);
         verify(this.secomSubscriptionService, times(1)).delete(removeSubscriptionArgument.capture());
 
         // Verify the arguments
         assertNotNull(removeSubscriptionArgument.getValue());
-        assertEquals(this.existingSubscriptionRequest.getUuid(), removeSubscriptionArgument.getValue().getSubscriptionIdentifier());
+        assertEquals(this.existingSubscriptionRequest.getUuid(), removeSubscriptionArgument.getValue());
     }
 
     /**
@@ -379,8 +382,6 @@ class SecomSubscriptionServiceTest {
         }
     }
 
-
-
     /**
      * Test that we can successfully create a new subscription request.
      */
@@ -394,7 +395,6 @@ class SecomSubscriptionServiceTest {
         SubscriptionRequest result = this.secomSubscriptionService.save("urn:mrn:org:test", this.newSubscriptionRequest);
 
         // Make sure everything seems OK
-        verify(this.secomSubscriptionRepo, never()).delete(any());
         assertNotNull(result);
         assertEquals(this.existingSubscriptionRequest.getUuid(), result.getUuid());
         assertEquals(this.existingSubscriptionRequest.getContainerType(), result.getContainerType());
@@ -405,43 +405,6 @@ class SecomSubscriptionServiceTest {
         assertEquals(this.existingSubscriptionRequest.getClientMrn(), result.getClientMrn());
 
         // Make sure the subscription notification was also sent
-        verify(this.secomSubscriptionNotificationService, times(1)).sendNotification(
-                eq(this.existingSubscriptionRequest.getClientMrn()),
-                eq(this.existingSubscriptionRequest.getUuid()),
-                eq(SubscriptionEventEnum.SUBSCRIPTION_CREATED));
-    }
-
-    /**
-     * Test that we can successfully update an existing subscription request,
-     * with the old request being deleted and recreated as required.
-     */
-    @Test
-    void testSaveWithExistingRequest() {
-        // Mock the HTTP servlet request
-        final HttpServletRequest httpServletRequestMock = mock(HttpServletRequest.class);
-        doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findByClientMrn(eq(this.existingSubscriptionRequest.getClientMrn()));
-        doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findById(this.existingSubscriptionRequest.getUuid());
-        doReturn(this.existingSubscriptionRequest).when(this.secomSubscriptionRepo).save(any());
-
-        // Perform the service call
-        SubscriptionRequest result = this.secomSubscriptionService.save(this.existingSubscriptionRequest.getClientMrn(), this.newSubscriptionRequest);
-
-        // Make sure everything seems OK
-        verify(this.secomSubscriptionRepo, times(1)).delete(any());
-        assertNotNull(result);
-        assertEquals(this.existingSubscriptionRequest.getUuid(), result.getUuid());
-        assertEquals(this.existingSubscriptionRequest.getContainerType(), result.getContainerType());
-        assertEquals(this.existingSubscriptionRequest.getDataProductType(), result.getDataProductType());
-        assertEquals(this.existingSubscriptionRequest.getSubscriptionPeriodStart(), result.getSubscriptionPeriodStart());
-        assertEquals(this.existingSubscriptionRequest.getSubscriptionPeriodEnd(), result.getSubscriptionPeriodEnd());
-        assertEquals(this.existingSubscriptionRequest.getGeometry(), result.getGeometry());
-        assertEquals(this.existingSubscriptionRequest.getClientMrn(), result.getClientMrn());
-
-        // Make sure the subscription notifications were also sent
-        verify(this.secomSubscriptionNotificationService, times(1)).sendNotification(
-                eq(this.existingSubscriptionRequest.getClientMrn()),
-                eq(this.existingSubscriptionRequest.getUuid()),
-                eq(SubscriptionEventEnum.SUBSCRIPTION_REMOVED));
         verify(this.secomSubscriptionNotificationService, times(1)).sendNotification(
                 eq(this.existingSubscriptionRequest.getClientMrn()),
                 eq(this.existingSubscriptionRequest.getUuid()),
@@ -466,10 +429,10 @@ class SecomSubscriptionServiceTest {
      */
     @Test
     void testDelete() {
-        doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findById(this.removeSubscription.getSubscriptionIdentifier());
+        doReturn(Optional.of(this.existingSubscriptionRequest)).when(this.secomSubscriptionRepo).findById(this.existingSubscriptionRequest.getUuid());
 
         // Perform the service call
-        UUID result = this.secomSubscriptionService.delete(this.removeSubscription);
+        UUID result = this.secomSubscriptionService.delete(this.existingSubscriptionRequest.getUuid());
 
         // Make sure everything seems OK
         assertNotNull(result);
@@ -493,10 +456,10 @@ class SecomSubscriptionServiceTest {
      */
     @Test
     void testDeleteNotFound() {
-        doReturn(Optional.empty()).when(this.secomSubscriptionRepo).findById(this.removeSubscription.getSubscriptionIdentifier());
+        doReturn(Optional.empty()).when(this.secomSubscriptionRepo).findById(this.existingSubscriptionRequest.getUuid());
 
         // Perform the service call
-        assertThrows(SecomNotFoundException.class, () -> this.secomSubscriptionService.delete(this.removeSubscription));
+        assertThrows(SecomNotFoundException.class, () -> this.secomSubscriptionService.delete(this.existingSubscriptionRequest.getUuid()));
 
         // Make sure no subscription notifications were sent
         verify(this.secomSubscriptionNotificationService, never()).sendNotification(any(), any(), any());
@@ -505,10 +468,14 @@ class SecomSubscriptionServiceTest {
     /**
      * Test that for a given subscription and a list of received Aids to
      * Navigation messages, this function will send the appropriate message to
-     * the SECOM client discovered through the SECOM service.
+     * the SECOM client discovered through the SECOM service, packaged as an
+     * S-100 dataset.
      */
     @Test
-    void testSendToSubscription() throws IOException {
+    void testSendToSubscriptionDataset() {
+        // Specify that this is for an S-100 dataset
+        this.existingSubscriptionRequest.setContainerType(ContainerTypeEnum.S100_DataSet);
+
         // Mock a SECOM client
         final SecomClient secomClient = mock(SecomClient.class);
         doReturn(secomClient).when(this.secomService).getClient(this.existingSubscriptionRequest.getClientMrn());
@@ -528,20 +495,64 @@ class SecomSubscriptionServiceTest {
         assertEquals(Boolean.TRUE, uploadArgument.getValue().getEnvelope().getFromSubscription());
         assertEquals(AckRequestEnum.DELIVERED_ACK_REQUESTED, uploadArgument.getValue().getEnvelope().getAckRequest());
         assertNotNull(uploadArgument.getValue().getEnvelope().getTransactionIdentifier());
+
+        // Verify that we updated the timestamp of the subscription
+        verify(this.secomSubscriptionRepo, times(1)).save(any());
+        assertNotNull(this.existingSubscriptionRequest.getUpdatedAt());
     }
 
     /**
-     * Test that the helper function that generates simple remove subscription
-     * requests, will do so in an orderly fashion and include the provided
-     * subscription identifier UUID.
+     * Test that for a given subscription and a list of received Aids to
+     * Navigation messages, this function will send the appropriate message to
+     * the SECOM client discovered through the SECOM service, packaged as an
+     * S-100 exchange set.
      */
     @Test
-    void testConstructRemoveSubscription() {
-        // Perform the service call
-        RemoveSubscription result = this.secomSubscriptionService.constructRemoveSubscription(this.existingSubscriptionRequest);
+    void testSendToSubscriptionExchangeSet() throws JAXBException, IOException {
+        // Specify that this is for an S-100 exchange set and mock the generation
+        this.existingSubscriptionRequest.setContainerType(ContainerTypeEnum.S100_ExchangeSet);
+        doReturn("exchangeSet".getBytes()).when(this.s100ExchangeSetService).packageToExchangeSet(any(), any(), any());
 
-        // Make sure the remove subscription object seems OK
-        assertNotNull(result);
-        assertEquals(this.existingSubscriptionRequest.getUuid(), result.getSubscriptionIdentifier());
+        // Mock a SECOM client
+        final SecomClient secomClient = mock(SecomClient.class);
+        doReturn(secomClient).when(this.secomService).getClient(this.existingSubscriptionRequest.getClientMrn());
+
+        // Perform the service call
+        this.secomSubscriptionService.sendToSubscription(this.existingSubscriptionRequest, this.s125Dataset);
+
+        // Verify that we upload the constructed SECOM upload object
+        ArgumentCaptor<UploadObject> uploadArgument = ArgumentCaptor.forClass(UploadObject.class);
+        verify(secomClient).upload(uploadArgument.capture());
+
+        // Verify that the constructed object seems valid
+        assertNotNull(uploadArgument.getValue());
+        assertNotNull(uploadArgument.getValue().getEnvelope());
+        assertTrue(uploadArgument.getValue().getEnvelope().getData().length > 0);
+        assertEquals("exchangeSet", new String(uploadArgument.getValue().getEnvelope().getData(), StandardCharsets.UTF_8));
+        assertEquals(SECOM_DataProductType.S125, uploadArgument.getValue().getEnvelope().getDataProductType());
+        assertEquals(Boolean.TRUE, uploadArgument.getValue().getEnvelope().getFromSubscription());
+        assertEquals(AckRequestEnum.DELIVERED_ACK_REQUESTED, uploadArgument.getValue().getEnvelope().getAckRequest());
+        assertNotNull(uploadArgument.getValue().getEnvelope().getTransactionIdentifier());
+
+        // Verify that we updated the timestamp of the subscription
+        verify(this.secomSubscriptionRepo, times(1)).save(any());
+        assertNotNull(this.existingSubscriptionRequest.getUpdatedAt());
+    }
+
+    /**
+     * Test that we can successfully update the update timestamp of a
+     * subscription to keep track of when the last information was sent to it.
+     */
+    @Test
+    void testUpdateSubscriptionTimestamp() {
+        // Make sure we don't have an update time
+        this.existingSubscriptionRequest.setUpdatedAt(null);
+
+        // Perform the service call
+        this.secomSubscriptionService.updateSubscriptionTimestamp(this.existingSubscriptionRequest);
+
+        // And check that the time was updated
+        verify(this.secomSubscriptionRepo, times(1)).save(any());
+        assertNotNull(this.existingSubscriptionRequest.getUpdatedAt());
     }
 }

@@ -19,9 +19,9 @@ package org.grad.eNav.atonService.models.domain.secom;
 import jakarta.persistence.*;
 import org.grad.eNav.atonService.models.UnLoCodeMapEntry;
 import org.grad.eNav.atonService.services.UnLoCodeService;
-import org.grad.eNav.atonService.utils.NullValueIndexerBridge;
 import org.grad.eNav.atonService.utils.GeometryBinder;
 import org.grad.eNav.atonService.utils.GeometryUtils;
+import org.grad.eNav.atonService.utils.NullValueIndexerBridge;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -103,6 +103,8 @@ public class SubscriptionRequest {
 
     @CreatedDate
     private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 
     @NonStandardField(name="subscriptionGeometry", valueBinder = @ValueBinderRef(
             type = GeometryBinder.class,
@@ -290,6 +292,24 @@ public class SubscriptionRequest {
      */
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    /**
+     * Gets updated at.
+     *
+     * @return the updated at
+     */
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    /**
+     * Sets updated at.
+     *
+     * @param updatedAt the updated at
+     */
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     /**
