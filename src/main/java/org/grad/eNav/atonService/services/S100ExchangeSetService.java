@@ -66,9 +66,17 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * The S-100 Exchange Set Service
- *
+ * <p/>
  * A service implementation to assist with the exchange set packaging
- * operations.
+ * operations. These operations are based on the S-100 Universal Hydrographic
+ * Data Model Edition 5.0.0 document. In particular the exchange set operations
+ * are covered in Part 17 of the standards.
+ * <p/>
+ * To assist with the S-100 exchange set generation procedure, the S-100
+ * exchange set XML schema specification was parsed using JAXB and loaded as
+ * a separate library, included in the S-125 data model POM dependency. This
+ * library includes a set of builder functions for generating the exchange sets
+ * which are utilised in this class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
@@ -405,7 +413,7 @@ public class S100ExchangeSetService {
      * @param delta the delta information to be packaged
      * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
      */
-    private record DatasetData(File datasetFile,
+    protected record DatasetData(File datasetFile,
                                BigInteger certificateId,
                                String certificatePem,
                                S125Dataset dataset,
