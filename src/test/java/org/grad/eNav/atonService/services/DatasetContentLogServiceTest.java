@@ -112,7 +112,7 @@ class DatasetContentLogServiceTest {
             datasetContentLog.setSequenceNo(BigInteger.ONE);
             datasetContentLog.setGeneratedAt(LocalDateTime.now());
             datasetContentLog.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
-            datasetContentLog.setOperation(DatasetOperation.UPDATED);
+            datasetContentLog.setOperation(i==0?DatasetOperation.CREATED:DatasetOperation.UPDATED);
             datasetContentLog.setContent("Existing Dataset Content " + i);
             datasetContentLog.setContentLength(BigInteger.valueOf(datasetContentLog.getContent().length()));
             this.datasetContentLogList.add(datasetContentLog);

@@ -157,7 +157,7 @@ class SecomSubscriptionServiceTest {
         this.existingSubscriptionRequest.setGeometry(factory.createPoint(new Coordinate(52.98, 1.28)));
         this.existingSubscriptionRequest.setClientMrn("urn:mrn:org:test");
 
-        // Create a new AtoN message
+        // Create a new S-125 dataset
         this.s125Dataset = new S125Dataset("S-125 Dataset");
         this.s125Dataset.setUuid(UUID.randomUUID());
         this.s125Dataset.setGeometry(factory.createPoint(new Coordinate(52.98, 1.28)));

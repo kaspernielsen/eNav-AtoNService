@@ -32,7 +32,7 @@ import java.util.zip.ZipOutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ZipUtilsTest {
+public class ZipUtilsTest {
 
     // Test Variables
     private ZipOutputStream zipOutputStream;
@@ -69,7 +69,7 @@ class ZipUtilsTest {
 
         // Assert that the zip contains one entry with the correct file name
         ZipEntry entry = new ZipEntry(fileName);
-        assertZipContainsEntry(entry);
+        assertZipContainsEntry(this.byteArrayOutputStream, entry);
     }
 
     /**
@@ -87,8 +87,8 @@ class ZipUtilsTest {
         // Assert that the zip contains two entries, one for the folder and one for the file inside
         ZipEntry folderEntry = new ZipEntry(folderName);
         ZipEntry fileEntry = new ZipEntry(folderName + this.testFile.getName());
-        assertZipContainsEntry(folderEntry);
-        assertZipContainsEntry(fileEntry);
+        assertZipContainsEntry(this.byteArrayOutputStream, folderEntry);
+        assertZipContainsEntry(this.byteArrayOutputStream, fileEntry);
     }
 
     /**
@@ -98,8 +98,8 @@ class ZipUtilsTest {
      * @param entry the entry we are looking for in the zipped data
      * @throws IOException for any exceptions in the IO operations
      */
-    private void assertZipContainsEntry(ZipEntry entry) throws IOException {
-        byte[] zipData = this.byteArrayOutputStream.toByteArray();
+    public static void assertZipContainsEntry(ByteArrayOutputStream byteArrayOutputStream, ZipEntry entry) throws IOException {
+        byte[] zipData = byteArrayOutputStream.toByteArray();
         try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(zipData))) {
             ZipEntry zipEntry;
             boolean entryFound = false;
