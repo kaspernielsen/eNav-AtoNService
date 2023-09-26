@@ -119,8 +119,8 @@ public class DatasetContentService {
      * @return the dataset with the newly generated dataset content object
      */
     @LogDataset
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public CompletableFuture<S125Dataset> generateDatasetContent(@NotNull UUID uuid) {
         log.debug("Request to generate the content for Dataset with UUID: {}", uuid);
 
@@ -205,9 +205,9 @@ public class DatasetContentService {
             final Dataset delta = s125DatasetBuilder.packageToDataset(s125Dataset, deltaAtonList);
 
             // Marshall the contents into XML
-            final String datasetXML = S125Utils.marshalS125(dataset, Boolean.FALSE);
+            final String datasetXML = S125Utils.marshalS125(dataset, Boolean.TRUE);
             // Marshall the delta into XML - but only if it's not cancelled/deleted
-            final String deltaXML = S125Utils.marshalS125(delta, Boolean.FALSE);
+            final String deltaXML = S125Utils.marshalS125(delta, Boolean.TRUE);
 
             // Populate the dataset content/delta
             datasetContent.setDataset(this.datasetService.findOne(s125Dataset.getUuid()));
