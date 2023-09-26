@@ -151,6 +151,7 @@ class S100ExchangeSetServiceTest {
     void testPackageToExchangeSet(@TempDir Path tempDir) throws CertificateException, JAXBException, IOException {
         // First set a temporary directory to generate the zip in
         this.s100ExchangeSetService.s100ExchangeSetDir = tempDir.toString();
+        this.s100ExchangeSetService.s100ExchangeSetPrefix = "atonServiceTest";
 
         // Create the signature certificate to be used for signing
         SignatureCertificateDto signatureCertificate = new SignatureCertificateDto();
@@ -158,6 +159,7 @@ class S100ExchangeSetServiceTest {
         signatureCertificate.setCertificate(this.testCertificatePem);
 
         // Mock the further internal operations
+        doReturn("XX00").when(this.serviceInformationConfig).ihoProducerCode();
         doReturn(signatureCertificate).when(cKeeperClient).getSignatureCertificate(any(), any(), any(), any());
         doReturn(this.datasetContentLogList).when(this.datasetContentLogService).findForUuidDuring(any(), any(), any());
         doReturn("catalogXMLContent").when(this.s100ExchangeSetService).generateExchangeSetContent(any(), any());
