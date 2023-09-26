@@ -181,7 +181,7 @@ public class S100ExchangeSetService {
             for(DatasetContentLog delta : deltas) {
                 final String fileName = this.generateExchangeSetFileName(String.format("%s-%d", dataset.getUuid(), index.getAndIncrement()),"XML");
                 final File datasetFile = FileActionUtils.createFile(esS125FolderDatasetFiles, fileName);
-                Files.write(datasetFile.toPath(), delta.getContent().getBytes());
+                Files.write(datasetFile.toPath(), delta.getDelta().getBytes());
 
                 // Add the dataset file to the map for later
                 datasetDataMap.put(
