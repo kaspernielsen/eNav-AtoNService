@@ -46,7 +46,7 @@ public class SecomTrustStoreProviderImpl implements SecomTrustStoreProvider {
     /**
      * The X.509 Root Certificate Alias.
      */
-    @Value("${gla.rad.aton-service.secom.rootCertificateAlias:rootCertificate}")
+    @Value("${gla.rad.service.secom.rootCertificateAlias:rootCertificate}")
     String rootCertificateAlias;
 
     /**

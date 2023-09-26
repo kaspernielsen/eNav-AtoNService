@@ -18,12 +18,14 @@ package org.grad.eNav.atonService.controllers.secom;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.grad.eNav.atonService.models.domain.s100.ServiceInformationConfig;
 import org.grad.secom.core.interfaces.CapabilitySecomInterface;
 import org.grad.secom.core.models.CapabilityObject;
 import org.grad.secom.core.models.CapabilityResponseObject;
 import org.grad.secom.core.models.ImplementedInterfaces;
 import org.grad.secom.core.models.enums.ContainerTypeEnum;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -47,28 +49,16 @@ import java.util.Optional;
 public class CapabilitySecomController implements CapabilitySecomInterface {
 
     /**
-     * The Application Version Information.
-     */
-    @Value("${gla.rad.aton-service.info.version:0.0.0}")
-    private String appVersion;
-
-    /**
-     * The AtoN Service Data Product Name.
-     */
-    @Value("${gla.rad.aton-service.data-product.name:S-125}")
-    private String dataProductName;
-
-    /**
-     * The AtoN Service Data Product Version.
-     */
-    @Value("${gla.rad.aton-service.data-product.version:0.0.0}")
-    private String dataProductVersion;
-
-    /**
      * The AtoN Service Data Product Location.
      */
-    @Value("${gla.rad.aton-service.data-product.location:/xsd/S125.xsd}")
+    @Value("${gla.rad.service.s100.dataProduct.location:/xsd/S125.xsd}")
     private String dataProductSchemaLocation;
+
+    /**
+     * The Service Information Config.
+     */
+    @Autowired
+    ServiceInformationConfig serviceInformationConfig;
 
     /**
      * GET /api/secom/v1/capability : Returns the service instance capabilities.
@@ -99,7 +89,7 @@ public class CapabilitySecomController implements CapabilitySecomInterface {
         // Start building the capability response
         CapabilityResponseObject capabilityResponseObject = new CapabilityResponseObject();
         capabilityResponseObject.setCapability(Collections.singletonList(capabilityObject));
-        capabilityObject.setServiceVersion(this.appVersion);
+        capabilityObject.setServiceVersion(this.serviceInformationConfig.version());
 
         // And return the Capability Response Object
         return capabilityResponseObject;

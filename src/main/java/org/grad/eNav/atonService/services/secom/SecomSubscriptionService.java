@@ -58,6 +58,7 @@ import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
@@ -83,6 +84,9 @@ import java.util.*;
 @Service
 @Slf4j
 public class SecomSubscriptionService implements MessageHandler {
+
+    @Value("${gla.rad.service.secom.subscriptions.restrictDuplicates:false}")
+    boolean restrictDuplicateSubscriptions;
 
     /**
      * The Entity Manager Factory.
@@ -278,6 +282,16 @@ public class SecomSubscriptionService implements MessageHandler {
         // Sanity Check
         Optional.ofNullable(mrn)
                 .orElseThrow(() -> new SecomValidationException("Cannot raise new subscription requests without a provided client MRN"));
+
+        // Normally we should not mind having multiple subscriptions per client
+        // but specifically for test cases, this could lead to complicated
+        // management on the client side, so we should be able to only allow one
+        // subscription per client automatically.
+        if(this.restrictDuplicateSubscriptions) {
+            this.secomSubscriptionRepo.findByClientMrn(mrn)
+                    .map(SubscriptionRequest::getUuid)
+                    .ifPresent(this::delete);
+        }
 
         // Populate the subscription dataset and geometry
         subscriptionRequest.setClientMrn(mrn);
