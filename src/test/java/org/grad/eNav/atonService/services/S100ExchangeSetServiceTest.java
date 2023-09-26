@@ -130,6 +130,8 @@ class S100ExchangeSetServiceTest {
             datasetContentLog.setOperation(i==0? DatasetOperation.CREATED:DatasetOperation.UPDATED);
             datasetContentLog.setContent("Existing Dataset Content " + i);
             datasetContentLog.setContentLength(BigInteger.valueOf(datasetContentLog.getContent().length()));
+            datasetContentLog.setContent("Existing Dataset Delta " + i);
+            datasetContentLog.setContentLength(BigInteger.valueOf(datasetContentLog.getDelta().length()));
             this.datasetContentLogList.add(datasetContentLog);
         }
 
