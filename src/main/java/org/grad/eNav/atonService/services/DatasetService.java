@@ -223,24 +223,13 @@ public class DatasetService {
         // Cancellation check
         this.cancellationCheck(dataset);
 
-        // If not defined, instantiate the dataset UUID for the new dataset
-        Optional.of(dataset)
-                .map(S125Dataset::getUuid)
-                .ifPresentOrElse(
-                        uuid -> { },
-                        () -> dataset.setUuid(UUID.randomUUID())
-                );
-
-        // If not defined, set a default dataset ISO 19115-1 topic category
         // TODO: Check that this is the right topic to be set
-        Optional.of(dataset.getDatasetIdentificationInformation())
+        // If not defined, set a default dataset ISO 19115-1 topic category
+        dataset.getDatasetIdentificationInformation().setDatasetTopicCategories(Optional.of(dataset)
+                .map(S125Dataset::getDatasetIdentificationInformation)
                 .map(S125DatasetIdentification::getDatasetTopicCategories)
                 .filter(not(List::isEmpty))
-                .ifPresentOrElse(
-                        datasetTopicCategories -> { },
-                        () -> dataset.getDatasetIdentificationInformation()
-                                .setDatasetTopicCategories(Collections.singletonList(MDTopicCategoryCode.OCEANS))
-                );
+                .orElse(Collections.singletonList(MDTopicCategoryCode.OCEANS)));
 
         // Never accept the content from the input, could be wrong. If defined,
         // copy the content from the previous entry or create a new one.
