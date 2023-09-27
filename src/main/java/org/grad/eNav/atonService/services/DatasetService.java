@@ -251,9 +251,6 @@ public class DatasetService {
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset savedDataset = this.datasetRepo.saveAndFlush(dataset);
 
-        // Make sure the dataset was saved
-        this.entityManager.flush();
-
         // Request an Update for the dataset content
         this.requestDatasetContentUpdate(savedDataset.getUuid());
 
