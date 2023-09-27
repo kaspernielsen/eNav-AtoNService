@@ -233,7 +233,9 @@ public class DatasetService {
 
         // Never accept the content from the input, could be wrong. If defined,
         // copy the content from the previous entry or create a new one.
-        dataset.setDatasetContent(this.datasetRepo.findById(dataset.getUuid())
+        dataset.setDatasetContent(Optional.of(dataset)
+                .map(S125Dataset::getUuid)
+                .flatMap(this.datasetRepo::findById)
                 .map(S125Dataset::getDatasetContent)
                 .orElse(null));
 
