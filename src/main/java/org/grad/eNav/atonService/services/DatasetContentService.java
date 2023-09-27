@@ -37,7 +37,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
@@ -120,7 +119,7 @@ public class DatasetContentService {
      */
     @LogDataset
     @Async
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public CompletableFuture<S125Dataset> generateDatasetContent(@NotNull UUID uuid) {
         log.debug("Request to generate the content for Dataset with UUID: {}", uuid);
 
