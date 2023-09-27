@@ -225,11 +225,15 @@ public class DatasetService {
 
         // TODO: Check that this is the right topic to be set
         // If not defined, set a default dataset ISO 19115-1 topic category
-        dataset.getDatasetIdentificationInformation().setDatasetTopicCategories(Optional.of(dataset)
+        Optional.of(dataset)
                 .map(S125Dataset::getDatasetIdentificationInformation)
                 .map(S125DatasetIdentification::getDatasetTopicCategories)
                 .filter(not(List::isEmpty))
-                .orElse(Collections.singletonList(MDTopicCategoryCode.OCEANS)));
+                .ifPresentOrElse(
+                        topicCategories -> { },
+                        () -> dataset.getDatasetIdentificationInformation()
+                                .setDatasetTopicCategories(Collections.singletonList(MDTopicCategoryCode.OCEANS))
+                );
 
         // Never accept the content from the input, could be wrong. If defined,
         // copy the content from the previous entry or create a new one.
