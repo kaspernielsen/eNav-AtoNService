@@ -373,7 +373,7 @@ public class S125DatasetIdentification {
         copy.setDatasetReferenceDate(this.getDatasetReferenceDate());
         copy.setDatasetLanguage(this.getDatasetLanguage());
         copy.setDatasetAbstract(this.getDatasetAbstract());
-        copy.setDatasetTopicCategories(this.getDatasetTopicCategories());
+        copy.setDatasetTopicCategories(new ArrayList<>(this.getDatasetTopicCategories()));
 
         // And return it
         return copy;
