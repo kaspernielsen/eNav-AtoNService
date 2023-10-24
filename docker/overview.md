@@ -165,7 +165,7 @@ environment variable inputs:
     # Disable the cloud config
     spring.cloud.config.enabled=false
     
-    # The Spring Cloud Discovery Config
+    # Clear out the environment variables
     spring.cloud.config.uri=
     spring.cloud.config.username=
     spring.cloud.config.password=
@@ -186,6 +186,7 @@ server like keycloak, logging configuration, the eureka client connection etc.:
     service.variable.kafka.server.zookeeper.port=<zookeeper.server.port>
     service.variable.database.server.name=<database.server.name>
     service.variable.database.server.port=<database.server.port>
+    service.variable.mcp.service-registry.endpoint=<mcp.service-registry.endpoint>
     
     # Eureka Client Configuration
     eureka.client.service-url.defaultZone=http://${service.variable.eureka.server.name}:${service.variable.eureka.server.port}/eureka/
@@ -206,8 +207,8 @@ server like keycloak, logging configuration, the eureka client connection etc.:
     logging.config=classpath:logback-delayed.xml
     logging.file.name=/var/log/${spring.application.name}.log
     logging.file.max-size=10MB
-    logging.pattern.rolling-file-name=${spring.application.name}-%d{yyyy-MM-dd}.%i.log 
-
+    logging.pattern.rolling-file-name=${spring.application.name}-%d{yyyy-MM-dd}.%i.log
+    
     # SECOM Logging Configuration
     logging.secom.requests.file.name=/var/log/${spring.application.name}-secom-requests.log
     logging.secom.requests.rollingpolicy.file-name=${spring.application.name}-secom-requests.%d{yyyy-MM-dd}.%i.log
@@ -305,7 +306,7 @@ server like keycloak, logging configuration, the eureka client connection etc.:
     gla.rad.service.secom.subscriptions.restrictDuplicates=true
     
     # SECOM Configuration Properties
-    secom.service-registry.url=https://rnavlab.gla-rad.org/mcp/msr/api/secom
+    secom.service-registry.url=${service.variable.mcp.service-registry.endpoint}
     secom.security.ssl.keystore=keystore.jks
     secom.security.ssl.keystore-type=jks
     secom.security.ssl.keystore-password=<changeit>

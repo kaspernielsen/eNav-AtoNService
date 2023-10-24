@@ -17,7 +17,7 @@
 # Use the official OpenJDK 17 image as the base image
 FROM openjdk:17-jdk-slim
 
-LABEL org.opencontainers.image.source="https://github.com/gla-rad/eNav-MessageBroker"
+LABEL org.opencontainers.image.source="https://github.com/gla-rad/eNav-AtoNService"
 
 # Set the working directory in the container
 WORKDIR /app
