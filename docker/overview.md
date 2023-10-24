@@ -85,7 +85,7 @@ product specification is not yet published. The “AtoN Service” monitors the 
 information published to the
 [Message Broker](https://hub.docker.com/repository/docker/glarad/enav-msg-broker/)
 and updates its list of defined datasets when applicable. It also supports the
-SECOM subscription operation,
+SECOM subscription operation.
 
 ## How to use this image
 
@@ -184,6 +184,8 @@ server like keycloak, logging configuration, the eureka client connection etc.:
     service.variable.kafka.server.name=<kafka.server.name>
     service.variable.kafka.server.broker.port=<kafka.server.port>
     service.variable.kafka.server.zookeeper.port=<zookeeper.server.port>
+    service.variable.database.server.name=<database.server.name>
+    service.variable.database.server.port=<database.server.port>
     
     # Eureka Client Configuration
     eureka.client.service-url.defaultZone=http://${service.variable.eureka.server.name}:${service.variable.eureka.server.port}/eureka/
@@ -197,9 +199,21 @@ server like keycloak, logging configuration, the eureka client connection etc.:
     spring.boot.admin.client.url=http://${service.variable.server.eureka.name}:${service.variable.server.eureka.port}/admin
     
     # Logging Configuration
+    # If we don't load the configuration for logback manually here, this is not
+    # picked up at the correct time by spring-cloud and the service asks to write
+    # to the /tmp/spring.log file. Another way of dealing with this is to add this
+    # information in the bootstrap.properties file.
+    logging.config=classpath:logback-delayed.xml
     logging.file.name=/var/log/${spring.application.name}.log
-    logging.logback.rollingpolicy.max-file-size=10MB
-    logging.logback.rollingpolicy.file-name-pattern=${spring.application.name}-%d{yyyy-MM-dd}.%i.log
+    logging.file.max-size=10MB
+    logging.pattern.rolling-file-name=${spring.application.name}-%d{yyyy-MM-dd}.%i.log 
+
+    # SECOM Logging Configuration
+    logging.secom.requests.file.name=/var/log/${spring.application.name}-secom-requests.log
+    logging.secom.requests.rollingpolicy.file-name=${spring.application.name}-secom-requests.%d{yyyy-MM-dd}.%i.log
+    logging.secom.requests.rollingpolicy.max-file-size=10MB
+    logging.secom.requests.rollingpolicy.max-history:10
+    logging.secom.requests.rollingpolicy.total-size-cap:100MB
     
     # Management Endpoints
     management.endpoint.logfile.external-file=/var/log/${spring.application.name}.log
@@ -210,10 +224,27 @@ server like keycloak, logging configuration, the eureka client connection etc.:
     
     # Springdoc configuration
     springdoc.swagger-ui.path=/swagger-ui.html
-    springdoc.packagesToScan=org.grad.eNav.msgBroker.controllers
+    springdoc.swagger-ui.display-query-params=true
+    springdoc.swagger-ui.url=/api/secom/openapi.json
+    springdoc.packagesToScan=org.grad.eNav.atonService.controllers
+    
+    # Spring JPA Configuration - PostgreSQL
+    spring.jpa.generate-ddl=true
+    spring.jpa.hibernate.ddl-auto=update
+    spring.jpa.hibernate.show-sql=true
+    spring.jpa.properties.hibernate.search.backend.lucene_version=LATEST
+    spring.jpa.properties.hibernate.search.backend.directory.root=./lucene/
+    spring.jpa.properties.hibernate.search.schema_management.strategy=create-or-update
+    spring.jpa.properties.hibernate.search.backend.analysis.configurer=class:org.grad.eNav.atonService.config.CustomLuceneAnalysisConfigurer
+    
+    # Datasource Configuration
+    spring.datasource.url=jdbc:postgresql:///${service.variable.database.server.name}:${service.variable.database.server.port}/aton_service
+    spring.datasource.username=<changeit>
+    spring.datasource.password=<changeit>
     
     # Keycloak Configuration
-    spring.security.oauth2.client.registration.keycloak.client-id=msg-broker
+    keycloak.enabled=true
+    spring.security.oauth2.client.registration.keycloak.client-id=aton-service
     spring.security.oauth2.client.registration.keycloak.client-secret=<changeit>
     spring.security.oauth2.client.registration.keycloak.client-name=Keycloak
     spring.security.oauth2.client.registration.keycloak.provider=keycloak
@@ -224,27 +255,69 @@ server like keycloak, logging configuration, the eureka client connection etc.:
     spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
     spring.security.oauth2.resourceserver.jwt.issuer-uri=http://${service.variable.keycloak.server.name}:${service.variable.keycloak.server.port}/realms/${service.variable.keycloak.server.realm}
     
+    # Feign
+    feign.client.config.default.connectTimeout=60000
+    feign.client.config.default.readTimeout=20000
+    
+    # Feign Security
+    spring.security.oauth2.client.registration.feign.client-id=aton-service
+    spring.security.oauth2.client.registration.feign.client-secret=<changeit>
+    spring.security.oauth2.client.registration.feign.authorization-grant-type=client_credentials
+    spring.security.oauth2.client.registration.feign.scope=web-origins,openid
+    spring.security.oauth2.client.provider.feign.token-uri=http://${service.variable.keycloak.server.name}:${service.variable.keycloak.server.port}/realms/niord/protocol/openid-connect/token
+    
     # Kafka Configuration
     kafka.brokers=${service.variable.kafka.server.name}:${service.variable.kafka.server.broker.port}
     kafka.zookeepers=${service.variable.kafka.server.name}:${service.variable.kafka.server.zookeeper.port}
     kafka.consumer.count=1
     
     # Web Socket Configuration
-    gla.rad.msg-broker.web-socket.name=msg-broker-websocket
-    gla.rad.msg-broker.web-socket.prefix=topic
+    gla.rad.atonService.web-socket.name=aton-service-websocket
+    gla.rad.atonService.web-socket.prefix=topic
+    
+    # Listening geometry definition
+    gla.rad.aton-service.geometry=POLYGON ((-180 -90, -180 90, 180 90, 180 -90, -180 -90))
     
     # Front-end Information
-    gla.rad.msgBroker.info.name=Message Broker
-    gla.rad.msgBroker.info.version=${spring.application.version}
-    gla.rad.msgBroker.info.operatorName=Research and Development Directorate of GLA of UK and Ireland
-    gla.rad.msgBroker.info.operatorContact=Nikolaos.Vastardis@gla-rad.org
-    gla.rad.msgBroker.info.operatorUrl=https://www.gla-rad.org/
-    gla.rad.msgBroker.info.copyright=\u00A9 2023 GLA Research & Development
+    gla.rad.service.info.name=AtoN Service
+    gla.rad.service.info.version=${spring.application.version}
+    gla.rad.service.info.organization=Research and Development Directorate of GLA of UK and Ireland
+    gla.rad.service.info.electronicMailAddresses[0]=Nikolaos.Vastardis@gla-rad.org
+    gla.rad.service.info.electronicMailAddresses[1]=enquiries@gla-rad.org
+    gla.rad.service.info.url=https://www.gla-rad.org/
+    gla.rad.service.info.phone=+44 01255 245000
+    gla.rad.service.info.fax=+44 01255 245000
+    gla.rad.service.info.city=Harwich
+    gla.rad.service.info.postalCode=CO12 3JW
+    gla.rad.service.info.country=United Kingdom
+    gla.rad.service.info.locales=en_GB,cy_GB,gd_GB,ga_IE
+    gla.rad.service.info.administrativeArea=England, Wales, Scotland & the whole of Ireland
+    gla.rad.service.info.ihoProducerCode=GB01
+    
+    # Service S-100 configuration
+    gla.rad.service.info.copyright=\u00A9 2023 GLA Research & Development
+    gla.rad.service.s100.exchangeSet.dir=/opt/e-nav/s-100/atonService
+    gla.rad.service.s100.exchangeSet.prefix=atonServiceExchangeSet
+    gla.rad.service.s100.dataProduct.location=/xsd/S125.xsd
+    
+    # Service SECOM configuration
+    gla.rad.service.secom.rootCertificateAlias=mcp-root
+    gla.rad.service.secom.subscriptions.restrictDuplicates=true
+    
+    # SECOM Configuration Properties
+    secom.service-registry.url=https://rnavlab.gla-rad.org/mcp/msr/api/secom
+    secom.security.ssl.keystore=keystore.jks
+    secom.security.ssl.keystore-type=jks
+    secom.security.ssl.keystore-password=<changeit>
+    secom.security.ssl.truststore=truststore.jks
+    secom.security.ssl.truststore-type=jks
+    secom.security.ssl.truststore-password=<changeit>
+    secom.security.ssl.insecureSslPolicy=true
 
 ## Operation
 
-The core operation of the “AtoN Service” involves monitoring the “S125” topic of
-the Kafka publish-subscribe broker, for messages generated by the **Message
+The core operation of the **AtoN Service** involves monitoring the “S125” topic
+of the Kafka publish-subscribe broker, for messages generated by the **Message
 Broker**. Upon a message being published there, whether an AtoN creation/update
 or a deletion, the service will react by updating its AtoN database and then
 initiating an S-125 dataset update operation. The whole operation starts when
@@ -298,7 +371,7 @@ to cancel the subscription and inform the corresponding clients.
 
 ## Contributing
 For contributing in this project, please have a look at the Github repository
-[eNav-MessageBroker](https://github.com/gla-rad/eNav-MessageBroker). Pull
+[eNav-AtoNService](https://github.com/gla-rad/eNav-AtoNService). Pull
 requests are welcome. For major changes, please open an issue first to discuss
 what you would like to change.
 
