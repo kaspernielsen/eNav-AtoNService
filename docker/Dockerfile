@@ -4,7 +4,7 @@
 #     docker build -t glarad/enav-aton-service:latest -f Dockerfile ..
 #
 # Run like this:
-#     sudo docker run -t -i --rm -p 8761:8761 -v /path/to/config-directory/on/machine:/conf <image-id>
+#     sudo docker run -t -i --rm -p 8766:8766 -v /path/to/config-directory/on/machine:/conf <image-id>
 #
 # You can also push to docker-hub like:
 #     docker push glarad/enav-aton-service:tagname
@@ -13,18 +13,28 @@
 # When using in non-local environment it is recommended to generate new trust and keystores and place them in
 # the conf-folder and point to them in application.properties.
 #
-FROM eclipse-temurin:17-jre
 
-LABEL org.opencontainers.image.source="https://github.com/gla-rad/eNav-AtoNService"
+# Use the official OpenJDK 17 image as the base image
+FROM openjdk:17-jdk-slim
 
+LABEL org.opencontainers.image.source="https://github.com/gla-rad/eNav-MessageBroker"
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the Spring Boot JAR file into the container
+COPY target/aton-service-0.0.4-SNAPSHOT.jar .
+
+# Create a modules path just in case
 ENV LOADER_PATH /modules
-
-RUN mkdir /conf
-
 RUN mkdir $LOADER_PATH
 
-ADD target/aton-service-0.0.4-SNAPSHOT.jar .
+# Set the environment variable to activate the "prod" profile
+ENV SPRING_PROFILES_ACTIVE=prod
 
-EXPOSE 8761
+# Define a variable for the configuration directory
+ENV CONFIG_DIR=/conf
 
-CMD ["java", "-Dspring.profiles.active=prod", "-jar", "aton-service-0.0.4-SNAPSHOT.jar", "--spring.config.location=/conf/"]
+EXPOSE 8766
+
+CMD ["java", "-jar", "aton-service-0.0.4-SNAPSHOT.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
