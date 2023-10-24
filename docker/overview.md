@@ -72,7 +72,7 @@ SOA and the microservice architecture are not necessarily that different.
 Sometimes, microservices are even considered as an extension or a more
 fine-grained version of SOA.
 
-## The e-Navigation Message Broker Service
+## The e-Navigation AtoN Service
 
 This is the core service supporting the provision of AtoN information. It
 follows the SECOM standard and it is implemented in accordance with the 
