@@ -307,10 +307,10 @@ server like keycloak, logging configuration, the eureka client connection etc.:
     
     # SECOM Configuration Properties
     secom.service-registry.url=${service.variable.mcp.service-registry.endpoint}
-    secom.security.ssl.keystore=keystore.jks
+    secom.security.ssl.keystore=<path.to.keystore>
     secom.security.ssl.keystore-type=jks
     secom.security.ssl.keystore-password=<changeit>
-    secom.security.ssl.truststore=truststore.jks
+    secom.security.ssl.truststore=<path.to.truststore>
     secom.security.ssl.truststore-type=jks
     secom.security.ssl.truststore-password=<changeit>
     secom.security.ssl.insecureSslPolicy=true
