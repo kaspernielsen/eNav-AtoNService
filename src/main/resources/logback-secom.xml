@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
-    <property resource="application.properties" />
 
     <!-- Use Spring default values -->
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
