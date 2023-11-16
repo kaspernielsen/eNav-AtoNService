@@ -314,7 +314,7 @@ public class S100ExchangeSetService {
                     .setReplacedData(Optional.of(dataset).map(S125Dataset::getCancelled).orElse(false))
                     .setNavigationPurposes(Collections.singletonList(S100NavigationPurpose.OVERVIEW))
                     .setMaintenanceFrequency(MaintenanceFrequency.CONTINUAL)
-                    .setDigitalSignatureReference(S100SEDigitalSignatureReference.ECDSA_256_SHA_2_256)
+                    .setDigitalSignatureReference(S100SEDigitalSignatureReference.ECDSA_384_SHA_3)
                     .build(delta.getContent().getBytes()));
         }
 

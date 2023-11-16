@@ -332,7 +332,7 @@ class S100ExchangeSetServiceTest {
             assertNull(metadata.getResourceMaintenance().getMDMaintenanceInformation().getUserDefinedMaintenanceFrequency());
             assertNotNull(metadata.getDigitalSignatureReference());
             assertNotNull(metadata.getDigitalSignatureReference().getValue());
-            assertEquals(S100SEDigitalSignatureReference.ECDSA_256_SHA_2_256.value(), metadata.getDigitalSignatureReference().getValue().value());
+            assertEquals(S100SEDigitalSignatureReference.ECDSA_384_SHA_3.value(), metadata.getDigitalSignatureReference().getValue().value());
             assertNotNull(metadata.getDigitalSignatureValues());
             assertEquals(1, metadata.getDigitalSignatureValues().size());
             assertNotNull(metadata.getDigitalSignatureValues().get(0));
