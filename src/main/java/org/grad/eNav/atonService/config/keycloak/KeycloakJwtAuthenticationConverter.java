@@ -52,8 +52,7 @@ public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, JwtAut
      *
      * @param resourceId the name of the keycloak resource ID
      */
-    public KeycloakJwtAuthenticationConverter(String resourceId)
-    {
+    public KeycloakJwtAuthenticationConverter(String resourceId) {
         this.resourceId = resourceId;
     }
 

@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -115,6 +116,7 @@ public class DatasetController {
      * @param dataSetDto the dataset to create
      * @return the ResponseEntity with status 201 (Created) and with body the new instance, or with status 400 (Bad Request) if the instance has already an ID
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> createDataset(@RequestBody S125DataSetDto dataSetDto) {
         log.debug("REST request to save Dataset : {}", dataSetDto);
@@ -143,6 +145,7 @@ public class DatasetController {
      * @param dataSetDto the dataset to update
      * @return the ResponseEntity with status 200 (OK) and with body the updated instance
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> updateDataset(@PathVariable UUID uuid, @Valid @RequestBody S125DataSetDto dataSetDto) {
         log.debug("REST request to update Dataset : {}", dataSetDto);
@@ -166,6 +169,7 @@ public class DatasetController {
      * @param uuid the UUID of the dataset to be cancelled
      * @return the ResponseEntity with status 200 (OK) and with body the cancelled instance
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping(value = "/{uuid}/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> cancelDataset(@PathVariable UUID uuid) {
         log.debug("REST request to cancel Dataset with UUID: {}", uuid);
@@ -187,6 +191,7 @@ public class DatasetController {
      * @param uuid the UUID of the dataset to be replaced
      * @return the ResponseEntity with status 200 (OK) and with body the replaced instance
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @PutMapping(value = "/{uuid}/replace", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<S125DataSetDto> replaceDataset(@PathVariable UUID uuid) {
         log.debug("REST request to replace Dataset with UUID: {}", uuid);
@@ -208,6 +213,7 @@ public class DatasetController {
      * @param uuid the UUID of the Dataset to be deleted
      * @return the ResponseEntity with status 200 (OK)
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping(value = "/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteDataset(@PathVariable UUID uuid) {
         log.debug("REST request to delete Dataset with UUID : {}", uuid);
