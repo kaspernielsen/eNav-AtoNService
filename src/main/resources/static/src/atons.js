@@ -116,7 +116,8 @@ $(() => {
         onDeleteRow: (datatable, rowdata, success, error) => {
             $.ajax({
                 type: 'DELETE',
-                url: `./api/atons/${this.data()["id"]}`,
+                url: `./api/atons/${rowdata["id"]}`,
+                crossDomain: true,
                 success: success,
                 error: (response, status, more) => {
                     error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
