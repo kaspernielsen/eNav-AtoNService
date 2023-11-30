@@ -66,12 +66,12 @@ $(function () {
             type: "POST",
             url: "./api/datasetcontentlog/dt",
             contentType: "application/json",
-            data: function (d) {
+            data: (d) => {
                 return JSON.stringify(d);
             },
-            error: function (jqXHR, ajaxOptions, thrownError) {
-                console.error(thrownError);
-            }
+            error: (response, status, more) => {
+               error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
+           }
         },
         columns: datasetContentLogColumnDefs,
         order: [[6, 'desc']],
@@ -197,7 +197,9 @@ function loadDatasetContentLog(event, table, button, config, endpoint) {
                 $('#datasetContentLogTextArea').val("No data found");
             }
         },
-        error: () => {console.error("error")}
+        error: (response, status, more) => {
+            showErrorDialog(response.getResponseHeader("X-atonService-error"));
+        }
     });
 }
 

@@ -119,7 +119,9 @@ $(function () {
                     type: 'DELETE',
                     url: `./api/atons/${this.data()["id"]}`,
                     success: success,
-                    error: error
+                    error: (response, status, more) => {
+                        error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
+                    }
                 });
             });
         }

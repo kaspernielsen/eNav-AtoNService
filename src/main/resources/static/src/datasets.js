@@ -150,8 +150,8 @@ $(function () {
                 // And build the JSON object
                 return JSON.stringify(d);
             },
-            error: function (jqXHR, ajaxOptions, thrownError) {
-                console.error(thrownError);
+            error: (response, status, more) => {
+                error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
             }
         },
         columns: datasetColumnDefs,
