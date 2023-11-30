@@ -1,4 +1,3 @@
-
 /**
  * A helper function to handle confirmation UI operations.
  *

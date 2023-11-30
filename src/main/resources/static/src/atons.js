@@ -67,7 +67,7 @@ var nodesColumnDefs = [
 }];
 
 // Run when the document is ready
-$(function () {
+$(() => {
     // And re-initialise it
     atonMessagesTable = $('#atons_table').DataTable({
         processing: true,

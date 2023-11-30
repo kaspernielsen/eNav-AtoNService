@@ -135,7 +135,7 @@ var datasetColumnDefs = [
 }];
 
 // Run when the document is ready
-$(function () {
+$(() => {
     // And re-initialise it
     datasetTable = $('#dataset_table').DataTable({
         processing: true,

@@ -57,7 +57,7 @@ var datasetContentLogColumnDefs = [
 }];
 
 // Run when the document is ready
-$(function () {
+$(() => {
     // And re-initialise it
     datasetContentLogTable = $('#dataset_content_logs_table').DataTable({
         processing: true,
