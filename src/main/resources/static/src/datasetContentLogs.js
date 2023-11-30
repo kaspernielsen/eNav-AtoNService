@@ -134,8 +134,8 @@ $(() => {
     datasetContentLogMap.addLayer(drawnItems);
 
     // Invalidate the map size on show to fix the presentation
-    $('#datasetContentLogGeometryPanel').on('shown.bs.modal', function() {
-        setTimeout(function() {
+    $('#datasetContentLogGeometryPanel').on('shown.bs.modal', () => {
+        setTimeout(() => {
             datasetContentLogMap.invalidateSize();
         }, 10);
     });
@@ -206,7 +206,7 @@ function loadDatasetContentLog(event, table, button, config, endpoint) {
 // Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
 function addNonGroupLayers(sourceLayer, targetGroup) {
     if (sourceLayer instanceof L.LayerGroup) {
-        sourceLayer.eachLayer(function(layer) {
+        sourceLayer.eachLayer((layer) => {
             addNonGroupLayers(layer, targetGroup);
         });
     } else {

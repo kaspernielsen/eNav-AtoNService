@@ -144,7 +144,7 @@ $(() => {
             type: "POST",
             url: `./api/dataset/dt`,
             contentType: "application/json",
-            data: function (d) {
+            data: (d) => {
                 // Add the include cancelled datasets option
                 d.search.includeCancelled = $('#showCancelledDatasetsSwitch').is(":checked") ? true : false;
                 // And build the JSON object
@@ -209,7 +209,7 @@ $(() => {
                 loadDatasetContent(e, dt, node, config);
             }
         }],
-        onAddRow: function (datatable, rowdata, success, error) {
+        onAddRow: (datatable, rowdata, success, error) => {
             $.ajax({
                 url: './api/dataset',
                 type: 'POST',
@@ -240,7 +240,7 @@ $(() => {
                 }
             });
         },
-        onEditRow: function (datatable, rowdata, success, error) {
+        onEditRow: (datatable, rowdata, success, error) => {
             // The geometry is not read correctly so we need to access it in-direclty
             var idx = datasetTable.cell('.selected', 0).index();
             var data = datasetTable.rows(idx.row).data();
@@ -276,7 +276,7 @@ $(() => {
                 }
             });
         },
-        onDeleteRow: function (datatable, rowdata, success, error) {
+        onDeleteRow: (datatable, rowdata, success, error) => {
             $.ajax({
                 type: 'DELETE',
                 url: `./api/dataset/${rowdata["uuid"]}`,
@@ -288,7 +288,7 @@ $(() => {
             });
         },
         // Indicate the dataset rows that have been cancelled
-        createdRow: function(row, data, dataIndex) {
+        createdRow: (row, data, dataIndex) => {
             if(data["cancelled"] == true) {
                 $(row).addClass('cancelled');
             }
@@ -339,7 +339,7 @@ $(() => {
         }
     });
 
-    datasetMap.on('draw:created', function (e) {
+    datasetMap.on('draw:created', (e) => {
         var type = e.layerType;
         var layer = e.layer;
 
@@ -348,8 +348,8 @@ $(() => {
     });
 
     // Invalidate the map size on show to fix the presentation
-    $('#datasetGeometryPanel').on('shown.bs.modal', function() {
-        setTimeout(function() {
+    $('#datasetGeometryPanel').on('shown.bs.modal', () => {
+        setTimeout(() => {
             datasetMap.invalidateSize();
         }, 10);
     });
@@ -511,7 +511,7 @@ function loadDatasetContent(event, table, button, config) {
 // Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
 function addNonGroupLayers(sourceLayer, targetGroup) {
     if (sourceLayer instanceof L.LayerGroup) {
-        sourceLayer.eachLayer(function(layer) {
+        sourceLayer.eachLayer((layer) => {
             addNonGroupLayers(layer, targetGroup);
         });
     } else {

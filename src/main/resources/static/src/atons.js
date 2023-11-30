@@ -76,11 +76,11 @@ $(() => {
             type: "POST",
             url: "./api/atons/dt",
             contentType: "application/json",
-            data: function (d) {
+            data: (d) => {
                 return JSON.stringify(d);
             },
-            error: function (jqXHR, ajaxOptions, thrownError) {
-                console.error(thrownError);
+            error: (response, status, more) => {
+                error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
             }
         },
         columns: nodesColumnDefs,
@@ -113,7 +113,7 @@ $(() => {
                 loadAtonContent(e, dt, node, config);
             }
         }],
-        onDeleteRow: function (datatable, rowdata, success, error) {
+        onDeleteRow: (datatable, rowdata, success, error) => {
             $.ajax({
                 type: 'DELETE',
                 url: `./api/atons/${this.data()["id"]}`,
@@ -149,7 +149,7 @@ $(() => {
     drawnItems = new L.FeatureGroup();
     atonMessagesMap.addLayer(drawnItems);
 
-    atonMessagesMap.on('draw:created', function (e) {
+    atonMessagesMap.on('draw:created', (e) => {
         var type = e.layerType;
         var layer = e.layer;
 
@@ -158,8 +158,8 @@ $(() => {
     });
 
     // Invalidate the map size on show to fix the presentation
-    $('#atonGeometryPanel').on('shown.bs.modal', function() {
-        setTimeout(function() {
+    $('#atonGeometryPanel').on('shown.bs.modal', () => {
+        setTimeout(() => {
             atonMessagesMap.invalidateSize();
         }, 10);
     });
@@ -210,7 +210,7 @@ function loadAtonContent(event, table, button, config) {
 // Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
 function addNonGroupLayers(sourceLayer, targetGroup) {
     if (sourceLayer instanceof L.LayerGroup) {
-        sourceLayer.eachLayer(function(layer) {
+        sourceLayer.eachLayer((layer) => {
             addNonGroupLayers(layer, targetGroup);
         });
     } else {
