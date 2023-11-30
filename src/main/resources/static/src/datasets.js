@@ -276,15 +276,17 @@ $(() => {
                 }
             });
         },
-        onDeleteRow: (datatable, rowdata, success, error) => {
-            $.ajax({
-                type: 'DELETE',
-                url: `./api/dataset/${rowdata["uuid"]}`,
-                crossDomain: true,
-                success: success,
-                error: (response, status, more) => {
-                    error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
-                }
+        onDeleteRow: (datatable, selectedRows, success, error) => {
+            selectedRows.every((rowIdx, tableLoop, rowLoop) => {
+                $.ajax({
+                    type: 'DELETE',
+                    url: `./api/dataset/${this.data()["uuid"]}`,
+                    crossDomain: true,
+                    success: success,
+                    error: (response, status, more) => {
+                        error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
+                    }
+                });
             });
         },
         // Indicate the dataset rows that have been cancelled

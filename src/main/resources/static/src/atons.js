@@ -113,15 +113,17 @@ $(() => {
                 loadAtonContent(e, dt, node, config);
             }
         }],
-        onDeleteRow: (datatable, rowdata, success, error) => {
-            $.ajax({
-                type: 'DELETE',
-                url: `./api/atons/${rowdata["id"]}`,
-                crossDomain: true,
-                success: success,
-                error: (response, status, more) => {
-                    error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
-                }
+        onDeleteRow: (datatable, selectedRows, success, error) => {
+            selectedRows.every((rowIdx, tableLoop, rowLoop) => {
+                $.ajax({
+                    type: 'DELETE',
+                    url: `./api/atons/${this.data()["id"]}`,
+                    crossDomain: true,
+                    success: success,
+                    error: (response, status, more) => {
+                        error({"responseText" : response.getResponseHeader("X-atonService-error")}, status, more);
+                    }
+                });
             });
         }
     });
