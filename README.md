@@ -17,10 +17,8 @@ You don't have to use it if you have another preference. Just make sure you
 update the *.gitignore* file appropriately.
 
 ## Build Setup
-The project is using the latest OpenJDK 17 to build, and only that should be
-used. The main issue is that the current Geomesa library only supports Java 8
-at the moment. We can only upgrade after later JDK versions are also supported
-by Geomesa.
+The project is using the latest OpenJDK 21 to build, although earlier versions
+should also work.
 
 To build the project you will need Maven, which usually comes along-side the
 IDE. Nothing exotic about the goals, just clean and install should do:
