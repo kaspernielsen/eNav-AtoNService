@@ -17,6 +17,7 @@
 package org.grad.eNav.atonService.config;
 
 import feign.RequestInterceptor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -43,6 +44,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Configuration
+@ConditionalOnProperty(value = "keycloak.enabled", matchIfMissing = true)
 public class FeignClientConfig {
 
     /**

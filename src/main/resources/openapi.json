@@ -15,11 +15,9 @@
     },
     "servers": [
       {
-        "url": "https://rnavlab.gla-rad.org/aton-service"
+        "url": "https://rnavlab.gla-rad.org/enav/aton-service"
       },{
-        "url": "https://enav.grad-rrnav.pub/aton-service"
-      }, {
-        "url": "http://cupid:8766"
+        "url": "https://enav.grad-rrnav.pub/enav/aton-service"
       }, {
         "url": "http://localhost:8766"
       }

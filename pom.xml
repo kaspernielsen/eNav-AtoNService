@@ -29,6 +29,7 @@
 		<scala.abi.version>2.13</scala.abi.version>
 		<zookeeper.version>3.5.9</zookeeper.version>
 		<kafka.version>3.4.1</kafka.version>
+		<pact-version>4.6.3</pact-version>
 	</properties>
 
 	<repositories>
@@ -58,6 +59,27 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<executable>true</executable>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>io.github.git-commit-id</groupId>
+				<artifactId>git-commit-id-maven-plugin</artifactId>
+				<version>7.0.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.1</version>
+				<configuration>
+					<systemPropertyVariables>
+						<pactbroker.url>${pact_broker_url}</pactbroker.url>
+						<pactbroker.auth.username>${pact_broker_username}</pactbroker.auth.username>
+						<pactbroker.auth.password>${pact_broker_password}</pactbroker.auth.password>
+						<pact.provider.version>${project.version}</pact.provider.version>
+						<pact.verifier.publishResults>${pact_publish_verification_results}</pact.verifier.publishResults>
+						<pact_do_not_track>true</pact_do_not_track>
+						<useSystemClassLoader>false</useSystemClassLoader>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -145,7 +167,7 @@
 			<version>${hibernate.search-orm.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-spatial</artifactId>
 			<version>${hibernate.search-orm.version}</version>
 		</dependency>
@@ -332,7 +354,6 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -340,8 +361,14 @@
 			<version>3.8.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>au.com.dius.pact.provider</groupId>
+			<artifactId>junit5spring</artifactId>
+			<version>${pact-version}</version>
+			<scope>test</scope>
+		</dependency>
 
-    </dependencies>
+	</dependencies>
 
 	<dependencyManagement>
 		<dependencies>
