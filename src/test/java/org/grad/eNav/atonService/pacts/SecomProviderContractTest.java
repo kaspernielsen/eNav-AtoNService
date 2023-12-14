@@ -24,11 +24,14 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import org.grad.eNav.atonService.TestFeignSecurityConfig;
 import org.grad.eNav.atonService.TestingConfiguration;
+import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,14 +58,28 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @IgnoreNoPactsToVerify
 @PactBroker
 @Provider("SecomS125Service")
-public class SecomProviderContractTest implements CapabilitySecomControllerTestInterface,
-                                                  GetSummarySecomControllerTestInterface {
-
+public class SecomProviderContractTest implements
+        CapabilitySecomControllerTestInterface,
+        GetSummarySecomControllerTestInterface,
+        GetSecomControllerTestInterface
+{
     /**
      * The port the test service is running on.
      */
     @LocalServerPort
     private int serverPort;
+
+    /**
+     * A geometry factory to facilitate testing.
+     */
+    private GeometryFactory geometryFactory;
+
+
+    /**
+     * The CKeeper Client mock.
+     */
+    @MockBean
+    CKeeperClient cKeeperClient;
 
     /**
      * The Dataset Service mock.
@@ -75,6 +92,14 @@ public class SecomProviderContractTest implements CapabilitySecomControllerTestI
      */
     @MockBean
     UnLoCodeService unLoCodeService;
+
+    /**
+     * Common setup for all the tests.
+     */
+    @BeforeEach
+    void setup() {
+        this.geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+    }
 
     /**
      * Establish the appropriate target to run the pact testing on.
@@ -99,10 +124,32 @@ public class SecomProviderContractTest implements CapabilitySecomControllerTestI
         context.verifyInteraction();
     }
 
+
     /**
-     * Implements the method for returning the mocked dataset service.
+     * Implements the method for returning the geometry factory.
      *
-     * @return the mocked dataset service
+     * @return the geometry factory
+     */
+    @Override
+    public GeometryFactory getGeometryFactory() {
+        return this.geometryFactory;
+    }
+
+
+    /**
+     * Provides the mocked cKeeper client to the tests.
+     *
+     * @return the mocked cKeeper client
+     */
+    @Override
+    public CKeeperClient getCKeeperClient() {
+        return this.cKeeperClient;
+    }
+
+    /**
+     * Implements the method for returning the mocked cKeeper client.
+     *
+     * @return the mocked cKeeper client
      */
     @Override
     public DatasetService getDatasetService() {

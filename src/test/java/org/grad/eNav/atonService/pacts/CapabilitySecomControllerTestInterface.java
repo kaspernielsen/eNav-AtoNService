@@ -17,6 +17,7 @@
 package org.grad.eNav.atonService.pacts;
 
 import au.com.dius.pact.provider.junitsupport.State;
+import org.locationtech.jts.geom.GeometryFactory;
 
 import java.util.Map;
 
@@ -29,13 +30,20 @@ import java.util.Map;
 public interface CapabilitySecomControllerTestInterface {
 
     /**
+     * Provides a geometry factory to setup test geometries.
+     *
+     * @return the test geometry factory
+     */
+    GeometryFactory getGeometryFactory();
+
+    /**
      * Test that the SECOM capability interface will return an appropriate
      * response on a successful query.
      *
      * @param data the request data
      */
-    @State("Test SECOM GET capability success") // Method will be run before testing interactions that require "with-data" state
-    default void toStateWithData(Map<?,?> data) {
+    @State("Test SECOM Get Capability success") // Method will be run before testing interactions that require "with-data" state
+    default void testSecomCapabilitySuccess(Map<?,?> data) {
         System.out.println("Service now checking the capability interface with " + data);
     }
 
