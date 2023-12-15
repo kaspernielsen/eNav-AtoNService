@@ -86,7 +86,7 @@ public interface GetSecomControllerTestInterface {
      *
      * @param data the request data
      */
-    @State("Test SECOM Get success") // Method will be run before testing interactions that require "with-data" state
+    @State("Test SECOM Get") // Method will be run before testing interactions that require "with-data" state
     default void testSecomGetSuccess(Map<?,?> data) throws IOException, CertificateException {
         // Read some test data - Certificates should be minified without headers
         final String s125Data = new String(new ClassPathResource("s125-msg.xml").getInputStream().readAllBytes());

@@ -68,7 +68,7 @@ public interface GetSummarySecomControllerTestInterface {
      *
      * @param data the request data
      */
-    @State("Test SECOM Get Summary success") // Method will be run before testing interactions that require "with-data" state
+    @State("Test SECOM Get Summary") // Method will be run before testing interactions that require "with-data" state
     default void testSecomGetSummarySuccess(Map<?,?> data) {
         // Create a new dataset for testing
         S125Dataset s125Dataset = new S125Dataset("TestDataset");
@@ -85,5 +85,29 @@ public interface GetSummarySecomControllerTestInterface {
         // And proceed with the testing
         System.out.println("Service now checking the get summary interface with " + data);
     }
+
+//    /**
+//     * Test that the SECOM Get Summary interface will return an appropriate
+//     * response on a successful query with query parameters.
+//     *
+//     * @param data the request data
+//     */
+//    @State("Test SECOM Get Summary with query parameters success") // Method will be run before testing interactions that require "with-data" state
+//    default void testSecomGetSummaryWithParamsSuccess(Map<?,?> data) {
+//        // Create a new dataset for testing
+//        S125Dataset s125Dataset = new S125Dataset("TestDataset");
+//        s125Dataset.setUuid(UUID.randomUUID());
+//        s125Dataset.setGeometry(this.getGeometryFactory().createPoint(new Coordinate(52.98, 2.28)));
+//        s125Dataset.setLastUpdatedAt(LocalDateTime.now());
+//        s125Dataset.setCancelled(false);
+//
+//        // Mock the service responses
+//        doReturn(new PageImpl<>(Collections.singletonList(s125Dataset), Pageable.ofSize(1), 1))
+//                .when(this.getDatasetService())
+//                .findAll(any(), any(), any(), any(), any(), any());
+//
+//        // And proceed with the testing
+//        System.out.println("Service now checking the get summary interface with " + data);
+//    }
 
 }
