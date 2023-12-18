@@ -82,7 +82,7 @@ public interface GetSecomControllerTestInterface {
 
     /**
      * Test that the SECOM Get interface will return an appropriate response on
-     * a successful query.
+     * various queries.
      *
      * @param data the request data
      */

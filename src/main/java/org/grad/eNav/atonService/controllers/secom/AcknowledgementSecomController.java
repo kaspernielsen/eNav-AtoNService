@@ -75,7 +75,7 @@ public class AcknowledgementSecomController implements AcknowledgementSecomInter
 
         // Create the response
         AcknowledgementResponseObject acknowledgementResponseObject = new AcknowledgementResponseObject();
-        acknowledgementResponseObject.setResponseText(String.format("Successfully received ACK for %s", acknowledgementObject.getEnvelope().getTransactionIdentifier()));
+        acknowledgementResponseObject.setMessage(String.format("Successfully received ACK for %s", acknowledgementObject.getEnvelope().getTransactionIdentifier()));
         acknowledgementResponseObject.setSECOM_ResponseCode(null);
 
         // Return the response

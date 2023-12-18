@@ -27,6 +27,7 @@ import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
+import org.grad.secom.core.components.SecomSignatureFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,7 +62,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 public class SecomProviderContractTest implements
         CapabilitySecomControllerTestInterface,
         GetSummarySecomControllerTestInterface,
-        GetSecomControllerTestInterface
+        GetSecomControllerTestInterface,
+        AcknowledgementSecomControllerTestInterface
 {
     /**
      * The port the test service is running on.
@@ -70,10 +72,18 @@ public class SecomProviderContractTest implements
     private int serverPort;
 
     /**
+     * The SECOM Signature Filter mock.
+     * <p/>
+     * This will basically disable the certificate and signature checking on
+     * SECOM requests and will allow testing pacts, without security on.
+     */
+    @MockBean
+    SecomSignatureFilter secomSignatureFilter;
+
+    /**
      * A geometry factory to facilitate testing.
      */
     private GeometryFactory geometryFactory;
-
 
     /**
      * The CKeeper Client mock.
@@ -124,7 +134,6 @@ public class SecomProviderContractTest implements
         context.verifyInteraction();
     }
 
-
     /**
      * Implements the method for returning the geometry factory.
      *
@@ -134,7 +143,6 @@ public class SecomProviderContractTest implements
     public GeometryFactory getGeometryFactory() {
         return this.geometryFactory;
     }
-
 
     /**
      * Provides the mocked cKeeper client to the tests.

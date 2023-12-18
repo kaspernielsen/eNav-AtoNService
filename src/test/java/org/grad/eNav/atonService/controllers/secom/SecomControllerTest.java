@@ -715,7 +715,7 @@ class SecomControllerTest {
                 .consumeWith(response -> {
                     AcknowledgementResponseObject acknowledgementResponseObject = response.getResponseBody();
                     assertNotNull(acknowledgementResponseObject);
-                    assertEquals(String.format("Successfully received ACK for %s", acknowledgementObject.getEnvelope().getTransactionIdentifier()), acknowledgementResponseObject.getResponseText());
+                    assertEquals(String.format("Successfully received ACK for %s", acknowledgementObject.getEnvelope().getTransactionIdentifier()), acknowledgementResponseObject.getMessage());
                 });
     }
 
