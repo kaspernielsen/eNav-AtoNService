@@ -27,6 +27,7 @@ import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.feign.CKeeperClient;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.grad.eNav.atonService.services.UnLoCodeService;
+import org.grad.eNav.atonService.services.secom.SecomSubscriptionService;
 import org.grad.secom.core.components.SecomSignatureFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestTemplate;
@@ -63,7 +64,9 @@ public class SecomProviderContractTest implements
         CapabilitySecomControllerTestInterface,
         GetSummarySecomControllerTestInterface,
         GetSecomControllerTestInterface,
-        AcknowledgementSecomControllerTestInterface
+        AcknowledgementSecomControllerTestInterface,
+        SubscriptionSecomControllerTestInterface,
+        RemoveSubscriptionSecomControllerTestInterface
 {
     /**
      * The port the test service is running on.
@@ -102,6 +105,12 @@ public class SecomProviderContractTest implements
      */
     @MockBean
     UnLoCodeService unLoCodeService;
+
+    /**
+     * The SecomSubscriptionService Service mock.
+     */
+    @MockBean
+    SecomSubscriptionService secomSubscriptionService;
 
     /**
      * Common setup for all the tests.
@@ -171,7 +180,17 @@ public class SecomProviderContractTest implements
      */
     @Override
     public UnLoCodeService getUnLoCodeService() {
-        return unLoCodeService;
+        return this.unLoCodeService;
+    }
+
+    /**
+     * Implements the method for returning the mocked SecomSubscription service.
+     *
+     * @return the mocked SecomSubscriptionService service
+     */
+    @Override
+    public SecomSubscriptionService getSecomSubscriptionService() {
+        return this.secomSubscriptionService;
     }
 
 }

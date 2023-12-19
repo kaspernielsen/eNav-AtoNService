@@ -33,7 +33,9 @@ import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.models.SubscriptionRequestObject;
 import org.locationtech.jts.io.ParseException;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.ValidationException;
 import org.modelmapper.convention.MatchingStrategies;
+import org.modelmapper.spi.ErrorMessage;
 import org.modelmapper.spi.MappingContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
@@ -236,7 +238,13 @@ public class GlobalConfig {
                     mapper.using(ctx -> Optional.of(ctx)
                             .map(MappingContext::getSource)
                             .map(String.class::cast)
-                            .map(g -> {try {return WKTUtils.convertWKTtoGeometry(g);} catch (ParseException ex) {return null;}})
+                            .map(g -> {
+                                try {
+                                    return WKTUtils.convertWKTtoGeometry(g);
+                                } catch (ParseException ex) {
+                                    throw new ValidationException(Collections.singletonList(new ErrorMessage(ex.getMessage())));
+                                }
+                            })
                             .orElse(null))
                             .map(SubscriptionRequestObject::getGeometry, SubscriptionRequest::setGeometry);
                 });

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.grad.eNav.atonService.exceptions.InvalidRequestException;
 import org.grad.eNav.atonService.utils.GeometryJSONConverter;
+import org.jetbrains.annotations.NotNull;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.converter.Converter;
@@ -52,8 +53,8 @@ public class GeoJsonStringToGeometryConverter implements Converter<String, Geome
      * @return The LocationTech Geometry object
      */
     @Override
-    public Geometry convert(String value) {
-        return Optional.ofNullable(value)
+    public Geometry convert(@NotNull String value) {
+        return Optional.of(value)
                 .map(json -> {
                 try {
                     return this.objectMapper.readTree(json);

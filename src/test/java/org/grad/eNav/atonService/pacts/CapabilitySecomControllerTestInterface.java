@@ -42,7 +42,7 @@ public interface CapabilitySecomControllerTestInterface {
      *
      * @param data the request data
      */
-    @State("Test SECOM Get Capability") // Method will be run before testing interactions that require "with-data" state
+    @State("Test SECOM Capability Interface") // Method will be run before testing interactions that require "with-data" state
     default void testSecomCapabilitySuccess(Map<?,?> data) {
         System.out.println("Service now checking the capability interface with " + data);
     }

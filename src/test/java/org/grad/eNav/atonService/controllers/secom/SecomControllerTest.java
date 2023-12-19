@@ -607,7 +607,7 @@ class SecomControllerTest {
                     SubscriptionResponseObject subscriptionResponseObject = response.getResponseBody();
                     assertNotNull(subscriptionResponseObject);
                     assertEquals(savedSubscriptionRequest.getUuid(), subscriptionResponseObject.getSubscriptionIdentifier());
-                    assertEquals("Subscription successfully created", subscriptionResponseObject.getResponseText());
+                    assertEquals("Subscription successfully created", subscriptionResponseObject.getMessage());
                 });
     }
 
@@ -662,7 +662,7 @@ class SecomControllerTest {
                 .consumeWith(response -> {
                     RemoveSubscriptionResponseObject removeSubscriptionResponseObject = response.getResponseBody();
                     assertNotNull(removeSubscriptionResponseObject);
-                    assertEquals(String.format("Subscription %s removed", removeSubscriptionObject.getSubscriptionIdentifier()), removeSubscriptionResponseObject.getResponseText());
+                    assertEquals(String.format("Subscription %s removed", removeSubscriptionObject.getSubscriptionIdentifier()), removeSubscriptionResponseObject.getMessage());
                 });
     }
 

@@ -76,7 +76,7 @@ public class RemoveSubscriptionSecomController implements RemoveSubscriptionSeco
 
         // Create the response
         final RemoveSubscriptionResponseObject removeSubscriptionResponse = new RemoveSubscriptionResponseObject();
-        removeSubscriptionResponse.setResponseText(String.format("Subscription %s removed", subscriptionIdentifier));
+        removeSubscriptionResponse.setMessage(String.format("Subscription %s removed", subscriptionIdentifier));
 
         // Return the response
         return removeSubscriptionResponse;
