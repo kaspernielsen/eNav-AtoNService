@@ -43,13 +43,17 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
- * The SecomProviderContractTest Class.
+ * The S125SecomProviderContractTest Class.
  * <p/>
  * The main class for performing the Pact contract testing. This class
  * initiates the Springboot testing environment (without security) and
  * also instantiates the pact verification context. Afterwards, the SECOM
  * controller testing interface classes will run the individual tests
  * using the states available.
+ * <p/>
+ * These tests will check against the latest consumer pact contract published
+ * for the SecomS125Service, i.e. SECOM-compliant services that specialise in
+ * S-125 data.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
@@ -60,7 +64,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @IgnoreNoPactsToVerify
 @PactBroker
 @Provider("SecomS125Service")
-public class SecomProviderContractTest implements
+public class S125SecomProviderContractTest implements
         CapabilitySecomControllerTestInterface,
         GetSummarySecomControllerTestInterface,
         GetSecomControllerTestInterface,
