@@ -11,8 +11,8 @@ on:
 
 env:
   pact_broker_url: ${{ vars.PACT_BROKER_URL }}
-  pact_broker_username: ${{ vars.PACT_BROKER_USERNAME }}
-  pact_broker_password: ${{ vars.PACT_BROKER_PASSWORD }}
+  pact_broker_username: ${{ secrets.PACT_BROKER_USERNAME }}
+  pact_broker_password: ${{ secrets.PACT_BROKER_PASSWORD }}
   pact_publish_verification_results: ${{ vars.PACT_PUBLISH_VERIFICATION_RESULTS }}
 
 jobs:
