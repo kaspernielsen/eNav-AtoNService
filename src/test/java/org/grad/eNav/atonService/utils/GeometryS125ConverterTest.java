@@ -16,14 +16,15 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _int.iala_aism.s125.gml._0_0.Dataset;
-import _int.iala_aism.s125.gml._0_0.MemberType;
-import _int.iala_aism.s125.gml._0_0.VirtualAISAidToNavigationType;
+
 import _int.iho.s100.gml.base._5_0.CurveProperty;
 import _int.iho.s100.gml.base._5_0.PointProperty;
 import _int.iho.s100.gml.base._5_0.S100SpatialAttributeType;
 import _int.iho.s100.gml.base._5_0.SurfaceProperty;
-import _net.opengis.gml.profiles.*;
+import _int.iho.s100.gml.profiles._5_0.*;
+import _int.iho.s100.gml.profiles._5_0.impl.PosListImpl;
+import _int.iho.s125.gml.cs0._1.Dataset;
+import _int.iho.s125.gml.cs0._1.impl.VirtualAISAidToNavigationImpl;
 import jakarta.xml.bind.JAXBException;
 import org.apache.commons.io.IOUtils;
 import org.grad.eNav.atonService.models.domain.s125.VirtualAISAidToNavigation;
@@ -68,15 +69,20 @@ class GeometryS125ConverterTest {
     void testConvertFromGeometry() throws IOException, JAXBException {
         // Read a valid S125 content to generate the S125Node message for.
         InputStream in = new ClassPathResource("s125-msg.xml").getInputStream();
-        String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+        String xml = IOUtils.toString(in, StandardCharsets.UTF_8);
 
         // Unmarshall it to a G1128 service instance object
         Dataset dataset = S125Utils.unmarshallS125(xml);
 
         // Assert the S-125 AidsToNavigation feature information is populated
-        assertNotNull(dataset.getImembersAndMembers());
-        assertEquals(3, dataset.getImembersAndMembers().size());
-        VirtualAISAidToNavigationType resultMember = (VirtualAISAidToNavigationType) ((MemberType) dataset.getImembersAndMembers().get(0)).getAbstractFeature().getValue();
+        assertNotNull(dataset.getMembers());
+        assertEquals(4, S125Utils.getDatasetMembers(dataset).size());
+        VirtualAISAidToNavigationImpl resultMember = S125Utils.getDatasetMembers(dataset)
+                .stream()
+                .filter(VirtualAISAidToNavigationImpl.class::isInstance)
+                .map(VirtualAISAidToNavigationImpl.class::cast)
+                .findAny()
+                .orElse(null);
 
         // Convert to JTS geometry
         Geometry result = this.geometryS125Converter.convertToGeometry(resultMember);
@@ -109,10 +115,10 @@ class GeometryS125ConverterTest {
         // Make sure the result looks OK
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertTrue(result.get(0) instanceof VirtualAISAidToNavigationType.Geometry);
+        assertTrue(result.getFirst() instanceof VirtualAISAidToNavigationImpl.Geometry);
 
         // Make sure the point property looks OK
-        PointProperty pointProperty = ((VirtualAISAidToNavigationType.Geometry) result.get(0)).getPointProperty();
+        PointProperty pointProperty = ((VirtualAISAidToNavigationImpl.Geometry) result.getFirst()).getPointProperty();
         assertNotNull(pointProperty.getPoint());
         assertNotNull(pointProperty.getPoint().getPos());
         assertNotNull(pointProperty.getPoint().getPos().getValue());
@@ -148,8 +154,8 @@ class GeometryS125ConverterTest {
         assertEquals(1, result.size());
 
         // Make sure the surface property looks OK
-        assertNotNull(result.get(0));
-        assertTrue(result.get(0) instanceof SurfaceProperty);
+        assertNotNull(result.getFirst());
+        assertTrue(result.getFirst() instanceof SurfaceProperty);
 
         // Make sure the surface property looks OK
         SurfaceProperty surfaceProperty = (SurfaceProperty) result.get(0);
@@ -157,15 +163,17 @@ class GeometryS125ConverterTest {
         assertNotNull(surfaceProperty.getSurface().getPatches());
         assertNotNull(surfaceProperty.getSurface().getPatches().getAbstractSurfacePatches());
         assertEquals(1, surfaceProperty.getSurface().getPatches().getAbstractSurfacePatches().size());
-        assertEquals(PolygonPatchType.class, surfaceProperty.getSurface().getPatches().getAbstractSurfacePatches().get(0).getValue().getClass());
+        assertTrue(surfaceProperty.getSurface().getPatches().getAbstractSurfacePatches().getFirst().getValue() instanceof PolygonPatchType);
 
-        // Make sure the polygon patches look OK
-        PolygonPatchType polygonPatchType = (PolygonPatchType)surfaceProperty.getSurface().getPatches().getAbstractSurfacePatches().get(0).getValue();
+        // Make sure the polygon patches looks OK
+        PolygonPatchType polygonPatchType = (PolygonPatchType)surfaceProperty.getSurface().getPatches().getAbstractSurfacePatches().getFirst().getValue();
         assertNotNull(polygonPatchType);
         assertNotNull(polygonPatchType.getExterior());
         assertNotNull(polygonPatchType.getExterior().getAbstractRing());
         assertNotNull(polygonPatchType.getExterior().getAbstractRing().getValue());
-        assertEquals(LinearRingType.class, polygonPatchType.getExterior().getAbstractRing().getValue().getClass());
+        assertTrue(polygonPatchType.getExterior().getAbstractRing().getValue() instanceof LinearRingType);
+
+        // Make sure the Linear Right look OK
         assertNotNull(((LinearRingType)polygonPatchType.getExterior().getAbstractRing().getValue()).getPosList());
         assertNotNull(((LinearRingType)polygonPatchType.getExterior().getAbstractRing().getValue()).getPosList().getValue());
         assertEquals(10, ((LinearRingType)polygonPatchType.getExterior().getAbstractRing().getValue()).getPosList().getValue().length);
@@ -194,19 +202,19 @@ class GeometryS125ConverterTest {
         assertEquals(1, result.size());
 
         // Make sure the result looks OK
-        assertNotNull(result.get(0));
-        assertTrue(result.get(0) instanceof CurveProperty);
+        assertNotNull(result.getFirst());
+        assertTrue(result.getFirst() instanceof CurveProperty);
 
         // Make sure the curve property looks OK
-        CurveProperty curveProperty = (CurveProperty) result.get(0);
+        CurveProperty curveProperty = (CurveProperty) result.getFirst();
         assertNotNull(curveProperty.getCurve().getSegments());
         assertNotNull(curveProperty.getCurve().getSegments().getAbstractCurveSegments());
         assertEquals(1, curveProperty.getCurve().getSegments().getAbstractCurveSegments().size());
         assertNotNull(curveProperty.getCurve().getSegments().getAbstractCurveSegments().get(0).getValue());
-        assertEquals(LineStringSegmentType.class, curveProperty.getCurve().getSegments().getAbstractCurveSegments().get(0).getValue().getClass());
+        assertTrue(curveProperty.getCurve().getSegments().getAbstractCurveSegments().getFirst().getValue() instanceof  LineStringSegmentType);
 
-        // Make sure the curve segments look OK
-        LineStringSegmentType lineStringSegmentType = (LineStringSegmentType) curveProperty.getCurve().getSegments().getAbstractCurveSegments().get(0).getValue();
+        // Make sure the curve segments looks OK
+        LineStringSegmentType lineStringSegmentType = (LineStringSegmentType) curveProperty.getCurve().getSegments().getAbstractCurveSegments().getFirst().getValue();
         assertNotNull(lineStringSegmentType.getPosList());
         assertNotNull(lineStringSegmentType.getPosList().getValue());
         assertEquals(4,lineStringSegmentType.getPosList().getValue().length);
@@ -235,11 +243,11 @@ class GeometryS125ConverterTest {
         assertEquals(1, result.size());
 
         // Make sure the result looks OK
-        assertNotNull(result.get(0));
-        assertTrue(result.get(0) instanceof PointProperty);
+        assertNotNull(result.getFirst());
+        assertTrue(result.getFirst() instanceof PointProperty);
 
         // Make sure the point property looks OK
-        PointProperty pointProperty = (PointProperty) result.get(0);
+        PointProperty pointProperty = (PointProperty) result.getFirst();
         assertNotNull(pointProperty.getPoint());
         assertNotNull(pointProperty.getPoint().getPos());
         assertNotNull(pointProperty.getPoint().getPos().getValue());
@@ -266,7 +274,7 @@ class GeometryS125ConverterTest {
         assertNotNull(result.getExterior());
         assertNotNull(result.getExterior().getAbstractRing());
         assertNotNull(result.getExterior().getAbstractRing().getValue());
-        assertEquals(LinearRingType.class, result.getExterior().getAbstractRing().getValue().getClass());
+        assertTrue(result.getExterior().getAbstractRing().getValue() instanceof LinearRingType);
         assertNotNull(((LinearRingType)result.getExterior().getAbstractRing().getValue()).getPosList());
         assertNotNull(((LinearRingType)result.getExterior().getAbstractRing().getValue()).getPosList().getValue());
         assertEquals(coords.size(), ((LinearRingType)result.getExterior().getAbstractRing().getValue()).getPosList().getValue().length);
@@ -367,9 +375,9 @@ class GeometryS125ConverterTest {
      * array of coordinates.
      */
     @Test
-    void testCoordinatesToPosList() {
+    void testPosListToCoordinate() {
         // Initialise the position list
-        PosList posList = new PosList();
+        PosList posList = new PosListImpl();
         posList.setValue(Stream.of(1.0, 2.0, 3.0, 4.0).toArray(Double[]::new));
 
         // Translate to coordinates

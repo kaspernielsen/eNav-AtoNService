@@ -16,8 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.StatusType;
-
+import _int.iho.s125.gml.cs0._1.StatusType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -31,7 +30,7 @@ import java.math.BigDecimal;
  * {@link AISAidToNavigation} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.SyntheticAISAidToNavigationType
+ * @see _int.iho.s125.gml.cs0._1.SyntheticAISAidToNavigation
  */
 @Entity
 public class SyntheticAISAidToNavigation extends AISAidToNavigation {

@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.CategoryOfAggregationType;
+import _int.iho.s125.gml.cs0._1.CategoryOfAggregationType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -28,12 +28,12 @@ import java.util.*;
 /**
  * The S-125 Aggregation Entity Class
  * <p/>
- * This class implements the {@link _int.iala_aism.s125.gml._0_0.AggregationType}
+ * This class implements the {@link _int.iho.s125.gml.cs0._1.Aggregation}
  * objects of the S-125 data product. These can be used to group multiple
  * Aids to Navigation into a single aggregation with a give type.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see  _int.iala_aism.s125.gml._0_0.AggregationType
+ * @see  _int.iho.s125.gml.cs0._1.Aggregation
  */
 @Entity
 public class Aggregation implements Serializable {

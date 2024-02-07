@@ -16,11 +16,10 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.CategoryOfPileType;
-import _int.iala_aism.s125.gml._0_0.ColourType;
-import _int.iala_aism.s125.gml._0_0.ColourPatternType;
-import _int.iala_aism.s125.gml._0_0.VisualProminenceType;
-
+import _int.iho.s125.gml.cs0._1.CategoryOfPileType;
+import _int.iho.s125.gml.cs0._1.ColourPatternType;
+import _int.iho.s125.gml.cs0._1.ColourType;
+import _int.iho.s125.gml.cs0._1.VisualProminenceType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -36,7 +35,7 @@ import java.util.List;
  * class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.PileType
+ * @see _int.iho.s125.gml.cs0._1.Pile
  */
 @Entity
 public class Pile extends StructureObject {

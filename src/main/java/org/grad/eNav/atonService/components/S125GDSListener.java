@@ -15,10 +15,14 @@
  */
 
 package org.grad.eNav.atonService.components;
-
-import _int.iala_aism.s125.gml._0_0.*;
-import _net.opengis.gml.profiles.AbstractFeatureType;
-import _net.opengis.gml.profiles.ReferenceType;
+import _int.iho.s100.gml.profiles._5_0.AbstractGMLType;
+import _int.iho.s100.gml.profiles._5_0.AggregationType;
+import _int.iho.s100.gml.profiles._5_0.ReferenceType;
+import _int.iho.s125.gml.cs0._1.AidsToNavigationType;
+import _int.iho.s125.gml.cs0._1.EquipmentType;
+import _int.iho.s125.gml.cs0._1.StructureObjectType;
+import _int.iho.s125.gml.cs0._1.impl.AggregationImpl;
+import _int.iho.s125.gml.cs0._1.impl.AssociationImpl;
 import jakarta.annotation.PreDestroy;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
@@ -255,7 +259,7 @@ public class S125GDSListener implements FeatureListener {
      */
     protected Stream<? extends AidsToNavigation> parseS125Dataset(S125Node s125Node) {
         // Get the S-125 node content included members
-        final List<? extends AbstractFeatureType> members = Optional.of(s125Node)
+        final List<? extends AbstractGMLType> members = Optional.of(s125Node)
                 .map(S125Node::getContent)
                 .map(xml -> {
                     try {
@@ -300,10 +304,10 @@ public class S125GDSListener implements FeatureListener {
 
         // Now start building the links to the remaining objects (e.g. aggregations/associations)
         final Map<String, Aggregation> aggregationsMap = members.stream()
-                .filter(AggregationType.class::isInstance)
-                .map(AggregationType.class::cast)
+                .filter(AggregationImpl.class::isInstance)
+                .map(AggregationImpl.class::cast)
                 .collect(Collectors.toMap(
-                        AggregationType::getId,
+                        AggregationImpl::getId,
                         aggr -> {
                             Aggregation result = this.modelMapper.map(aggr, Aggregation.class);
                             result.setPeers(aggr.getPeers()
@@ -316,10 +320,10 @@ public class S125GDSListener implements FeatureListener {
                         }
                 ));
         final Map<String, Association> associationsMap = members.stream()
-                .filter(AssociationType.class::isInstance)
-                .map(AssociationType.class::cast)
+                .filter(AssociationImpl.class::isInstance)
+                .map(AssociationImpl.class::cast)
                 .collect(Collectors.toMap(
-                        AssociationType::getId,
+                        AssociationImpl::getId,
                         asso -> {
                             Association result = this.modelMapper.map(asso, Association.class);
                             result.setPeers(asso.getPeers()
@@ -334,7 +338,7 @@ public class S125GDSListener implements FeatureListener {
 
         // Now map the S-125 structure objects and add all the associated information
         try {
-            for (AbstractFeatureType member : members) {
+            for (AbstractGMLType member : members) {
                 //Sanity Check
                 if(Objects.isNull(member)) {
                     continue;
@@ -361,7 +365,7 @@ public class S125GDSListener implements FeatureListener {
                             .ifPresent(l -> l.add(equipmentTypeMap.get(equipment.getId())));
                 }
                 // Handle aggregation members
-                if (member instanceof AggregationType aggregation) {
+                if (member instanceof AggregationImpl aggregation) {
                     aggregation.getPeers()
                             .stream()
                             .map(this::getInternalReference)
@@ -371,7 +375,7 @@ public class S125GDSListener implements FeatureListener {
                             .forEach(aggregations -> aggregations.add(aggregationsMap.get(aggregation.getId())));
                 }
                 // Handle association members
-                if (member instanceof  AssociationType association) {
+                if (member instanceof AssociationImpl association) {
                     association.getPeers()
                             .stream()
                             .map(this::getInternalReference)

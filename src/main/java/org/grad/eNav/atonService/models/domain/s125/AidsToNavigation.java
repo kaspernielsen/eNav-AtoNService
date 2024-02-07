@@ -48,7 +48,7 @@ import java.util.Set;
  * abstract so that we can extend this for each Aids to Navigation type.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.AidsToNavigationType
+ * @see _int.iho.s125.gml.cs0._1.AidsToNavigationType
  */
 @Entity
 @EntityListeners(AuditingEntityListener.class)

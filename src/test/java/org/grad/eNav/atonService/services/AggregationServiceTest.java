@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.services;
 
-import _int.iala_aism.s125.gml._0_0.CategoryOfAggregationType;
+import _int.iho.s125.gml.cs0._1.CategoryOfAggregationType;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.s125.Aggregation;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;

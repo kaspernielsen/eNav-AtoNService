@@ -16,12 +16,18 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
-import _int.iho.s100.gml.base._5_0.CurveProperty;
-import _int.iho.s100.gml.base._5_0.PointProperty;
-import _int.iho.s100.gml.base._5_0.S100SpatialAttributeType;
-import _int.iho.s100.gml.base._5_0.SurfaceProperty;
-import _net.opengis.gml.profiles.*;
+import _int.iho.s100.gml.base._5_0.*;
+import _int.iho.s100.gml.base._5_0.CurveType;
+import _int.iho.s100.gml.base._5_0.PointType;
+import _int.iho.s100.gml.base._5_0.SurfaceType;
+import _int.iho.s100.gml.base._5_0.impl.*;
+import _int.iho.s100.gml.base._5_0.impl.CurveTypeImpl;
+import _int.iho.s100.gml.base._5_0.impl.PointTypeImpl;
+import _int.iho.s100.gml.base._5_0.impl.SurfaceTypeImpl;
+import _int.iho.s100.gml.profiles._5_0.*;
+import _int.iho.s100.gml.profiles._5_0.ObjectFactory;
+import _int.iho.s100.gml.profiles._5_0.impl.*;
+import _int.iho.s125.gml.cs0._1.AidsToNavigationType;
 import jakarta.xml.bind.JAXBElement;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
@@ -204,10 +210,10 @@ public class GeometryS125Converter {
         ObjectFactory opengisGMLFactory = new ObjectFactory();
 
         // Generate the elements
-        PolygonPatchType polygonPatchType = new PolygonPatchType();
-        AbstractRingPropertyType abstractRingPropertyType = new AbstractRingPropertyType();
-        LinearRingType linearRingType = new LinearRingType();
-        PosList posList = new PosList();
+        PolygonPatchType polygonPatchType = new PolygonPatchTypeImpl();
+        AbstractRingPropertyType abstractRingPropertyType = new AbstractRingPropertyTypeImpl();
+        LinearRingType linearRingType = new LinearRingTypeImpl();
+        PosList posList = new PosListImpl();
 
         // Populate with the geometry data
         posList.setValue(coords);
@@ -230,8 +236,8 @@ public class GeometryS125Converter {
      */
     protected LineStringSegmentType generateCurvePropertySegment(Double[] coords) {
         // Generate the elements
-        LineStringSegmentType lineStringSegmentType = new LineStringSegmentType();
-        PosList posList = new PosList();
+        LineStringSegmentType lineStringSegmentType = new LineStringSegmentTypeImpl();
+        PosList posList = new PosListImpl();
 
         // Populate with the geometry data
         posList.setValue(coords);
@@ -250,7 +256,7 @@ public class GeometryS125Converter {
      */
     protected Pos generatePointPropertyPosition(Double[] coords) {
         // Generate the elements
-        Pos pos = new Pos();
+        Pos pos = new PosImpl();
 
         // Populate with the geometry data
         pos.setValue(coords);
@@ -269,9 +275,9 @@ public class GeometryS125Converter {
         ObjectFactory opengisGMLFactory = new ObjectFactory();
 
         // Generate the elements
-        SurfaceProperty surfaceProperty = new SurfaceProperty();
-        _int.iho.s100.gml.base._5_0.SurfaceType surfaceType = new _int.iho.s100.gml.base._5_0.SurfaceType();
-        Patches patches = new Patches();
+        SurfaceProperty surfaceProperty = new SurfacePropertyImpl();
+        _int.iho.s100.gml.base._5_0.SurfaceType surfaceType = new SurfaceTypeImpl();
+        Patches patches = new PatchesImpl();
 
         // Populate the elements
         surfaceType.setPatches(patches);
@@ -288,9 +294,9 @@ public class GeometryS125Converter {
      */
     protected CurveProperty initialiseCurveProperty() {
         // Generate the elements
-        CurveProperty curveProperty = new CurveProperty();
-        _int.iho.s100.gml.base._5_0.CurveType curveType = new _int.iho.s100.gml.base._5_0.CurveType();
-        Segments segments = new Segments();
+        CurveProperty curveProperty = new CurvePropertyImpl();
+        CurveType curveType = new CurveTypeImpl();
+        Segments segments = new SegmentsImpl();
 
         // Populate the elements
         curveType.setSegments(segments);
@@ -307,8 +313,8 @@ public class GeometryS125Converter {
      */
     protected PointProperty initPointProperty() {
         // Generate the elements
-        PointProperty pointProperty = new PointProperty();
-        _int.iho.s100.gml.base._5_0.PointType pointType = new _int.iho.s100.gml.base._5_0.PointType();
+        PointProperty pointProperty = new PointPropertyImpl();
+        PointType pointType = new PointTypeImpl();
 
         // Populate the elements
         pointProperty.setPoint(pointType);
@@ -348,8 +354,8 @@ public class GeometryS125Converter {
                 .map(c -> Arrays.asList(c.getX(), c.getY()))
                 .flatMap(List::stream).toList();
 
-        // The create the list and return
-        PosList posList = new PosList();
+        // Then create the list and return
+        PosList posList = new PosListImpl();
         posList.setValue(coords.toArray(Double[]::new));
         return posList;
     }

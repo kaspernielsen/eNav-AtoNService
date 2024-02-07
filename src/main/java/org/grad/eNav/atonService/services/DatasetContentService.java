@@ -16,8 +16,8 @@
 
 package org.grad.eNav.atonService.services;
 
-import _int.iala_aism.s125.gml._0_0.AidsToNavigationType;
-import _int.iala_aism.s125.gml._0_0.Dataset;
+import _int.iho.s125.gml.cs0._1.AidsToNavigationType;
+import _int.iho.s125.gml.cs0._1.Dataset;
 import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
@@ -144,7 +144,7 @@ public class DatasetContentService {
                 .map(AidsToNavigationType.class::cast)
                 .toList();
         final Set<String> origAtonNumbers = origAtonList.stream()
-                .map(AidsToNavigationType::getAtonNumber)
+                .map(AidsToNavigationType::getIdCode)
                 .collect(Collectors.toSet());
 
         // Get all the new matching Aids to Navigation - if we have a geometry

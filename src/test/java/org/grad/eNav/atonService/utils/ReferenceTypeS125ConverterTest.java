@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _net.opengis.gml.profiles.ReferenceType;
+import _int.iho.s100.gml.profiles._5_0.ReferenceType;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.grad.eNav.atonService.models.domain.s125.VirtualAISAidToNavigation;

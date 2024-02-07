@@ -25,7 +25,7 @@ import jakarta.persistence.Entity;
  * It is modelled as an entity that extends the {@link Landmark} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.LighthouseType
+ * @see _int.iho.s125.gml.cs0._1.Lighthouse
  */
 @Entity
 public class Lighthouse extends Landmark {

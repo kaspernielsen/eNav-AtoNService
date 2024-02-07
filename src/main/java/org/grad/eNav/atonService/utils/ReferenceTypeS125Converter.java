@@ -16,7 +16,8 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _net.opengis.gml.profiles.ReferenceType;
+import _int.iho.s100.gml.profiles._5_0.ReferenceType;
+import _int.iho.s100.gml.profiles._5_0.impl.ReferenceTypeImpl;
 import org.grad.eNav.atonService.models.enums.ReferenceTypeRole;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 
@@ -43,7 +44,7 @@ public class ReferenceTypeS125Converter {
     public ReferenceType convertToReferenceType(AidsToNavigation aidToNavigation, ReferenceTypeRole role) {
         return Optional.ofNullable(aidToNavigation)
                 .map(peer -> {
-                    ReferenceType referenceType = new ReferenceType();
+                    ReferenceType referenceType = new ReferenceTypeImpl();
                     referenceType.setHref("#ID-ATON-" + peer.getId());
                     referenceType.setRole(role.getRole());
                     referenceType.setArcrole(role.getArchRole());

@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.CategoryOfCardinalMarkType;
+import _int.iho.s125.gml.cs0._1.CategoryOfCardinalMarkType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -29,7 +29,7 @@ import jakarta.persistence.Enumerated;
  * super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.BuoyCardinalType
+ * @see _int.iho.s125.gml.cs0._1.BuoyCardinal
  */
 @Entity
 public class BuoyCardinal extends GenericBuoy {

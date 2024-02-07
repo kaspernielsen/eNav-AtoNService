@@ -16,10 +16,9 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.CategoryOfRecommendedTrackType;
-import _int.iala_aism.s125.gml._0_0.StatusType;
-import _int.iala_aism.s125.gml._0_0.TrafficFlowType;
-
+import _int.iho.s125.gml.cs0._1.CategoryOfRecommendedTrackType;
+import _int.iho.s125.gml.cs0._1.StatusType;
+import _int.iho.s125.gml.cs0._1.TrafficFlowType;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,7 +31,7 @@ import java.util.List;
  * {@link AidsToNavigation} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.RecommendedTrackType
+ * @see _int.iho.s125.gml.cs0._1.RecommendedTrack
  */
 @Entity
 public class RecommendedTrack extends AidsToNavigation {

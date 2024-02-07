@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.CategoryOfAssociationType;
+import _int.iho.s125.gml.cs0._1.CategoryOfAssociationType;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -28,12 +28,12 @@ import java.util.*;
 /**
  * The S-125 Association Entity Class
  * <p/>
- * This class implements the {@link _int.iala_aism.s125.gml._0_0.AssociationType}
+ * This class implements the {@link _int.iho.s125.gml.cs0._1.Association}
  * objects of the S-125 data product. These can be used to group multiple
  * Aids to Navigation into a single association with a give type.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.AssociationType
+ * @see _int.iho.s125.gml.cs0._1.Association
  */
 @Entity
 public class Association implements Serializable {

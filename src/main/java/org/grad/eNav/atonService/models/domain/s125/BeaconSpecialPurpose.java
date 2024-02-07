@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.models.domain.s125;
 
-import _int.iala_aism.s125.gml._0_0.CategoryOfSpecialPurposeMarkType;
+import _int.iho.s125.gml.cs0._1.CategoryOfSpecialPurposeMarkType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,7 +32,7 @@ import java.util.List;
  * {@link GenericBeacon} super class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
- * @see _int.iala_aism.s125.gml._0_0.BeaconSpecialPurposeGeneralType
+ * @see _int.iho.s125.gml.cs0._1.BeaconSpecialPurposeGeneral
  */
 @Entity
 public class BeaconSpecialPurpose extends GenericBeacon {
