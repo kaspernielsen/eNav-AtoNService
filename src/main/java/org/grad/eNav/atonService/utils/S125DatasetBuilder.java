@@ -16,32 +16,33 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _int.iho.s100.gml.base._5_0.*;
-import _int.iho.s100.gml.base._5_0.impl.DataSetIdentificationTypeImpl;
+import _int.iho.s100.gml.base._5_0.CurveProperty;
+import _int.iho.s100.gml.base._5_0.MultiPointProperty;
+import _int.iho.s100.gml.base._5_0.PointProperty;
+import _int.iho.s100.gml.base._5_0.SurfaceProperty;
 import _int.iho.s100.gml.profiles._5_0.BoundingShapeType;
 import _int.iho.s100.gml.profiles._5_0.EnvelopeType;
 import _int.iho.s100.gml.profiles._5_0.Pos;
 import _int.iho.s100.gml.profiles._5_0.impl.BoundingShapeTypeImpl;
 import _int.iho.s100.gml.profiles._5_0.impl.EnvelopeTypeImpl;
 import _int.iho.s100.gml.profiles._5_0.impl.PosImpl;
-import _int.iho.s125.gml.cs0._1.AidsToNavigationType;
 import _int.iho.s125.gml.cs0._1.Dataset;
-import _int.iho.s125.gml.cs0._1.impl.*;
+import _int.iho.s125.gml.cs0._1.impl.AggregationImpl;
+import _int.iho.s125.gml.cs0._1.impl.AssociationImpl;
+import _int.iho.s125.gml.cs0._1.impl.DatasetImpl;
 import _int.iho.s125.gml.cs0._1.impl.ObjectFactory;
 import jakarta.validation.constraints.NotNull;
-import jakarta.xml.bind.JAXBElement;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
-import org.grad.eNav.atonService.models.domain.s125.S125DatasetIdentification;
+import org.grad.eNav.s125.utils.S125Utils;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class S125DatasetBuilder {
 
@@ -115,34 +116,31 @@ public class S125DatasetBuilder {
         //                      DATASET MEMBERS SECTION                       //
         //====================================================================//
         // Add the AtoN members
-        Optional.ofNullable(atons)
+        S125Utils.addDatasetMembers(dataset, Optional.ofNullable(atons)
                 .orElse(Collections.emptyList())
                 .stream()
                 .map(aton -> this.modelMapper.map(aton, S125AtonTypes.fromLocalClass(aton.getClass()).getS125Class()))
-                //.map(aton -> this.s125GMLFactory.createS125AidsToNavigation(aton)) // Causes problems by introducing "xsi:type"
-                //.map(this::createJaxbElement)
-                //.map(JAXBElement::getValue)
-                .forEach(aton -> this.addMember(aton, dataset.getMembers()));
+                .toList());
 
         // Append the aggregations
-        Optional.ofNullable(atons)
+        S125Utils.addDatasetMembers(dataset, Optional.ofNullable(atons)
                 .orElse(Collections.emptyList())
                 .stream()
                 .map(AidsToNavigation::getAggregations)
                 .flatMap(Set::stream)
                 .distinct()
                 .map(agg -> this.modelMapper.map(agg, AggregationImpl.class))
-                .forEach(dataset.getMembers().getAggregation()::add);
+                .toList());
 
         // Append the associations
-        Optional.ofNullable(atons)
+        S125Utils.addDatasetMembers(dataset,Optional.ofNullable(atons)
                 .orElse(Collections.emptyList())
                 .stream()
                 .map(AidsToNavigation::getAssociations)
                 .flatMap(Set::stream)
                 .distinct()
                 .map(ass -> this.modelMapper.map(ass, AssociationImpl.class))
-                .forEach(dataset.getMembers().getAssociation()::add);
+                .toList());
 
         // Return the dataset
         return dataset;
@@ -193,78 +191,6 @@ public class S125DatasetBuilder {
             envelope.expandToInclude(c);
         }
         return envelope;
-    }
-
-    /**
-     * Populates the appropriate list of the Dataset Members with the Aids to
-     * Navigation entry provided, based on its class. This can easily be moved
-     * in the S-125 library for making it easier to work with the data product.
-     */
-    protected <T extends AidsToNavigationType> void addMember(T s125AidsToNavigationType, Dataset.Members members) {
-        switch (S125AtonTypes.fromS125Class(s125AidsToNavigationType.getClass())) {
-            case CARDINAL_BEACON ->
-                    members.getBeaconCardinal().add(s125AidsToNavigationType);
-            case LATERAL_BEACON ->
-                    members.getBeaconLateral().add(s125AidsToNavigationType);
-            case ISOLATED_DANGER_BEACON ->
-                    members.getBeaconIsolatedDanger().add(s125AidsToNavigationType);
-            case SAFE_WATER_BEACON ->
-                    members.getBeaconSafeWater().add(s125AidsToNavigationType);
-            case SPECIAL_PURPOSE_BEACON ->
-                    members.getBeaconSpecialPurposeGeneral().add(s125AidsToNavigationType);
-            case CARDINAL_BUOY ->
-                    members.getBuoyCardinal().add(s125AidsToNavigationType);
-            case LATERAL_BUOY ->
-                    members.getBuoyLateral().add(s125AidsToNavigationType);
-            case INSTALLATION_BUOY ->
-                    members.getBuoyInstallation().add(s125AidsToNavigationType);
-            case ISOLATED_DANGER_BUOY ->
-                    members.getBuoyIsolatedDanger().add(s125AidsToNavigationType);
-            case SAFE_WATER_BUOY ->
-                    members.getBuoySafeWater().add(s125AidsToNavigationType);
-            case SPECIAL_PURPOSE_BUOY ->
-                    members.getBuoySpecialPurposeGeneral().add(s125AidsToNavigationType);
-            case DAYMARK ->
-                    members.getDaymark().add(s125AidsToNavigationType);
-            case FOG_SIGNAL ->
-                    members.getFogSignal().add(s125AidsToNavigationType);
-            case LIGHT ->
-                    members.getLight().add(s125AidsToNavigationType);
-            case LIGHT_FLOAT ->
-                    members.getLightFloat().add(s125AidsToNavigationType);
-            case LANDMARK ->
-                    members.getLandmark().add(s125AidsToNavigationType);
-            case LIGHTHOUSE ->
-                    members.getLighthouse().add(s125AidsToNavigationType);
-            case LIGHT_VESSEL ->
-                    members.getLightVessel().add(s125AidsToNavigationType);
-            case NAVIGATION_LINE ->
-                    members.getNavigationLine().add(s125AidsToNavigationType);
-            case OFFSHORE_PLATFORM ->
-                    members.getOffshorePlatform().add(s125AidsToNavigationType);
-            case PHYSICAL_AIS_ATON ->
-                    members.getPhysicalAISAidToNavigation().add(s125AidsToNavigationType);
-            case PILE ->
-                    members.getPile().add(s125AidsToNavigationType);
-            case RADAR_REFLECTOR ->
-                    members.getRadarReflector().add(s125AidsToNavigationType);
-            case RADIO_STATION ->
-                    members.getRadioStation().add(s125AidsToNavigationType);
-            case RECOMMENDED_TRACK ->
-                    members.getRecommendedTrack().add(s125AidsToNavigationType);
-            case RETRO_REFLECTOR ->
-                    members.getRetroReflector().add(s125AidsToNavigationType);
-            case SILO_TANK ->
-                    members.getSiloTank().add(s125AidsToNavigationType);
-            case SYNTHETIC_AIS_ATON ->
-                    members.getSyntheticAISAidToNavigation().add(s125AidsToNavigationType);
-            case TOPMARK ->
-                    members.getTopmark().add(s125AidsToNavigationType);
-            case VIRTUAL_AIS_ATON ->
-                    members.getVirtualAISAidToNavigation().add(s125AidsToNavigationType);
-            default ->
-                    members.getAidsToNavigation().add(s125AidsToNavigationType);
-        };
     }
 
 }

@@ -18,6 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import jakarta.persistence.EntityManager;
 import org.apache.commons.io.IOUtils;
+import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.exceptions.DeletedAtoNsInDatasetContentGenerationException;
 import org.grad.eNav.atonService.exceptions.SavingFailedException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
@@ -64,7 +65,7 @@ import static org.mockito.Mockito.*;
 class DatasetContentServiceTest {
 
     // Regular expression to look for member tags
-    final Pattern DATASET_MEMBER_PATTERN = Pattern.compile("<(/)?[\\s\\S][\\s\\S]\\d:member>");
+    final Pattern DATASET_MEMBER_PATTERN = Pattern.compile("<(/)?[\\s\\S][\\s\\S]\\d:BeaconCardinal");
 
     /**
      * The Tested Service.
@@ -215,6 +216,9 @@ class DatasetContentServiceTest {
     void testGenerateDatasetContent() throws ExecutionException, InterruptedException {
         final int numOfAtons = 5;
         final Page<AidsToNavigation> aidsToNavigationPage = new PageImpl<>(this.aidsToNavigationList.subList(0, numOfAtons), Pageable.ofSize(5), this.aidsToNavigationList.size());
+
+        // Get the model mapper configuration from the GlobalConfig
+        this.datasetContentService.modelMapper = new GlobalConfig().modelMapper();
 
         // Mock the service calls
         doReturn(this.existingDataset).when(this.datasetService).findOne(eq(this.existingDataset.getUuid()));
