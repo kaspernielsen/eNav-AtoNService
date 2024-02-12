@@ -23,7 +23,7 @@ LABEL org.opencontainers.image.source="https://github.com/gla-rad/eNav-AtoNServi
 WORKDIR /app
 
 # Copy the Spring Boot JAR file into the container
-COPY target/aton-service-0.0.4-SNAPSHOT.jar .
+COPY target/aton-service-0.0.5-SNAPSHOT.jar .
 
 # Create a modules path just in case
 ENV LOADER_PATH /modules
@@ -37,4 +37,4 @@ ENV CONFIG_DIR=/conf
 
 EXPOSE 8766
 
-CMD ["java", "-jar", "aton-service-0.0.4-SNAPSHOT.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
+CMD ["java", "-jar", "aton-service-0.0.5-SNAPSHOT.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
