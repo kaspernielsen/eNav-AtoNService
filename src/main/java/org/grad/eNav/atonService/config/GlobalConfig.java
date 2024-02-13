@@ -19,6 +19,7 @@ package org.grad.eNav.atonService.config;
 import _int.iho.s100.gml.base._5_0.impl.DataSetIdentificationTypeImpl;
 import _int.iho.s125.gml.cs0._1.AidsToNavigationType;
 import _int.iho.s125.gml.cs0._1.Dataset;
+import _int.iho.s125.gml.cs0._1.S100TruncatedDate;
 import _int.iho.s125.gml.cs0._1.impl.*;
 import jakarta.xml.bind.JAXBException;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.beans.PropertyDescriptor;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -140,6 +142,14 @@ public class GlobalConfig {
                     .implicitMappings()
                     .addMappings(mapper -> {
                         mapper.skip(AidsToNavigation::setId); // We don't know if the ID is correct so skip it
+                        mapper.using(ctx -> ((AidsToNavigationType)ctx.getSource()).getDateStart().getDate())
+                                .map(src -> src, AidsToNavigation::setDateStart);
+                        mapper.using(ctx -> ((AidsToNavigationType)ctx.getSource()).getDateEnd().getDate())
+                                .map(src -> src, AidsToNavigation::setDateEnd);
+                        mapper.using(ctx -> ((AidsToNavigationType)ctx.getSource()).getPeriodStart().getDate())
+                                .map(src -> src, AidsToNavigation::setPeriodStart);
+                        mapper.using(ctx -> ((AidsToNavigationType)ctx.getSource()).getPeriodEnd().getDate())
+                                .map(src -> src, AidsToNavigation::setPeriodEnd);
                         mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((AidsToNavigationType) ctx.getSource())))
                                 .map(src -> src, AidsToNavigation::setGeometry);
                     });
@@ -165,6 +175,14 @@ public class GlobalConfig {
                     .addMappings(mapper -> {
                         mapper.using(ctx -> "ID-ATON-" + ((AidsToNavigation) ctx.getSource()).getId())
                                 .map(src -> src, AidsToNavigationType::setId);
+                        mapper.using(ctx -> {S100TruncatedDate std = new S100TruncatedDateImpl(); std.setDate(((AidsToNavigation)ctx.getSource()).getDateStart()); return std;})
+                                .map(src -> src, AidsToNavigationType::setDateStart);
+                        mapper.using(ctx -> {S100TruncatedDate std = new S100TruncatedDateImpl(); std.setDate(((AidsToNavigation)ctx.getSource()).getDateEnd()); return std;})
+                                .map(src -> src, AidsToNavigationType::setDateEnd);
+                        mapper.using(ctx -> {S100TruncatedDate std = new S100TruncatedDateImpl(); std.setDate(((AidsToNavigation)ctx.getSource()).getPeriodStart()); return std;})
+                                .map(src -> src, AidsToNavigationType::setPeriodStart);
+                        mapper.using(ctx -> {S100TruncatedDate std = new S100TruncatedDateImpl(); std.setDate(((AidsToNavigation)ctx.getSource()).getPeriodEnd()); return std;})
+                                .map(src -> src, AidsToNavigationType::setPeriodEnd);
                         mapper.using(ctx -> modelMapper.map(((AidsToNavigation)ctx.getSource()).getInformations(), new TypeToken<List<InformationTypeImpl>>() {}.getType()) )
                                 .map(src -> src, AidsToNavigationTypeImpl::setInformations);
                         mapper.using(ctx -> modelMapper.map(((AidsToNavigation)ctx.getSource()).getFeatureNames(), new TypeToken<List<FeatureNameTypeImpl>>() {}.getType()) )
