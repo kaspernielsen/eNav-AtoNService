@@ -64,6 +64,7 @@ public abstract class AidsToNavigation implements Serializable {
     @SequenceGenerator(name="aids_to_navigation_generator", sequenceName = "aids_to_navigation_seq", allocationSize=1)
     private BigInteger id;
 
+    @NotNull
     @KeywordField(name="aton_number", sortable = Sortable.YES)
     @Column(unique=true)
     private String atonNumber;
