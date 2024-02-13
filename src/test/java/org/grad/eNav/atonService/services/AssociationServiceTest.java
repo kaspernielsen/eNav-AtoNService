@@ -18,9 +18,7 @@ package org.grad.eNav.atonService.services;
 
 import _int.iho.s125.gml.cs0._1.CategoryOfAssociationType;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.Association;
-import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
+import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.repos.AidsToNavigationRepo;
 import org.grad.eNav.atonService.repos.AssociationRepo;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,9 +85,15 @@ class AssociationServiceTest {
             aidsToNavigation.setId(BigInteger.valueOf(i));
             aidsToNavigation.setAtonNumber("AtonNumber" + i);
             aidsToNavigation.setIdCode("ID"+i);
-            aidsToNavigation.setTextualDescription("Description of AtoN No" + i);
-            aidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No" + i);
             aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
+            // Add the feature name entries
+            FeatureName featureName = new FeatureName();
+            featureName.setName("Aton No" + i);
+            aidsToNavigation.setFeatureNames(Collections.singleton(featureName));
+            // Add the information entries
+            Information information = new Information();
+            information.setText("Description of AtoN No" + i);
+            aidsToNavigation.setInformations(Collections.singleton(information));
             this.association.getPeers().add(aidsToNavigation);
         }
     }

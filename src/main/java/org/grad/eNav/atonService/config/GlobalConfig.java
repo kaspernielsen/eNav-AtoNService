@@ -36,6 +36,7 @@ import org.grad.eNav.s125.utils.S125Utils;
 import org.grad.secom.core.models.SubscriptionRequestObject;
 import org.locationtech.jts.io.ParseException;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.modelmapper.ValidationException;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.ErrorMessage;
@@ -116,7 +117,7 @@ public class GlobalConfig {
                 .setFieldMatchingEnabled(true)
                 .setAmbiguityIgnored(true);
 
-        // Skip the dataset identification which will take place manually
+        // Configure the dataset top-level mapping first
         modelMapper.emptyTypeMap(S125Dataset.class, DatasetImpl.class)
                 .addMappings(mapper -> {
                     mapper.using(ctx -> modelMapper.map(((S125Dataset)ctx.getSource()).getDatasetIdentificationInformation(), DataSetIdentificationTypeImpl.class) )
@@ -162,9 +163,12 @@ public class GlobalConfig {
             modelMapper.createTypeMap(atonType.getLocalClass(), atonType.getS125Class())
                     .implicitMappings()
                     .addMappings(mapper -> {
-                        mapper.skip(AidsToNavigationTypeImpl::setInformations);
                         mapper.using(ctx -> "ID-ATON-" + ((AidsToNavigation) ctx.getSource()).getId())
                                 .map(src -> src, AidsToNavigationType::setId);
+                        mapper.using(ctx -> modelMapper.map(((AidsToNavigation)ctx.getSource()).getInformations(), new TypeToken<List<InformationTypeImpl>>() {}.getType()) )
+                                .map(src -> src, AidsToNavigationTypeImpl::setInformations);
+                        mapper.using(ctx -> modelMapper.map(((AidsToNavigation)ctx.getSource()).getFeatureNames(), new TypeToken<List<FeatureNameTypeImpl>>() {}.getType()) )
+                                .map(src -> src, AidsToNavigationTypeImpl::setFeatureNames);
                         mapper.using(ctx -> new GeometryS125Converter().convertFromGeometry((AidsToNavigation) ctx.getSource()))
                                 .map(src -> src, (dest, val) -> {
                                     try {

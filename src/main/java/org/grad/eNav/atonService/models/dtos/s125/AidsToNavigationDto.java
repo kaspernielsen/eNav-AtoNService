@@ -25,6 +25,7 @@ import org.locationtech.jts.geom.Geometry;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The S-125 Aids to Navigation DTO Entity Class.
@@ -32,7 +33,7 @@ import java.util.List;
  * This is the basic class for transmitting the S-125 Aids to Navigation data
  * onto third parties. This is going to be encoded as a JSON object and it
  * does not contain AtoN type specific information, just the basics for
- * identifying an AtoN, so the commin fields.
+ * identifying an AtoN, so the common fields.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  * @see org.grad.eNav.atonService.models.domain.s125.AidsToNavigation
@@ -54,14 +55,6 @@ public class AidsToNavigationDto {
 
     private LocalDate periodStart;
 
-    private List<String> informations;
-
-    private List<String> informationInNationalLanguages;
-
-    private String textualDescription;
-
-    private String textualDescriptionInNationalLanguage;
-
     private List<String> seasonalActionRequireds;
 
     private BigInteger scaleMinimum;
@@ -72,7 +65,12 @@ public class AidsToNavigationDto {
     @JsonDeserialize(using = GeometryJSONDeserializer.class)
     private Geometry geometry;
 
+    private Set<InformationDto> informations;
+
+    private Set<FeatureNameDto> featureNames;
+
     private String atonType;
+
     private String content;
 
     /**
@@ -202,78 +200,6 @@ public class AidsToNavigationDto {
     }
 
     /**
-     * Gets informations.
-     *
-     * @return the informations
-     */
-    public List<String> getInformations() {
-        return informations;
-    }
-
-    /**
-     * Sets informations.
-     *
-     * @param informations the informations
-     */
-    public void setInformations(List<String> informations) {
-        this.informations = informations;
-    }
-
-    /**
-     * Gets information in national languages.
-     *
-     * @return the information in national languages
-     */
-    public List<String> getInformationInNationalLanguages() {
-        return informationInNationalLanguages;
-    }
-
-    /**
-     * Sets information in national languages.
-     *
-     * @param informationInNationalLanguages the information in national languages
-     */
-    public void setInformationInNationalLanguages(List<String> informationInNationalLanguages) {
-        this.informationInNationalLanguages = informationInNationalLanguages;
-    }
-
-    /**
-     * Gets textual description.
-     *
-     * @return the textual description
-     */
-    public String getTextualDescription() {
-        return textualDescription;
-    }
-
-    /**
-     * Sets textual description.
-     *
-     * @param textualDescription the textual description
-     */
-    public void setTextualDescription(String textualDescription) {
-        this.textualDescription = textualDescription;
-    }
-
-    /**
-     * Gets textual description in national language.
-     *
-     * @return the textual description in national language
-     */
-    public String getTextualDescriptionInNationalLanguage() {
-        return textualDescriptionInNationalLanguage;
-    }
-
-    /**
-     * Sets textual description in national language.
-     *
-     * @param textualDescriptionInNationalLanguage the textual description in national language
-     */
-    public void setTextualDescriptionInNationalLanguage(String textualDescriptionInNationalLanguage) {
-        this.textualDescriptionInNationalLanguage = textualDescriptionInNationalLanguage;
-    }
-
-    /**
      * Gets seasonal action requireds.
      *
      * @return the seasonal action requireds
@@ -343,6 +269,42 @@ public class AidsToNavigationDto {
      */
     public void setGeometry(Geometry geometry) {
         this.geometry = geometry;
+    }
+
+    /**
+     * Gets informations.
+     *
+     * @return the informations
+     */
+    public Set<InformationDto> getInformations() {
+        return informations;
+    }
+
+    /**
+     * Sets informations.
+     *
+     * @param informations the informations
+     */
+    public void setInformations(Set<InformationDto> informations) {
+        this.informations = informations;
+    }
+
+    /**
+     * Gets feature names.
+     *
+     * @return the feature names
+     */
+    public Set<FeatureNameDto> getFeatureNames() {
+        return featureNames;
+    }
+
+    /**
+     * Sets feature names.
+     *
+     * @param featureNames the feature names
+     */
+    public void setFeatureNames(Set<FeatureNameDto> featureNames) {
+        this.featureNames = featureNames;
     }
 
     /**

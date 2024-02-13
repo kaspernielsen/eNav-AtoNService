@@ -86,16 +86,6 @@ public abstract class AidsToNavigation implements Serializable {
     @GenericField(indexNullAs = "1970-01-01")
     private LocalDate periodStart;
 
-    @ElementCollection
-    private List<String> informations;
-
-    @ElementCollection
-    private List<String> informationInNationalLanguages;
-
-    private String textualDescription;
-
-    private String textualDescriptionInNationalLanguage;
-
     private BigInteger scaleMinimum;
 
     private String pictorialRepresentation;
@@ -104,6 +94,14 @@ public abstract class AidsToNavigation implements Serializable {
     @JsonDeserialize(using = GeometryJSONDeserializer.class)
     @NonStandardField(name="geometry", valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     private Geometry geometry;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "feature", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    final private Set<Information> informations = new HashSet<>();
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "feature", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    final private Set<FeatureName> featureNames = new HashSet<>();
 
     @JsonManagedReference
     @ManyToMany(mappedBy = "peers")
@@ -244,78 +242,6 @@ public abstract class AidsToNavigation implements Serializable {
     }
 
     /**
-     * Gets informations.
-     *
-     * @return the informations
-     */
-    public List<String> getInformations() {
-        return informations;
-    }
-
-    /**
-     * Sets informations.
-     *
-     * @param informations the informations
-     */
-    public void setInformations(List<String> informations) {
-        this.informations = informations;
-    }
-
-    /**
-     * Gets information in national languages.
-     *
-     * @return the information in national languages
-     */
-    public List<String> getInformationInNationalLanguages() {
-        return informationInNationalLanguages;
-    }
-
-    /**
-     * Sets information in national languages.
-     *
-     * @param informationInNationalLanguages the information in national languages
-     */
-    public void setInformationInNationalLanguages(List<String> informationInNationalLanguages) {
-        this.informationInNationalLanguages = informationInNationalLanguages;
-    }
-
-    /**
-     * Gets textual description.
-     *
-     * @return the textual description
-     */
-    public String getTextualDescription() {
-        return textualDescription;
-    }
-
-    /**
-     * Sets textual description.
-     *
-     * @param textualDescription the textual description
-     */
-    public void setTextualDescription(String textualDescription) {
-        this.textualDescription = textualDescription;
-    }
-
-    /**
-     * Gets textual description in national language.
-     *
-     * @return the textual description in national language
-     */
-    public String getTextualDescriptionInNationalLanguage() {
-        return textualDescriptionInNationalLanguage;
-    }
-
-    /**
-     * Sets textual description in national language.
-     *
-     * @param textualDescriptionInNationalLanguage the textual description in national language
-     */
-    public void setTextualDescriptionInNationalLanguage(String textualDescriptionInNationalLanguage) {
-        this.textualDescriptionInNationalLanguage = textualDescriptionInNationalLanguage;
-    }
-
-    /**
      * Gets scale minimum.
      *
      * @return the scale minimum
@@ -367,6 +293,48 @@ public abstract class AidsToNavigation implements Serializable {
      */
     public void setGeometry(Geometry geometry) {
         this.geometry = geometry;
+    }
+
+    /**
+     * Gets informations.
+     *
+     * @return the informations
+     */
+    public Set<Information> getInformations() {
+        return informations;
+    }
+
+    /**
+     * Sets informations.
+     *
+     * @param informations the informations
+     */
+    public void setInformations(Set<Information> informations) {
+        this.informations.clear();
+        if (informations != null) {
+            this.informations.addAll(informations);
+        }
+    }
+
+    /**
+     * Gets feature names.
+     *
+     * @return the feature names
+     */
+    public Set<FeatureName> getFeatureNames() {
+        return featureNames;
+    }
+
+    /**
+     * Sets feature names.
+     *
+     * @param featureNames the feature names
+     */
+    public void setFeatureNames(Set<FeatureName> featureNames) {
+        this.featureNames.clear();
+        if (featureNames != null) {
+            this.featureNames.addAll(featureNames);
+        }
     }
 
     /**

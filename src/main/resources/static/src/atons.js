@@ -28,6 +28,16 @@ var nodesColumnDefs = [
      hoverMsg: "The AtoN ID Code",
      placeholder: "The AtoN ID Code",
  }, {
+     data: "atonType",
+     title: "Type",
+     hoverMsg: "The AtoN Type",
+     placeholder: "The AtoN Type",
+ }, {
+    data: ( row, type, val, meta ) => row.featureNames.find(fn => fn.displayName).name,
+    title: "Name",
+    hoverMsg: "The AtoN Name",
+    placeholder: "The AtoN Name",
+ },{
     data: "dateStart",
     title: "Start Date",
     type: "date",
@@ -39,16 +49,6 @@ var nodesColumnDefs = [
     type: "date",
     hoverMsg: "The AtoN End Date",
     placeholder: "The AtoN End Date"
- }, {
-     data: "atonType",
-     title: "Type",
-     hoverMsg: "The AtoN Type",
-     placeholder: "The AtoN Type",
-}, {
-    data: "textualDescription",
-    title: "Description",
-    hoverMsg: "The AtoN Description",
-    placeholder: "The AtoN Description",
  }, {
     data: "geometry",
     title: "Geometry",

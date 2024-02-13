@@ -19,6 +19,8 @@ package org.grad.eNav.atonService.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
+import org.grad.eNav.atonService.models.domain.s125.FeatureName;
+import org.grad.eNav.atonService.models.domain.s125.Information;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +42,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -85,9 +88,15 @@ class S125WebSocketServiceTest {
         this.aidsToNavigation.setId(BigInteger.valueOf(1));
         this.aidsToNavigation.setAtonNumber("AtonNumber001");
         this.aidsToNavigation.setIdCode("ID001");
-        this.aidsToNavigation.setTextualDescription("Description of AtoN No 1");
-        this.aidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No 1" );
         this.aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(53.61, 1.594)));
+        // Add the feature name entries
+        FeatureName featureName = new FeatureName();
+        featureName.setName("Aton No1 ");
+        aidsToNavigation.setFeatureNames(Collections.singleton(featureName));
+        // Add the information entries
+        Information information = new Information();
+        information.setText("Description of AtoN No 1");
+        aidsToNavigation.setInformations(Collections.singleton(information));
 
         // Also set the web-socket service topic prefix
         this.s125WebSocketService.prefix = "topic";
@@ -145,8 +154,24 @@ class S125WebSocketServiceTest {
         assertEquals(this.aidsToNavigation.getId(), payLoadArgument.getValue().getId());
         assertEquals(this.aidsToNavigation.getAtonNumber(), payLoadArgument.getValue().getAtonNumber());
         assertEquals(this.aidsToNavigation.getIdCode(), payLoadArgument.getValue().getIdCode());
-        assertEquals(this.aidsToNavigation.getTextualDescription(), payLoadArgument.getValue().getTextualDescription());
-        assertEquals(this.aidsToNavigation.getTextualDescriptionInNationalLanguage(), payLoadArgument.getValue().getTextualDescriptionInNationalLanguage());
+        assertEquals(this.aidsToNavigation.getInformations().size(), payLoadArgument.getValue().getInformations().size());
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getFileLocator).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getFileLocator).orElse(null));
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getFileReference).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getFileReference).orElse(null));
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getHeadline).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getHeadline).orElse(null));
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getLanguage).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getLanguage).orElse(null));
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getText).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getText).orElse(null));
+        assertEquals(this.aidsToNavigation.getFeatureNames().size(), payLoadArgument.getValue().getFeatureNames().size());
+        assertEquals(this.aidsToNavigation.getFeatureNames().stream().findFirst().map(FeatureName::getName).orElse(null),
+                payLoadArgument.getValue().getFeatureNames().stream().findFirst().map(FeatureName::getName).orElse(null));
+        assertEquals(this.aidsToNavigation.getFeatureNames().stream().findFirst().map(FeatureName::getDisplayName).orElse(null),
+                payLoadArgument.getValue().getFeatureNames().stream().findFirst().map(FeatureName::getDisplayName).orElse(null));
+        assertEquals(this.aidsToNavigation.getFeatureNames().stream().findFirst().map(FeatureName::getLanguage).orElse(null),
+                payLoadArgument.getValue().getFeatureNames().stream().findFirst().map(FeatureName::getLanguage).orElse(null));
     }
 
     /**
@@ -176,8 +201,24 @@ class S125WebSocketServiceTest {
         assertEquals(this.aidsToNavigation.getId(), payLoadArgument.getValue().getId());
         assertEquals(this.aidsToNavigation.getAtonNumber(), payLoadArgument.getValue().getAtonNumber());
         assertEquals(this.aidsToNavigation.getIdCode(), payLoadArgument.getValue().getIdCode());
-        assertEquals(this.aidsToNavigation.getTextualDescription(), payLoadArgument.getValue().getTextualDescription());
-        assertEquals(this.aidsToNavigation.getTextualDescriptionInNationalLanguage(), payLoadArgument.getValue().getTextualDescriptionInNationalLanguage());
+        assertEquals(this.aidsToNavigation.getInformations().size(), payLoadArgument.getValue().getInformations().size());
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getFileLocator).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getFileLocator).orElse(null));
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getFileReference).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getFileReference).orElse(null));
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getHeadline).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getHeadline).orElse(null));
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getLanguage).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getLanguage).orElse(null));
+        assertEquals(this.aidsToNavigation.getInformations().stream().findFirst().map(Information::getText).orElse(null),
+                payLoadArgument.getValue().getInformations().stream().findFirst().map(Information::getText).orElse(null));
+        assertEquals(this.aidsToNavigation.getFeatureNames().size(), payLoadArgument.getValue().getFeatureNames().size());
+        assertEquals(this.aidsToNavigation.getFeatureNames().stream().findFirst().map(FeatureName::getName).orElse(null),
+                payLoadArgument.getValue().getFeatureNames().stream().findFirst().map(FeatureName::getName).orElse(null));
+        assertEquals(this.aidsToNavigation.getFeatureNames().stream().findFirst().map(FeatureName::getDisplayName).orElse(null),
+                payLoadArgument.getValue().getFeatureNames().stream().findFirst().map(FeatureName::getDisplayName).orElse(null));
+        assertEquals(this.aidsToNavigation.getFeatureNames().stream().findFirst().map(FeatureName::getLanguage).orElse(null),
+                payLoadArgument.getValue().getFeatureNames().stream().findFirst().map(FeatureName::getLanguage).orElse(null));
     }
 
     /**

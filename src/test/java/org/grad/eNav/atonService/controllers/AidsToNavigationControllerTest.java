@@ -23,8 +23,12 @@ import org.grad.eNav.atonService.TestingConfiguration;
 import org.grad.eNav.atonService.exceptions.DataNotFoundException;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
+import org.grad.eNav.atonService.models.domain.s125.FeatureName;
+import org.grad.eNav.atonService.models.domain.s125.Information;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
+import org.grad.eNav.atonService.models.dtos.s125.FeatureNameDto;
+import org.grad.eNav.atonService.models.dtos.s125.InformationDto;
 import org.grad.eNav.atonService.services.AidsToNavigationService;
 import org.grad.eNav.atonService.services.DatasetService;
 import org.junit.jupiter.api.BeforeEach;
@@ -109,14 +113,20 @@ class AidsToNavigationControllerTest {
         // Initialise the station nodes list
         this.aidsToNavigationList = new ArrayList<>();
         for(long i=0; i<10; i++) {
-            AidsToNavigation node = new BeaconCardinal();
-            node.setId(BigInteger.valueOf(i));
-            node.setAtonNumber("AtonNumber" + i);
-            node.setIdCode("ID"+i);
-            node.setTextualDescription("Description of AtoN No" + i);
-            node.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No" + i);
-            node.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
-            this.aidsToNavigationList.add(node);
+            AidsToNavigation aidsToNavigation = new BeaconCardinal();
+            aidsToNavigation.setId(BigInteger.valueOf(i));
+            aidsToNavigation.setAtonNumber("AtonNumber" + i);
+            aidsToNavigation.setIdCode("ID"+i);
+            aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
+            // Add the feature name entries
+            FeatureName featureName = new FeatureName();
+            featureName.setName("Aton No" + i);
+            aidsToNavigation.setFeatureNames(Collections.singleton(featureName));
+            // Add the information entries
+            Information information = new Information();
+            information.setText("Description of AtoN No" + i);
+            aidsToNavigation.setInformations(Collections.singleton(information));
+            this.aidsToNavigationList.add(aidsToNavigation);
         }
 
         // Create a pageable definition
@@ -127,9 +137,17 @@ class AidsToNavigationControllerTest {
         existingAidsToNavigation.setId(BigInteger.valueOf(1));
         existingAidsToNavigation.setAtonNumber("AtonNumber001");
         existingAidsToNavigation.setIdCode("ID001");
-        existingAidsToNavigation.setTextualDescription("Description of AtoN No 1");
-        existingAidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No 1" );
         existingAidsToNavigation.setGeometry(factory.createPoint(new Coordinate(1, 1)));
+        // Add the feature name entries
+        FeatureName featureName = new FeatureName();
+        featureName.setId(BigInteger.ONE);
+        featureName.setName("Aton No 1");
+        existingAidsToNavigation.setFeatureNames(Collections.singleton(featureName));
+        // Add the information entries
+        Information information = new Information();
+        information.setId(BigInteger.ONE);
+        information.setText("Description of AtoN No 1");
+        existingAidsToNavigation.setInformations(Collections.singleton(information));
     }
 
     /**
@@ -157,8 +175,24 @@ class AidsToNavigationControllerTest {
             assertEquals(page.getContent().get(i).getId(), result.getContent().get(i).getId());
             assertEquals(page.getContent().get(i).getAtonNumber(), result.getContent().get(i).getAtonNumber());
             assertEquals(page.getContent().get(i).getIdCode(), result.getContent().get(i).getIdCode());
-            assertEquals(page.getContent().get(i).getTextualDescription(), result.getContent().get(i).getTextualDescription());
-            assertEquals(page.getContent().get(i).getTextualDescriptionInNationalLanguage(), result.getContent().get(i).getTextualDescriptionInNationalLanguage());
+            assertEquals(page.getContent().get(i).getInformations().size(), result.getContent().get(i).getInformations().size());
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getFileLocator).orElse(null),
+                    result.getContent().get(i).getInformations().stream().findFirst().map(InformationDto::getFileLocator).orElse(null));
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getFileReference).orElse(null),
+                    result.getContent().get(i).getInformations().stream().findFirst().map(InformationDto::getFileReference).orElse(null));
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getHeadline).orElse(null),
+                    result.getContent().get(i).getInformations().stream().findFirst().map(InformationDto::getHeadline).orElse(null));
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getLanguage).orElse(null),
+                    result.getContent().get(i).getInformations().stream().findFirst().map(InformationDto::getLanguage).orElse(null));
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getText).orElse(null),
+                    result.getContent().get(i).getInformations().stream().findFirst().map(InformationDto::getText).orElse(null));
+            assertEquals(page.getContent().get(i).getFeatureNames().size(), result.getContent().get(i).getFeatureNames().size());
+            assertEquals(page.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureName::getName).orElse(null),
+                    result.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureNameDto::getName).orElse(null));
+            assertEquals(page.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureName::getDisplayName).orElse(null),
+                    result.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureNameDto::getDisplayName).orElse(null));
+            assertEquals(page.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureName::getLanguage).orElse(null),
+                    result.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureNameDto::getLanguage).orElse(null));
         }
     }
 
@@ -203,8 +237,24 @@ class AidsToNavigationControllerTest {
             assertEquals(page.getContent().get(i).getId(), result.getData().get(i).getId());
             assertEquals(page.getContent().get(i).getAtonNumber(), result.getData().get(i).getAtonNumber());
             assertEquals(page.getContent().get(i).getIdCode(), result.getData().get(i).getIdCode());
-            assertEquals(page.getContent().get(i).getTextualDescription(), result.getData().get(i).getTextualDescription());
-            assertEquals(page.getContent().get(i).getTextualDescriptionInNationalLanguage(), result.getData().get(i).getTextualDescriptionInNationalLanguage());
+            assertEquals(page.getContent().get(i).getInformations().size(), result.getData().get(i).getInformations().size());
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getFileLocator).orElse(null),
+                    result.getData().get(i).getInformations().stream().findFirst().map(InformationDto::getFileLocator).orElse(null));
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getFileReference).orElse(null),
+                    result.getData().get(i).getInformations().stream().findFirst().map(InformationDto::getFileReference).orElse(null));
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getHeadline).orElse(null),
+                    result.getData().get(i).getInformations().stream().findFirst().map(InformationDto::getHeadline).orElse(null));
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getLanguage).orElse(null),
+                    result.getData().get(i).getInformations().stream().findFirst().map(InformationDto::getLanguage).orElse(null));
+            assertEquals(page.getContent().get(i).getInformations().stream().findFirst().map(Information::getText).orElse(null),
+                    result.getData().get(i).getInformations().stream().findFirst().map(InformationDto::getText).orElse(null));
+            assertEquals(page.getContent().get(i).getFeatureNames().size(), result.getData().get(i).getFeatureNames().size());
+            assertEquals(page.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureName::getName).orElse(null),
+                    result.getData().get(i).getFeatureNames().stream().findFirst().map(FeatureNameDto::getName).orElse(null));
+            assertEquals(page.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureName::getDisplayName).orElse(null),
+                    result.getData().get(i).getFeatureNames().stream().findFirst().map(FeatureNameDto::getDisplayName).orElse(null));
+            assertEquals(page.getContent().get(i).getFeatureNames().stream().findFirst().map(FeatureName::getLanguage).orElse(null),
+                    result.getData().get(i).getFeatureNames().stream().findFirst().map(FeatureNameDto::getLanguage).orElse(null));
         }
     }
 

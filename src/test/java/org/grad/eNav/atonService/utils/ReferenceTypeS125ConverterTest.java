@@ -17,9 +17,7 @@
 package org.grad.eNav.atonService.utils;
 
 import _int.iho.s100.gml.profiles._5_0.ReferenceType;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
-import org.grad.eNav.atonService.models.domain.s125.VirtualAISAidToNavigation;
+import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.enums.ReferenceTypeRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +27,7 @@ import org.locationtech.jts.geom.PrecisionModel;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -53,9 +52,15 @@ class ReferenceTypeS125ConverterTest {
         aidToNavigation.setId(BigInteger.ZERO);
         aidToNavigation.setAtonNumber("Virtual AtoN Number");
         aidToNavigation.setIdCode("Virtual AtoN ID");
-        aidToNavigation.setTextualDescription("Description of Virtual AtoN");
-        aidToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of Virtual AtoN");
         aidToNavigation.setGeometry(factory.createPoint(new Coordinate(0, 0)));
+        // Add the feature name entries
+        FeatureName featureName = new FeatureName();
+        featureName.setName("Virtual Ato");
+        aidToNavigation.setFeatureNames(Collections.singleton(featureName));
+        // Add the information entries
+        Information information = new Information();
+        information.setText("Description of Virtual AtoN");
+        aidToNavigation.setInformations(Collections.singleton(information));
 
         // Initialise the AtoN object list
         this.aidsToNavigationList = new ArrayList<>();
@@ -64,9 +69,15 @@ class ReferenceTypeS125ConverterTest {
             tempAidToNavigation.setId(BigInteger.valueOf(i));
             tempAidToNavigation.setAtonNumber("AtonNumber" + i);
             tempAidToNavigation.setIdCode("ID" + i);
-            tempAidToNavigation.setTextualDescription("Description of AtoN No" + i);
-            tempAidToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No" + i);
             tempAidToNavigation.setGeometry(factory.createPoint(new Coordinate(i % 180, i % 90)));
+            // Add the feature name entries
+            FeatureName tempFeatureName = new FeatureName();
+            tempFeatureName.setName("Aton No" + i);
+            tempAidToNavigation.setFeatureNames(Collections.singleton(tempFeatureName));
+            // Add the information entries
+            Information tempInformation = new Information();
+            tempInformation.setText("Description of AtoN No" + i);
+            tempAidToNavigation.setInformations(Collections.singleton(tempInformation));
             this.aidsToNavigationList.add(tempAidToNavigation);
         }
     }

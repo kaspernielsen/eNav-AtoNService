@@ -22,9 +22,7 @@ import org.grad.eNav.atonService.exceptions.DeletedAtoNsInDatasetContentGenerati
 import org.grad.eNav.atonService.exceptions.SavingFailedException;
 import org.grad.eNav.atonService.exceptions.ValidationException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
-import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
-import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
-import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.repos.DatasetRepo;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -130,9 +128,15 @@ class DatasetServiceTest {
             aidsToNavigation.setId(BigInteger.valueOf(i));
             aidsToNavigation.setAtonNumber("AtonNumber" + i);
             aidsToNavigation.setIdCode("ID"+i);
-            aidsToNavigation.setTextualDescription("Description of AtoN No" + i);
-            aidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No" + i);
             aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
+            // Add the feature name entries
+            FeatureName featureName = new FeatureName();
+            featureName.setName("Aton No" + i);
+            aidsToNavigation.setFeatureNames(Collections.singleton(featureName));
+            // Add the information entries
+            Information information = new Information();
+            information.setText("Description of AtoN No" + i);
+            aidsToNavigation.setInformations(Collections.singleton(information));
             this.aidsToNavigationList.add(aidsToNavigation);
         }
 

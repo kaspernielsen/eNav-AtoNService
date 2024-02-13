@@ -61,9 +61,15 @@ class AggregationTest {
             aidsToNavigation.setId(BigInteger.valueOf(i));
             aidsToNavigation.setAtonNumber("AtonNumber" + i);
             aidsToNavigation.setIdCode("ID"+i);
-            aidsToNavigation.setTextualDescription("Description of AtoN No" + i);
-            aidsToNavigation.setTextualDescriptionInNationalLanguage("National Language Description of AtoN No" + i);
             aidsToNavigation.setGeometry(factory.createPoint(new Coordinate(i%180, i%90)));
+            // Add the feature name entries
+            FeatureName featureName = new FeatureName();
+            featureName.setName("Aton No" + i);
+            aidsToNavigation.setFeatureNames(Collections.singleton(featureName));
+            // Add the information entries
+            Information information = new Information();
+            information.setText("Description of AtoN No" + i);
+            aidsToNavigation.setInformations(Collections.singleton(information));
             aidsToNavigationList.add(aidsToNavigation);
         }
 
