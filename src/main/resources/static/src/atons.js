@@ -33,11 +33,11 @@ var nodesColumnDefs = [
      hoverMsg: "The AtoN Type",
      placeholder: "The AtoN Type",
  }, {
-    data: ( row, type, val, meta ) => row.featureNames.find(fn => fn.displayName).name,
+    data: ( row, type, val, meta ) => row.featureNames ? row.featureNames.find(fn => fn.displayName).name : '',
     title: "Name",
     hoverMsg: "The AtoN Name",
     placeholder: "The AtoN Name",
- },{
+ }, {
     data: "dateStart",
     title: "Start Date",
     type: "date",
