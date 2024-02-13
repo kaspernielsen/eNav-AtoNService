@@ -18,11 +18,6 @@ var nodesColumnDefs = [
     visible: false,
     searchable: false
 }, {
-    data: "atonNumber",
-    title: "AtoN Number",
-    hoverMsg: "The AtoN Number",
-    placeholder: "The AtoN Number"
- }, {
      data: "idCode",
      title: "ID Code",
      hoverMsg: "The AtoN ID Code",
