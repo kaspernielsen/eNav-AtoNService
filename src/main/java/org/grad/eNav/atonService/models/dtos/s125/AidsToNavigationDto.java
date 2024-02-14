@@ -96,6 +96,7 @@ public class AidsToNavigationDto {
      *
      * @return the aton number
      */
+    @Deprecated
     public String getAtonNumber() {
         return atonNumber;
     }
@@ -105,6 +106,7 @@ public class AidsToNavigationDto {
      *
      * @param atonNumber the aton number
      */
+    @Deprecated
     public void setAtonNumber(String atonNumber) {
         this.atonNumber = atonNumber;
     }

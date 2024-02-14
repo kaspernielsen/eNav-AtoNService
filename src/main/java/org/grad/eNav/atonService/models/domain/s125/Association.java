@@ -125,7 +125,7 @@ public class Association implements Serializable {
         if (!(o instanceof Association that)) return false;
         return associationType == that.associationType
                 && Objects.equals(this.getPeers().size(), that.getPeers().size())
-                && new HashSet<>(this.getPeerAtonNumbers()).containsAll(that.getPeerAtonNumbers());
+                && new HashSet<>(this.getPeerIdCodes()).containsAll(that.getPeerIdCodes());
     }
 
     /**
@@ -137,20 +137,20 @@ public class Association implements Serializable {
     public int hashCode() {
         return Objects.hash(
                 associationType,
-                Arrays.hashCode(this.getPeerAtonNumbers().toArray())
+                Arrays.hashCode(this.getPeerIdCodes().toArray())
         );
     }
 
     /**
-     * Returns a list of all the peer AtoN number included in the association.
+     * Returns a list of all the peer AtoN ID Codes included in the association.
      *
-     * @return a list of all the peer AtoN number included in the association
+     * @return a list of all the peer AtoN ID Codes included in the association
      */
     @JsonIgnore
-    public List<String> getPeerAtonNumbers() {
+    public List<String> getPeerIdCodes() {
         return this.getPeers()
                 .stream()
-                .map(AidsToNavigation::getAtonNumber)
+                .map(AidsToNavigation::getIdCode)
                 .sorted()
                 .toList();
     }

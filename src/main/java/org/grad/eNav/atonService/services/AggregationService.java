@@ -103,14 +103,14 @@ public class AggregationService {
      * of the object. Therefore, that's how it is mapped and checked against
      * the existing entries.
      *
-     * @param atonNumber        The number of the Aid to Navigation included in the aggregations
-     * @param newAggregations   The new aggregations to update the Aid to Navigation with
+     * @param idCode The ID Code of the Aid to Navigation included in the aggregations
+     * @param newAggregations The new aggregations to update the Aid to Navigation with
      * @return the update Aids to Navigation
      */
     @Transactional
-    public Set<Aggregation> updateAidsToNavigationAggregations(@NotNull String atonNumber, @NotNull Set<Aggregation> newAggregations) {
+    public Set<Aggregation> updateAidsToNavigationAggregations(@NotNull String idCode, @NotNull Set<Aggregation> newAggregations) {
         // Find the matching new aggregations
-        final Set<Aggregation> oldAggregations = this.aggregationRepo.findByIncludedAtonNumber(atonNumber);
+        final Set<Aggregation> oldAggregations = this.aggregationRepo.findByIncludedIdCode(idCode);
 
         // Perform the set operations - find the existing ones to be retained
         final Set<Aggregation> existingAggregations = Sets.intersection(oldAggregations, newAggregations);
@@ -128,8 +128,8 @@ public class AggregationService {
                 // We need to make sure that we have the correct objects to persist
                 .peek(aggregation -> aggregation.setPeers(aggregation.getPeers()
                         .stream()
-                        .map(AidsToNavigation::getAtonNumber)
-                        .map(this.aidsToNavigationRepo::findByAtonNumber)
+                        .map(AidsToNavigation::getIdCode)
+                        .map(this.aidsToNavigationRepo::findByIdCode)
                         .filter(Optional::isPresent)
                         .map(Optional::get)
                         .collect(Collectors.toSet())))

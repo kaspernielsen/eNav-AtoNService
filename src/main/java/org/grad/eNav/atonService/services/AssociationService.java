@@ -103,14 +103,14 @@ public class AssociationService {
      * of the object. Therefore, that's how it is mapped and checked against
      * the existing entries.
      *
-     * @param atonNumber        The number of the Aid to Navigation included in the associations
-     * @param newAssociations   The new associations to update the Aid to Navigation with
+     * @param idCode The ID Code of the Aid to Navigation included in the associations
+     * @param newAssociations The new associations to update the Aid to Navigation with
      * @return the update Aids to Navigation
      */
     @Transactional
-    public Set<Association> updateAidsToNavigationAssociations(@NotNull String atonNumber, @NotNull Set<Association> newAssociations) {
+    public Set<Association> updateAidsToNavigationAssociations(@NotNull String idCode, @NotNull Set<Association> newAssociations) {
         // Find the matching new aggregations
-        final Set<Association> oldAssociations = this.associationRepo.findByIncludedAtonNumber(atonNumber);
+        final Set<Association> oldAssociations = this.associationRepo.findByIncludedIdCode(idCode);
 
         // Perform the set operations - find the existing ones to be retained
         final Set<Association> existingAssociations = Sets.intersection(oldAssociations, newAssociations);
@@ -128,8 +128,8 @@ public class AssociationService {
                 // We need to make sure that we have the correct objects to persist
                 .peek(association -> association.setPeers(association.getPeers()
                         .stream()
-                        .map(AidsToNavigation::getAtonNumber)
-                        .map(this.aidsToNavigationRepo::findByAtonNumber)
+                        .map(AidsToNavigation::getIdCode)
+                        .map(this.aidsToNavigationRepo::findByIdCode)
                         .filter(Optional::isPresent)
                         .map(Optional::get)
                         .collect(Collectors.toSet())))

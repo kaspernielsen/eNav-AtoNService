@@ -31,13 +31,13 @@ import java.util.Set;
 public interface AssociationRepo extends JpaRepository<Association, BigInteger>  {
 
     /**
-     * Retrieves all the associations that include the number of the AtoN
+     * Retrieves all the associations that include the ID Code of the AtoN
      * provided in the input parameter.
      *
-     * @param atonNumber    The AtoN number to find the corresponding associations
+     * @param idCode The AtoN ID code to find the corresponding associations
      * @return the associations that include the specified AtoN number
      */
-    @Query("SELECT a FROM Association a JOIN a.peers p WHERE p.atonNumber = :atonNumber")
-    Set<Association> findByIncludedAtonNumber(String atonNumber);
+    @Query("SELECT a FROM Association a JOIN a.peers p WHERE p.idCode = :idCode")
+    Set<Association> findByIncludedIdCode(String idCode);
 
 }

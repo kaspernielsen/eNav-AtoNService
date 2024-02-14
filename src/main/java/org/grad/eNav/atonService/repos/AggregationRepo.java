@@ -31,13 +31,13 @@ import java.util.Set;
 public interface AggregationRepo extends JpaRepository<Aggregation, BigInteger>  {
 
     /**
-     * Retrieves all the aggregations that include the number of the AtoN
+     * Retrieves all the aggregations that include the ID Code of the AtoN
      * provided in the input parameter.
      *
-     * @param atonNumber    The AtoN number to find the corresponding aggregations
+     * @param idCode The AtoN ID Code to find the corresponding aggregations
      * @return the aggregations that include the specified AtoN number
      */
-    @Query("SELECT a FROM Aggregation a JOIN a.peers p WHERE p.atonNumber = :atonNumber")
-    Set<Aggregation> findByIncludedAtonNumber(String atonNumber);
+    @Query("SELECT a FROM Aggregation a JOIN a.peers p WHERE p.idCode = :idCode")
+    Set<Aggregation> findByIncludedIdCode(String idCode);
 
 }

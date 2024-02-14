@@ -137,6 +137,7 @@ public abstract class AidsToNavigation implements Serializable {
      *
      * @return the aton number
      */
+    @Deprecated
     public String getAtonNumber() {
         return atonNumber;
     }
@@ -146,6 +147,7 @@ public abstract class AidsToNavigation implements Serializable {
      *
      * @param atonNumber the aton number
      */
+    @Deprecated
     public void setAtonNumber(String atonNumber) {
         this.atonNumber = atonNumber;
     }

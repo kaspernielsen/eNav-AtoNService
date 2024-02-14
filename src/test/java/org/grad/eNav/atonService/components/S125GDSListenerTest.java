@@ -276,7 +276,7 @@ class S125GDSListenerTest {
         aidsToNavigation.setGeometry(this.geometryFactory.createPoint(new Coordinate(0, 0)));
 
         // Mock the service calls
-        doReturn(Optional.of(aidsToNavigation)).when(this.aidsToNavigationService).findByAtonNumber(any());
+        doReturn(Optional.of(aidsToNavigation)).when(this.aidsToNavigationService).findByIdCode(any());
         doReturn(aidsToNavigation).when(this.aidsToNavigationService).delete(any());
 
         // Mock a new event

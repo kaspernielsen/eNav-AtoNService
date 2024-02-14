@@ -143,7 +143,7 @@ public class DatasetContentService {
                 .filter(AidsToNavigationType.class::isInstance)
                 .map(AidsToNavigationType.class::cast)
                 .toList();
-        final Set<String> origAtonNumbers = origAtonList.stream()
+        final Set<String> origIDCodes = origAtonList.stream()
                 .map(AidsToNavigationType::getIdCode)
                 .collect(Collectors.toSet());
 
@@ -155,8 +155,8 @@ public class DatasetContentService {
                 )
                 .orElseGet(Page::empty)
                 .getContent();
-        final Set<String> atonNumbers = atonList.stream()
-                .map(AidsToNavigation::getAtonNumber)
+        final Set<String> idCodes = atonList.stream()
+                .map(AidsToNavigation::getIdCode)
                 .collect(Collectors.toSet());
 
         // ================================================================== //
@@ -165,7 +165,7 @@ public class DatasetContentService {
         // In cases where any of the original AtoNs is not found in the current
         // list, this means that a new content will be invalid since there has
         // been a removal. Therefore, a ValidationException should be thrown.
-        if(!atonNumbers.containsAll(origAtonNumbers)) {
+        if(!idCodes.containsAll(origIDCodes)) {
             // Create a response that something went wrong
             CompletableFuture<S125Dataset> exFuture = CompletableFuture.failedFuture(new DeletedAtoNsInDatasetContentGenerationException(
                     String.format("Deleted AtoNs detected during the generation " +
@@ -181,8 +181,8 @@ public class DatasetContentService {
         // Filter the new/updated Aids to Navigation entries - CAREFUL keel only
         // the unique items cause some might be included in both cases.
         final List<AidsToNavigation> newAtonList = atonList.stream()
-                .filter(aton -> Objects.nonNull(aton.getAtonNumber()))
-                .filter(aton -> not(origAtonNumbers.contains(aton.getAtonNumber())))
+                .filter(aton -> Objects.nonNull(aton.getIdCode()))
+                .filter(aton -> not(origIDCodes.contains(aton.getIdCode())))
                 .toList();
         final List<AidsToNavigation> updatedAtonList = atonList.stream()
                 .filter(aton -> Objects.nonNull(aton.getLastModifiedAt()))

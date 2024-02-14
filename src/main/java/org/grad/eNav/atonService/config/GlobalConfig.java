@@ -299,7 +299,7 @@ public class GlobalConfig {
     public static String convertTos125DataSet(ModelMapper modelMapper, List<AidsToNavigation> atons) {
         final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(modelMapper);
         final String datasetTitle = CaseUtils.toCamelCase("AtoN Dataset for " + atons.stream()
-                .map(AidsToNavigation::getAtonNumber)
+                .map(AidsToNavigation::getIdCode)
                 .collect(Collectors.joining(" ")), true, ' ');
         final S125Dataset s125Dataset = new S125Dataset(datasetTitle);
         final Dataset dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atons);

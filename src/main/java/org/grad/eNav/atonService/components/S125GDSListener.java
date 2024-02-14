@@ -198,7 +198,7 @@ public class S125GDSListener implements FeatureListener {
         // For feature deletions,
         else if (featureEvent.getType() == FeatureEvent.Type.REMOVED) {
             /// Extract the S-125 message UIDs and use it to delete all referencing nodes
-            final Set<String> atonNumbers = Optional.of(featureEvent)
+            final Set<String> idCodes = Optional.of(featureEvent)
                     .filter(KafkaFeatureEvent.KafkaFeatureRemoved.class::isInstance)
                     .map(KafkaFeatureEvent.KafkaFeatureRemoved.class::cast)
                     .map(KafkaFeatureEvent.KafkaFeatureRemoved::getFilter)
@@ -208,8 +208,8 @@ public class S125GDSListener implements FeatureListener {
                     .orElse(Collections.emptySet());
 
             // Now delete the selected AtoNs and collect the output
-            final List<? extends AidsToNavigation> listOfAtons = atonNumbers.stream()
-                    .map(this.aidsToNavigationService::findByAtonNumber)
+            final List<? extends AidsToNavigation> listOfAtons = idCodes.stream()
+                    .map(this.aidsToNavigationService::findByIdCode)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .map(AidsToNavigation::getId)

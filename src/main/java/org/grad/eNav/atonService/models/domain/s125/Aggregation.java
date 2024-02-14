@@ -125,7 +125,7 @@ public class Aggregation implements Serializable {
         if (!(o instanceof Aggregation that)) return false;
         return aggregationType == that.aggregationType
                 && Objects.equals(this.getPeers().size(), that.getPeers().size())
-                && new HashSet<>(this.getPeerAtonNumbers()).containsAll(that.getPeerAtonNumbers());
+                && new HashSet<>(this.getPeerIDCodes()).containsAll(that.getPeerIDCodes());
     }
 
     /**
@@ -137,20 +137,20 @@ public class Aggregation implements Serializable {
     public int hashCode() {
         return Objects.hash(
                 aggregationType,
-                Arrays.hashCode(this.getPeerAtonNumbers().toArray())
+                Arrays.hashCode(this.getPeerIDCodes().toArray())
         );
     }
 
     /**
-     * Returns a list of all the peer AtoN number included in the aggregation.
+     * Returns a list of all the peer AtoN ID Codes included in the aggregation.
      *
-     * @return a list of all the peer AtoN number included in the aggregation
+     * @return a list of all the peer AtoN ID Codes included in the aggregation
      */
     @JsonIgnore
-    public List<String> getPeerAtonNumbers() {
+    public List<String> getPeerIDCodes() {
         return this.getPeers()
                 .stream()
-                .map(AidsToNavigation::getAtonNumber)
+                .map(AidsToNavigation::getIdCode)
                 .sorted()
                 .toList();
     }

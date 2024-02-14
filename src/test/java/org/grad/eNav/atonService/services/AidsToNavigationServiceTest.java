@@ -23,8 +23,6 @@ import org.grad.eNav.atonService.models.domain.s125.BeaconCardinal;
 import org.grad.eNav.atonService.models.domain.s125.FeatureName;
 import org.grad.eNav.atonService.models.domain.s125.Information;
 import org.grad.eNav.atonService.models.dtos.datatables.*;
-import org.grad.eNav.atonService.models.dtos.s125.FeatureNameDto;
-import org.grad.eNav.atonService.models.dtos.s125.InformationDto;
 import org.grad.eNav.atonService.repos.AidsToNavigationRepo;
 import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.engine.search.query.SearchResult;
@@ -335,8 +333,8 @@ class AidsToNavigationServiceTest {
 
         // Also, that a saving call took place in the repository
         verify(this.aidsToNavigationRepo, times(1)).save(this.newAidsToNavigation);
-        verify(this.aggregationService, times(1)).updateAidsToNavigationAggregations(eq(this.newAidsToNavigation.getAtonNumber()), eq(Collections.emptySet()));
-        verify(this.associationService, times(1)).updateAidsToNavigationAssociations(eq(this.newAidsToNavigation.getAtonNumber()), eq(Collections.emptySet()));
+        verify(this.aggregationService, times(1)).updateAidsToNavigationAggregations(eq(this.newAidsToNavigation.getIdCode()), eq(Collections.emptySet()));
+        verify(this.associationService, times(1)).updateAidsToNavigationAssociations(eq(this.newAidsToNavigation.getIdCode()), eq(Collections.emptySet()));
     }
 
     /**
@@ -373,12 +371,12 @@ class AidsToNavigationServiceTest {
      * by its AtoN Number.
      */
     @Test
-    void testDeleteByAtonNumber() {
-        doReturn(Optional.of(this.existingAidsToNavigation)).when(this.aidsToNavigationRepo).findByAtonNumber(this.existingAidsToNavigation.getAtonNumber());
+    void testDeleteByIdCode() {
+        doReturn(Optional.of(this.existingAidsToNavigation)).when(this.aidsToNavigationRepo).findByIdCode(this.existingAidsToNavigation.getIdCode());
         doReturn(this.existingAidsToNavigation).when(this.aidsToNavigationService).delete(this.existingAidsToNavigation.getId());
 
         // Perform the service call
-        this.aidsToNavigationService.deleteByAtonNumber(this.existingAidsToNavigation.getAtonNumber());
+        this.aidsToNavigationService.deleteByIdCode(this.existingAidsToNavigation.getIdCode());
 
         // Verify that a deletion call took place in the repository
         verify(this.aidsToNavigationService, times(1)).delete(this.existingAidsToNavigation.getId());
@@ -390,11 +388,11 @@ class AidsToNavigationServiceTest {
      */
     @Test
     void testDeleteByAtonNumberNotFound() {
-        doReturn(Optional.empty()).when(this.aidsToNavigationRepo).findByAtonNumber(this.existingAidsToNavigation.getAtonNumber());
+        doReturn(Optional.empty()).when(this.aidsToNavigationRepo).findByIdCode(this.existingAidsToNavigation.getIdCode());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
-                this.aidsToNavigationService.deleteByAtonNumber(this.existingAidsToNavigation.getAtonNumber())
+                this.aidsToNavigationService.deleteByIdCode(this.existingAidsToNavigation.getIdCode())
         );
     }
 

@@ -186,17 +186,6 @@ public class AidsToNavigationService {
     }
 
     /**
-     * Returns the Aids to Navigation based on the provided AtoN number is that
-     * exists.
-     *
-     * @param atonNumber the AtoN number
-     * @return the Aids to Navigation if that exists
-     */
-    public Optional<AidsToNavigation> findByAtonNumber(String atonNumber) {
-        return this.aidsToNavigationRepo.findByAtonNumber(atonNumber);
-    }
-
-    /**
      * Returns the Aids to Navigation based on the provided ID Code is that
      * exists.
      *
@@ -226,12 +215,12 @@ public class AidsToNavigationService {
         final AidsToNavigation saved = this.aidsToNavigationRepo.save(aidsToNavigation);
 
         // Update the associations and aggregations links
-        saved.setAggregations(this.aggregationService.updateAidsToNavigationAggregations(saved.getAtonNumber(), aidsToNavigation.getAggregations()));
-        saved.setAssociations(this.associationService.updateAidsToNavigationAssociations(saved.getAtonNumber(), aidsToNavigation.getAssociations()));
+        saved.setAggregations(this.aggregationService.updateAidsToNavigationAggregations(saved.getIdCode(), aidsToNavigation.getAggregations()));
+        saved.setAssociations(this.associationService.updateAidsToNavigationAssociations(saved.getIdCode(), aidsToNavigation.getAssociations()));
 
         // DO NOT REMOVE: Perform a log, which also handles lazy loading!
         log.debug(String.format("Saved Aid to Navigation %s with %d aggregations and %d associations.",
-                saved.getAtonNumber(),
+                saved.getIdCode(),
                 saved.getAggregations().size(),
                 saved.getAssociations().size()));
 
@@ -274,15 +263,15 @@ public class AidsToNavigationService {
     /**
      * Delete the Aids to Navigation by its AtoN number.
      *
-     * @param atonNumber the AtoN number of the Aids to Navigation
+     * @param idCode the ID Code of the Aids to Navigation
      */
     @Transactional
-    public AidsToNavigation deleteByAtonNumber(String atonNumber) throws DataNotFoundException {
-        log.debug("Request to delete Aid to Navigation with AtoN number : {}", atonNumber);
-        BigInteger id = this.aidsToNavigationRepo.findByAtonNumber(atonNumber)
+    public AidsToNavigation deleteByIdCode(String idCode) throws DataNotFoundException {
+        log.debug("Request to delete Aid to Navigation with AtoN number : {}", idCode);
+        BigInteger id = this.aidsToNavigationRepo.findByIdCode(idCode)
                 .map(AidsToNavigation::getId)
                 .orElseThrow(() ->
-                        new DataNotFoundException(String.format("No Aid to Navigation found for the provided AtoN number: %s", atonNumber))
+                        new DataNotFoundException(String.format("No Aid to Navigation found for the provided AtoN ID Code: %s", idCode))
                 );
         return this.delete(id);
     }

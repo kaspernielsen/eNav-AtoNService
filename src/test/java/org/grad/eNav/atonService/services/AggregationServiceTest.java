@@ -145,13 +145,13 @@ class AggregationServiceTest {
      */
     @Test
     void testUpdateAidsToNavigationAggregations() {
-        doReturn(Collections.emptySet()).when(this.aggregationRepo).findByIncludedAtonNumber(any());
+        doReturn(Collections.emptySet()).when(this.aggregationRepo).findByIncludedIdCode(any());
         doAnswer((inv) ->
                 this.aggregation.getPeers()
                         .stream()
-                        .filter(aton -> Objects.equals(aton.getAtonNumber(), inv.getArgument(0)))
+                        .filter(aton -> Objects.equals(aton.getIdCode(), inv.getArgument(0)))
                         .findFirst()
-        ).when(this.aidsToNavigationRepo).findByAtonNumber(any());
+        ).when(this.aidsToNavigationRepo).findByIdCode(any());
         doAnswer((inv) -> inv.getArgument(0)).when(this.aggregationService).save(any());
 
         // Perform the service  call

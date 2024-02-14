@@ -78,7 +78,7 @@ public class AidsToNavigationController {
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Page<AidsToNavigationDto>> getAidsToNavigation(@RequestParam("atonNumber") Optional<String> idCode,
+    public ResponseEntity<Page<AidsToNavigationDto>> getAidsToNavigation(@RequestParam("idCode") Optional<String> idCode,
                                                                          @RequestParam("geometry") Optional<Geometry> geometry,
                                                                          @RequestParam("startDate") Optional<LocalDateTime> startDate,
                                                                          @RequestParam("endDate") Optional<LocalDateTime> endDate,

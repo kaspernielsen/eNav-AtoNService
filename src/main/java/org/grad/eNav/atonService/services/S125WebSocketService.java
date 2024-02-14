@@ -122,9 +122,9 @@ public class S125WebSocketService implements MessageHandler {
             AidsToNavigation aidsToNavigation = (AidsToNavigation) message.getPayload();
 
             // A simple debug message
-            log.debug(String.format("S-125 Web Socket Service received AtoN %s with AtoN number: %s.",
+            log.debug(String.format("S-125 Web Socket Service received AtoN %s with AtoN ID Code: %s.",
                     datasetOperation.getOperation(),
-                    aidsToNavigation.getAtonNumber()));
+                    aidsToNavigation.getIdCode()));
 
             // Handle based on whether this is a deletion or not
             if(!datasetOperation.isWithdrawal()) {

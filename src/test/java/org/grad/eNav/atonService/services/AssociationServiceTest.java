@@ -145,13 +145,13 @@ class AssociationServiceTest {
      */
     @Test
     void testUpdateAidsToNavigationAssociations() {
-        doReturn(Collections.emptySet()).when(this.associationRepo).findByIncludedAtonNumber(any());
+        doReturn(Collections.emptySet()).when(this.associationRepo).findByIncludedIdCode(any());
         doAnswer((inv) ->
                 this.association.getPeers()
                         .stream()
-                        .filter(aton -> Objects.equals(aton.getAtonNumber(), inv.getArgument(0)))
+                        .filter(aton -> Objects.equals(aton.getIdCode(), inv.getArgument(0)))
                         .findFirst()
-        ).when(this.aidsToNavigationRepo).findByAtonNumber(any());
+        ).when(this.aidsToNavigationRepo).findByIdCode(any());
         doAnswer((inv) -> inv.getArgument(0)).when(this.associationService).save(any());
 
         // Perform the service  call
