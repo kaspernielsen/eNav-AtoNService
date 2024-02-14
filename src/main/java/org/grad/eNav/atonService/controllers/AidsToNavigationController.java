@@ -70,7 +70,7 @@ public class AidsToNavigationController {
     /**
      * GET /api/atons : Returns a paged list of all current Aids to navigation.
      *
-     * @param atonNumber the Aids to Navigation number
+     * @param idCode the Aids to Navigation number
      * @param geometry the geometry for AtoN message filtering
      * @param startDate the start date for AtoN message filtering
      * @param endDate the end date for AtoN message filtering
@@ -78,18 +78,18 @@ public class AidsToNavigationController {
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Page<AidsToNavigationDto>> getAidsToNavigation(@RequestParam("atonNumber") Optional<String> atonNumber,
+    public ResponseEntity<Page<AidsToNavigationDto>> getAidsToNavigation(@RequestParam("atonNumber") Optional<String> idCode,
                                                                          @RequestParam("geometry") Optional<Geometry> geometry,
                                                                          @RequestParam("startDate") Optional<LocalDateTime> startDate,
                                                                          @RequestParam("endDate") Optional<LocalDateTime> endDate,
                                                                          Pageable pageable) {
         log.debug("REST request to get page of Aids to Navigation");
-        atonNumber.ifPresent(v -> log.debug("Aids to Navigation number specified as: {}", atonNumber));
+        idCode.ifPresent(v -> log.debug("Aids to Navigation ID code specified as: {}", idCode));
         geometry.ifPresent(v -> log.debug("Aids to Navigation geometry specified as: {}", GeometryJSONConverter.convertFromGeometry(v).toString()));
         startDate.ifPresent(v -> log.debug("Aids to Navigation start date specified as: {}", startDate));
         endDate.ifPresent(v -> log.debug("Aids to Navigation end date specified as: {}", endDate));
         Page<AidsToNavigation> atonPage = this.aidsToNavigationService.findAll(
-                atonNumber.orElse(null),
+                idCode.orElse(null),
                 geometry.orElse(null),
                 startDate.orElse(null),
                 endDate.orElse(null),

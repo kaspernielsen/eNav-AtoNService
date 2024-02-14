@@ -28,7 +28,7 @@ var nodesColumnDefs = [
      hoverMsg: "The AtoN Type",
      placeholder: "The AtoN Type",
  }, {
-    data: ( row, type, val, meta ) => row.featureNames ? row.featureNames.find(fn => fn.displayName).name : '',
+    data: ( row, type, val, meta ) => row.featureNames && row.featureNames.length > 0 ? row.featureNames.find(fn => fn.displayName).name : '',
     title: "Name",
     hoverMsg: "The AtoN Name",
     placeholder: "The AtoN Name",

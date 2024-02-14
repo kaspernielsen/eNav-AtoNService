@@ -93,7 +93,7 @@ public class AidsToNavigationService {
 
     // Service Variables
     private final String[] searchFields = new String[] {
-            "aton_number"
+            "id_code"
     };
     private final String[] searchFieldsWithSort = new String[] {
             "id"
@@ -102,7 +102,7 @@ public class AidsToNavigationService {
     /**
      * Get all the Aids to Navigation in a pageable search.
      *
-     * @param atonNumber the Aids to Navigation number
+     * @param idCode the Aids to Navigation ID Code
      * @param geometry the geometry to match the Aids to Navigation for
      * @param fromTime the time to match the Aids to Navigation from
      * @param toTime the time to match the Aids to Navigation to
@@ -110,7 +110,7 @@ public class AidsToNavigationService {
      * @return the list of Aids to Navigation
      */
     @Transactional(readOnly = true)
-    public Page<AidsToNavigation> findAll(String atonNumber,
+    public Page<AidsToNavigation> findAll(String idCode,
                                           Geometry geometry,
                                           LocalDateTime fromTime,
                                           LocalDateTime toTime,
@@ -118,7 +118,7 @@ public class AidsToNavigationService {
         log.debug("Request to get Aids to Navigation in a pageable search");
         // Create the search query - always sort by name
         SearchQuery searchQuery = this.getAidsToNavigationSearchQuery(
-                atonNumber,
+                idCode,
                 geometry,
                 fromTime,
                 toTime,
@@ -135,21 +135,21 @@ public class AidsToNavigationService {
     /**
      * Get the number of all the Aids to Navigation in the pageable search.
      *
-     * @param atonNumber the Aids to Navigation number
+     * @param idCode the Aids to Navigation ID Code
      * @param geometry the geometry to match the Aids to Navigation for
      * @param fromTime the time to match the Aids to Navigation from
      * @param toTime the time to match the Aids to Navigation to
      * @return the number of all matching Aids to Navigation
      */
     @Transactional(readOnly = true)
-    public long findAllTotalCount(String atonNumber,
+    public long findAllTotalCount(String idCode,
                                  Geometry geometry,
                                  LocalDateTime fromTime,
                                  LocalDateTime toTime) {
         log.debug("Request to get the total count of Aids to Navigation matching the pageable search");
         // Create the search query - always sort by name
         SearchQuery searchQuery = this.getAidsToNavigationSearchQuery(
-                atonNumber,
+                idCode,
                 geometry,
                 fromTime,
                 toTime,
@@ -219,7 +219,7 @@ public class AidsToNavigationService {
         log.debug("Request to save Aid to Navigation : {}", aidsToNavigation);
 
         // Update the entity ID if the Code ID was found
-        this.aidsToNavigationRepo.findByAtonNumber(aidsToNavigation.getAtonNumber())
+        this.aidsToNavigationRepo.findByIdCode(aidsToNavigation.getIdCode())
                 .ifPresent(aton -> aidsToNavigation.setId(aton.getId()));
 
         // Now save for each type
@@ -320,14 +320,14 @@ public class AidsToNavigationService {
      * For any more elaborate search, the getSearchMessageQueryByText funtion
      * can be used.
      *
-     * @param atonNumber the AtoN UID to be searched
+     * @param idCode the AtoN ID Code to be searched
      * @param geometry the geometry that the results should intersect with
      * @param geometry the geometry that the results should intersect with
      * @param fromTime the date-time the results should match from
      * @param sort the sorting selection for the search query
      * @return the full text query
      */
-    protected SearchQuery<AidsToNavigation> getAidsToNavigationSearchQuery(String atonNumber,
+    protected SearchQuery<AidsToNavigation> getAidsToNavigationSearchQuery(String idCode,
                                                                            Geometry geometry,
                                                                            LocalDateTime fromTime,
                                                                            LocalDateTime toTime,
@@ -338,8 +338,8 @@ public class AidsToNavigationService {
         return searchSession.search( scope )
                 .where( f -> f.bool(b -> {
                             b.must(f.matchAll());
-                            Optional.ofNullable(atonNumber).ifPresent(v -> b.must(f.match()
-                                    .field("aton_number")
+                            Optional.ofNullable(idCode).ifPresent(v -> b.must(f.match()
+                                    .field("id_code")
                                     .matching(v)));
                             Optional.ofNullable(geometry).ifPresent(g-> b.must(f.extension(LuceneExtension.get())
                                     .fromLuceneQuery(createGeoSpatialQuery(g))));
