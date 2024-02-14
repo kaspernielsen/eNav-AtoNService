@@ -317,7 +317,7 @@
 		<dependency>
 			<groupId>org.grad.eNav</groupId>
 			<artifactId>S125</artifactId>
-			<version>0.5.62</version>
+			<version>0.5.63</version>
 		</dependency>
 
 		<!-- SECOM -->

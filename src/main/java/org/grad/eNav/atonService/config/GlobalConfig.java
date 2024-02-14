@@ -142,13 +142,13 @@ public class GlobalConfig {
                     .implicitMappings()
                     .addMappings(mapper -> {
                         mapper.skip(AidsToNavigation::setId); // We don't know if the ID is correct so skip it
-                        mapper.using(ctx -> ((AidsToNavigationType)ctx.getSource()).getDateStart().getDate())
+                        mapper.using(ctx -> S125Utils.s100TruncatedDateToLocalDate(((AidsToNavigationType)ctx.getSource()).getDateStart()))
                                 .map(src -> src, AidsToNavigation::setDateStart);
-                        mapper.using(ctx -> ((AidsToNavigationType)ctx.getSource()).getDateEnd().getDate())
+                        mapper.using(ctx -> S125Utils.s100TruncatedDateToLocalDate(((AidsToNavigationType)ctx.getSource()).getDateEnd()))
                                 .map(src -> src, AidsToNavigation::setDateEnd);
-                        mapper.using(ctx -> ((AidsToNavigationType)ctx.getSource()).getPeriodStart().getDate())
+                        mapper.using(ctx -> S125Utils.s100TruncatedDateToLocalDate(((AidsToNavigationType)ctx.getSource()).getPeriodStart()))
                                 .map(src -> src, AidsToNavigation::setPeriodStart);
-                        mapper.using(ctx -> ((AidsToNavigationType)ctx.getSource()).getPeriodEnd().getDate())
+                        mapper.using(ctx -> S125Utils.s100TruncatedDateToLocalDate(((AidsToNavigationType)ctx.getSource()).getPeriodEnd()))
                                 .map(src -> src, AidsToNavigation::setPeriodEnd);
                         mapper.using(ctx -> new GeometryS125Converter().convertToGeometry(((AidsToNavigationType) ctx.getSource())))
                                 .map(src -> src, AidsToNavigation::setGeometry);
@@ -175,13 +175,13 @@ public class GlobalConfig {
                     .addMappings(mapper -> {
                         mapper.using(ctx -> "ID-ATON-" + ((AidsToNavigation) ctx.getSource()).getId())
                                 .map(src -> src, AidsToNavigationType::setId);
-                        mapper.using(ctx -> {S100TruncatedDate std = new S100TruncatedDateImpl(); std.setDate(((AidsToNavigation)ctx.getSource()).getDateStart()); return std;})
+                        mapper.using(ctx -> S125Utils.localDateToS100TruncatedDate(((AidsToNavigation)ctx.getSource()).getDateStart()))
                                 .map(src -> src, AidsToNavigationType::setDateStart);
-                        mapper.using(ctx -> {S100TruncatedDate std = new S100TruncatedDateImpl(); std.setDate(((AidsToNavigation)ctx.getSource()).getDateEnd()); return std;})
+                        mapper.using(ctx -> S125Utils.localDateToS100TruncatedDate(((AidsToNavigation)ctx.getSource()).getDateEnd()))
                                 .map(src -> src, AidsToNavigationType::setDateEnd);
-                        mapper.using(ctx -> {S100TruncatedDate std = new S100TruncatedDateImpl(); std.setDate(((AidsToNavigation)ctx.getSource()).getPeriodStart()); return std;})
+                        mapper.using(ctx -> S125Utils.localDateToS100TruncatedDate(((AidsToNavigation)ctx.getSource()).getPeriodStart()))
                                 .map(src -> src, AidsToNavigationType::setPeriodStart);
-                        mapper.using(ctx -> {S100TruncatedDate std = new S100TruncatedDateImpl(); std.setDate(((AidsToNavigation)ctx.getSource()).getPeriodEnd()); return std;})
+                        mapper.using(ctx -> S125Utils.localDateToS100TruncatedDate(((AidsToNavigation)ctx.getSource()).getPeriodEnd()))
                                 .map(src -> src, AidsToNavigationType::setPeriodEnd);
                         mapper.using(ctx -> modelMapper.map(((AidsToNavigation)ctx.getSource()).getInformations(), new TypeToken<List<InformationTypeImpl>>() {}.getType()) )
                                 .map(src -> src, AidsToNavigationTypeImpl::setInformations);
