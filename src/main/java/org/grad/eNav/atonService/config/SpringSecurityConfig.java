@@ -259,7 +259,7 @@ class SpringSecurityConfig {
         );
 
         // Build and return
-        return http.build();
+        return http.cors(AbstractHttpConfigurer::disable).build();
     }
 
 }

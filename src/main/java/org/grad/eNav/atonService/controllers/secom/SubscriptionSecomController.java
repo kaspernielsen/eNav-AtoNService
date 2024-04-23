@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -75,6 +76,7 @@ public class SubscriptionSecomController implements SubscriptionSecomInterface {
      * @param subscriptionRequestObject the subscription request object
      * @return the subscription response object
      */
+    @CrossOrigin(originPatterns = "http://localhost:8768/*")
     @Tag(name = "SECOM")
     public SubscriptionResponseObject subscription(@Valid SubscriptionRequestObject subscriptionRequestObject) {
         // Try to access the request header if possible...
