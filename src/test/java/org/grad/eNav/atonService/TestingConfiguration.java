@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService;
 
-import org.geotools.data.DataStore;
+import org.geotools.api.data.DataStore;
 import org.grad.eNav.atonService.components.DomainDtoMapper;
 import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;

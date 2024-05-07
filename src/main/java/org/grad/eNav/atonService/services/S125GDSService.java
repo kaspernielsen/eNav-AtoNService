@@ -17,7 +17,7 @@
 package org.grad.eNav.atonService.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.geotools.data.DataStore;
+import org.geotools.api.data.DataStore;
 import org.grad.eNav.atonService.components.S125GDSListener;
 import org.grad.eNav.atonService.models.GeomesaS125;
 import org.grad.eNav.atonService.utils.WKTUtils;

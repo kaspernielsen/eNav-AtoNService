@@ -16,8 +16,8 @@
 
 package org.grad.eNav.atonService.services;
 
-import org.geotools.data.DataStore;
-import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.api.data.DataStore;
+import org.geotools.api.data.SimpleFeatureSource;
 import org.grad.eNav.atonService.components.S125GDSListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
