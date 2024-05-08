@@ -277,7 +277,7 @@ public class SecomSubscriptionService implements MessageHandler {
      * @return the subscription request generated
      */
     public SubscriptionRequest save(String mrn, SubscriptionRequest subscriptionRequest) {
-        log.debug("Request from MRN {} to save SECOM subscription : {}", mrn, subscriptionRequest);
+        log.debug("Request from MRN {} to save SECOM subscription {}", mrn, subscriptionRequest.getUuid());
 
         // Sanity Check
         Optional.ofNullable(mrn)
