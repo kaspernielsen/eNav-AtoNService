@@ -28,7 +28,7 @@
 		<zookeeper.version>3.9.2</zookeeper.version>
 		<kafka.version>3.7.0</kafka.version>
 		<pact-version>4.6.3</pact-version>
-		<secomlib-version>0.0.39</secomlib-version>
+		<secomlib-version>0.0.41</secomlib-version>
 		<hibernate.search-orm.version>6.2.3.Final</hibernate.search-orm.version>
 	</properties>
 
@@ -263,18 +263,6 @@
 			<groupId>org.apache.zookeeper</groupId>
 			<artifactId>zookeeper</artifactId>
 			<version>${zookeeper.version}</version>
-			<exclusions>
-				<!--
-					This netty Boring SSL static library messes up the SSL
-					context we create for the SECOMLib client. This might need
-					to be investigated further, but for now we should remove
-					that, since our kafka is not using SSL.
-				-->
-				<exclusion>
-					<groupId>io.netty</groupId>
-					<artifactId>netty-tcnative-boringssl-static</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<!-- Swagger -->
