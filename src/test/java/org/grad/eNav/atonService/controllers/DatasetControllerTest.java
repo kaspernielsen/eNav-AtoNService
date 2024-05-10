@@ -99,7 +99,7 @@ class DatasetControllerTest {
         this.objectMapper.registerModule(new PageJacksonModule());
         this.objectMapper.registerModule(new SortJacksonModule());
 
-        // Initialise the station nodes list
+        // Initialise the dataset list
         this.datasetList = new ArrayList<>();
         for(long i=0; i<10; i++) {
             S125Dataset dataset = new S125Dataset(String.format("Dataset %d", i));

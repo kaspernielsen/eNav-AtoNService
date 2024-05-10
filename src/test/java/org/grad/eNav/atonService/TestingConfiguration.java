@@ -22,9 +22,11 @@ import org.grad.eNav.atonService.config.GlobalConfig;
 import org.grad.eNav.atonService.models.domain.DatasetContentLog;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
+import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
 import org.grad.eNav.atonService.models.dtos.DatasetContentLogDto;
 import org.grad.eNav.atonService.models.dtos.s125.AidsToNavigationDto;
 import org.grad.eNav.atonService.models.dtos.s125.S125DataSetDto;
+import org.grad.eNav.atonService.models.dtos.secom.SubscriptionRequestDto;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -73,6 +75,22 @@ public class TestingConfiguration {
 	 */
 	@Bean
 	public DomainDtoMapper<DatasetContentLog, DatasetContentLogDto> datasetContentLogDtoMapper() {
+		return new DomainDtoMapper<>();
+	}
+
+	/**
+	 * SubscriptionDomainMapper from DTO to Domain.
+	 */
+	@Bean
+	public DomainDtoMapper<SubscriptionRequestDto, SubscriptionRequest> subscriptionDomainMapper() {
+		return new DomainDtoMapper<>();
+	}
+
+	/**
+	 * SubscriptionDomainMapper from Domain to DTO.
+	 */
+	@Bean
+	public DomainDtoMapper<SubscriptionRequest, SubscriptionRequestDto> subscriptionDtoMapper() {
 		return new DomainDtoMapper<>();
 	}
 

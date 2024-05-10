@@ -23,6 +23,7 @@ import jakarta.xml.bind.JAXBException;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
+import org.grad.eNav.atonService.models.dtos.datatables.*;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
 import org.grad.eNav.atonService.services.S100ExchangeSetService;
@@ -50,6 +51,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
@@ -59,10 +61,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -126,18 +126,40 @@ class SecomSubscriptionServiceTest {
     PublishSubscribeChannel s125RemovalChannel;
 
     // Test Variables
+    private List<SubscriptionRequest> subscriptionRequestList;
     private SubscriptionRequest newSubscriptionRequest;
     private SubscriptionRequest existingSubscriptionRequest;
     private S125Dataset s125Dataset;
     private DatasetContent datasetContent;
-
+    private GeometryFactory factory;
     /**
      * Common setup for all the tests.
      */
     @BeforeEach
     void setUp() {
         // Create a temp geometry factory to get a test geometries
-        GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
+        this.factory = new GeometryFactory(new PrecisionModel(), 4326);
+
+        // Initialise the subscriptions nodes list
+        this.subscriptionRequestList = new ArrayList<>();
+        for(long i=0; i<10; i++) {
+            SubscriptionRequest subscription = new SubscriptionRequest();
+            subscription.setUuid(UUID.randomUUID());
+            subscription.setContainerType(ContainerTypeEnum.S100_DataSet);
+            subscription.setDataProductType(SECOM_DataProductType.S125);
+            subscription.setProductVersion("0.0.1");
+            subscription.setDataReference(UUID.randomUUID());
+            subscription.setGeometry(this.factory.createEmpty(0));
+            subscription.setUnlocode("UKHAR");
+            subscription.setSubscriptionPeriodStart(LocalDateTime.now());
+            subscription.setSubscriptionPeriodEnd(LocalDateTime.now());
+            subscription.setCreatedAt(LocalDateTime.now());
+            subscription.setUpdatedAt(LocalDateTime.now());
+            subscription.setSubscriptionGeometry(this.factory.createEmpty(0));
+            subscription.setGeometry(this.factory.createPoint(new Coordinate(i, i)));
+            subscription.setClientMrn(String.format("urn:mrn:org:test:%d", i));
+            this.subscriptionRequestList.add(subscription);
+        }
 
         // Create a new subscription request
         this.newSubscriptionRequest = new SubscriptionRequest();
@@ -145,7 +167,7 @@ class SecomSubscriptionServiceTest {
         this.newSubscriptionRequest.setDataProductType(SECOM_DataProductType.S125);
         this.newSubscriptionRequest.setSubscriptionPeriodStart(LocalDateTime.now());
         this.newSubscriptionRequest.setSubscriptionPeriodEnd(LocalDateTime.now());
-        this.newSubscriptionRequest.setGeometry(factory.createPoint(new Coordinate(52.98, 28)));
+        this.newSubscriptionRequest.setGeometry(this.factory.createPoint(new Coordinate(52.98, 28)));
 
         // Create a an existing subscription request with a UUID
         this.existingSubscriptionRequest = new SubscriptionRequest();
@@ -154,13 +176,13 @@ class SecomSubscriptionServiceTest {
         this.existingSubscriptionRequest.setDataProductType(SECOM_DataProductType.S125);
         this.existingSubscriptionRequest.setSubscriptionPeriodStart(LocalDateTime.now());
         this.existingSubscriptionRequest.setSubscriptionPeriodEnd(LocalDateTime.now());
-        this.existingSubscriptionRequest.setGeometry(factory.createPoint(new Coordinate(52.98, 1.28)));
+        this.existingSubscriptionRequest.setGeometry(this.factory.createPoint(new Coordinate(52.98, 1.28)));
         this.existingSubscriptionRequest.setClientMrn("urn:mrn:org:test");
 
         // Create a new S-125 dataset
         this.s125Dataset = new S125Dataset("S-125 Dataset");
         this.s125Dataset.setUuid(UUID.randomUUID());
-        this.s125Dataset.setGeometry(factory.createPoint(new Coordinate(52.98, 1.28)));
+        this.s125Dataset.setGeometry(this.factory.createPoint(new Coordinate(52.98, 1.28)));
         this.s125Dataset.setCreatedAt(LocalDateTime.now());
         this.s125Dataset.setLastUpdatedAt(LocalDateTime.now());
         this.datasetContent = new DatasetContent();
@@ -379,6 +401,73 @@ class SecomSubscriptionServiceTest {
             assertEquals(this.existingSubscriptionRequest.getSubscriptionPeriodEnd(), result.get(i).getSubscriptionPeriodEnd());
             assertEquals(this.existingSubscriptionRequest.getGeometry(), result.get(i).getGeometry());
             assertEquals(this.existingSubscriptionRequest.getClientMrn(), result.get(i).getClientMrn());
+        }
+    }
+
+    /**
+     * Test that we can retrieve the paged list of subscription request entries
+     * for a Datatables pagination request (which by the way also includes
+     * search and sorting definitions).
+     */
+    @Test
+    void testHandleDatatablesPagingRequest() {
+        // First create the pagination request
+        DtPagingRequest dtPagingRequest = new DtPagingRequest();
+        dtPagingRequest.setStart(0);
+        dtPagingRequest.setLength(5);
+
+        // Set the pagination request columns
+        dtPagingRequest.setColumns(new ArrayList());
+        Stream.of("uuid", "containerType", "dataProductType")
+                .map(DtColumn::new)
+                .forEach(dtPagingRequest.getColumns()::add);
+
+        // Set the pagination request ordering
+        DtOrder dtOrder = new DtOrder();
+        dtOrder.setColumn(0);
+        dtOrder.setDir(DtDirection.asc);
+        dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
+
+        // Set the pagination search
+        DtSearch dtSearch = new DtSearch();
+        dtSearch.setValue("search-term");
+        dtPagingRequest.setSearch(dtSearch);
+
+        // Mock the full text query
+        SearchQuery<?> mockedQuery = mock(SearchQuery.class);
+        SearchResult<?> mockedResult = mock(SearchResult.class);
+        SearchResultTotal mockedResultTotal = mock(SearchResultTotal.class);
+        doReturn(5L).when(mockedResultTotal).hitCount();
+        doReturn(mockedResultTotal).when(mockedResult).total();
+        doReturn(this.subscriptionRequestList.subList(0, 5)).when(mockedResult).hits();
+        doReturn(mockedResult).when(mockedQuery).fetch(any(), any());
+        doReturn(mockedQuery).when(this.secomSubscriptionService).getDatasetSearchQueryByText(any(), any());
+
+        // Perform the service call
+        Page<SubscriptionRequest> result = this.secomSubscriptionService.handleDatatablesPagingRequest(dtPagingRequest);
+
+        // Validate the result
+        assertNotNull(result);
+        assertEquals(5, result.getSize());
+
+        // Test each of the result entries
+        for(int i=0; i < result.getSize(); i++) {
+            assertNotNull(result.getContent().get(i));
+            assertEquals(this.subscriptionRequestList.get(i).getUuid(), result.getContent().get(i).getUuid());
+            assertEquals(this.subscriptionRequestList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
+            assertEquals(this.subscriptionRequestList.get(i).getUuid(), result.getContent().get(i).getUuid());
+            assertEquals(this.subscriptionRequestList.get(i).getContainerType(), result.getContent().get(i).getContainerType());
+            assertEquals(this.subscriptionRequestList.get(i).getDataProductType(), result.getContent().get(i).getDataProductType());
+            assertEquals(this.subscriptionRequestList.get(i).getProductVersion(), result.getContent().get(i).getProductVersion());
+            assertEquals(this.subscriptionRequestList.get(i).getDataReference(), result.getContent().get(i).getDataReference());
+            assertEquals(this.subscriptionRequestList.get(i).getGeometry(), result.getContent().get(i).getGeometry());
+            assertEquals(this.subscriptionRequestList.get(i).getUnlocode(), result.getContent().get(i).getUnlocode());
+            assertEquals(this.subscriptionRequestList.get(i).getSubscriptionPeriodStart(), result.getContent().get(i).getSubscriptionPeriodStart());
+            assertEquals(this.subscriptionRequestList.get(i).getSubscriptionPeriodEnd(), result.getContent().get(i).getSubscriptionPeriodEnd());
+            assertEquals(this.subscriptionRequestList.get(i).getCreatedAt(), result.getContent().get(i).getCreatedAt());
+            assertEquals(this.subscriptionRequestList.get(i).getUpdatedAt(), result.getContent().get(i).getUpdatedAt());
+            assertEquals(this.subscriptionRequestList.get(i).getSubscriptionGeometry(), result.getContent().get(i).getSubscriptionGeometry());
+            assertEquals(this.subscriptionRequestList.get(i).getClientMrn(), result.getContent().get(i).getClientMrn());
         }
     }
 

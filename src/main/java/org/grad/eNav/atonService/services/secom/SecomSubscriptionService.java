@@ -33,6 +33,7 @@ import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.domain.secom.SubscriptionRequest;
+import org.grad.eNav.atonService.models.dtos.datatables.DtPagingRequest;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
 import org.grad.eNav.atonService.repos.SecomSubscriptionRepo;
 import org.grad.eNav.atonService.services.S100ExchangeSetService;
@@ -59,6 +60,8 @@ import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHandler;
@@ -270,6 +273,32 @@ public class SecomSubscriptionService implements MessageHandler {
     }
 
     /**
+     * Handles a datatables pagination request and returns the SECOM
+     * subscription results list in an appropriate format to be viewed by a
+     * datatables jQuery table.
+     * <p/>
+     *
+     * @param dtPagingRequest the Datatables pagination request
+     * @return the Datatables paged response
+     */
+    @Transactional(readOnly = true)
+    public Page<SubscriptionRequest> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+        log.debug("Request to get SECOM Subscriptions in a Datatables pageable search");
+        // Create the search query
+        final SearchQuery<SubscriptionRequest> searchQuery = this.getDatasetSearchQueryByText(
+                dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getLucenceSort(List.of())
+        );
+
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
+                .map(searchResult -> new PageImpl<>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
+    }
+
+
+    /**
      * Creates a new SECOM subscription and persists its information in the
      * database.
      *
@@ -390,6 +419,34 @@ public class SecomSubscriptionService implements MessageHandler {
 
         // Update the subscription timestamp tp keep track of the updates
         this.updateSubscriptionTimestamp(subscriptionRequest);
+    }
+
+    /**
+     * Constructs a hibernate search query using Lucene based on the provided
+     * search test. This query will be based on the SECOM subscriptions fields.
+     *
+     * @param searchText the text to be searched
+     * @param sort the sorting selection for the search query
+     * @return the full text query
+     */
+    protected SearchQuery<SubscriptionRequest> getDatasetSearchQueryByText(String searchText, Sort sort) {
+        SearchSession searchSession = Search.session( this.entityManager );
+        SearchScope<SubscriptionRequest> scope = searchSession.scope( SubscriptionRequest.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where(f -> f.wildcard()
+                        .fields(
+                                "containerType",
+                                "dataProductType",
+                                "productVersion", "dataReference",
+                                "dataReference",
+                                "subscriptionPeriodStart",
+                                "subscriptionPeriodEnd"
+                        )
+                        .matching(Optional.ofNullable(searchText).map(st -> "*" + st).orElse("") + "*")
+                )
+                .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
     }
 
     /**
