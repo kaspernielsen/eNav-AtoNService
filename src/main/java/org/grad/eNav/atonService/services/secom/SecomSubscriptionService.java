@@ -436,12 +436,12 @@ public class SecomSubscriptionService implements MessageHandler {
                 .extension(LuceneExtension.get())
                 .where(f -> f.wildcard()
                         .fields(
+                                "uuid",
                                 "containerType",
                                 "dataProductType",
-                                "productVersion", "dataReference",
+                                "productVersion",
                                 "dataReference",
-                                "subscriptionPeriodStart",
-                                "subscriptionPeriodEnd"
+                                "clientMrn"
                         )
                         .matching(Optional.ofNullable(searchText).map(st -> "*" + st).orElse("") + "*")
                 )

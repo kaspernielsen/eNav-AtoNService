@@ -77,6 +77,17 @@ class HTMLViewerControllerTest {
     }
 
     /**
+     * Test that we can access the Subscriptions HTML page.
+     */
+    @Test
+    void testGetSubscriptions() throws Exception {
+        // Perform the MVC request
+        this.mockMvc.perform(get("/subscriptions")
+                        .contentType(MediaType.TEXT_HTML))
+                .andExpect(status().isOk());
+    }
+
+    /**
      * Test that we can access the Logs HTML page.
      */
     @Test

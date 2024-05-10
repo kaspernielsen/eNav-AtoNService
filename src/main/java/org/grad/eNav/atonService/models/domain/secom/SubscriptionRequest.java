@@ -39,6 +39,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -102,8 +103,11 @@ public class SubscriptionRequest {
     private LocalDateTime subscriptionPeriodEnd;
 
     @CreatedDate
+    @GenericField(indexNullAs = "1970-01-01T00:00:00")
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
+    @GenericField(indexNullAs = "1970-01-01T00:00:00")
     private LocalDateTime updatedAt;
 
     @NonStandardField(name="subscriptionGeometry", valueBinder = @ValueBinderRef(
@@ -112,6 +116,8 @@ public class SubscriptionRequest {
     ))
     private Geometry subscriptionGeometry;
 
+    @KeywordField(sortable = Sortable.YES,
+                  valueBridge = @ValueBridgeRef(type = NullValueIndexerBridge.class))
     private String clientMrn;
 
     /**

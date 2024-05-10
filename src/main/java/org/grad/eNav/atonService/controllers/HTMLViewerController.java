@@ -69,7 +69,7 @@ public class HTMLViewerController {
      * The Datasets page of the AtoN Service Application.
      *
      * @param model The application UI model
-     * @return The index page
+     * @return The datasets page
      */
     @GetMapping("/datasets")
     public String datasets(Model model) {
@@ -83,7 +83,7 @@ public class HTMLViewerController {
      * The Aids to Navigation page of the AtoN Service Application.
      *
      * @param model The application UI model
-     * @return The index page
+     * @return The atons page
      */
     @GetMapping("/atons")
     public String atons(Model model) {
@@ -94,10 +94,24 @@ public class HTMLViewerController {
     }
 
     /**
+     * The SECOM Subscriptions page of the AtoN Service Application.
+     *
+     * @param model The application UI model
+     * @return The subscriptions page
+     */
+    @GetMapping("/subscriptions")
+    public String subscriptions(Model model) {
+        model.addAttribute("appName", this.serviceInformationConfig.name());
+        model.addAttribute("appOperatorUrl", this.serviceInformationConfig.url());
+        model.addAttribute("appCopyright", this.serviceInformationConfig.copyright());
+        return "subscriptions";
+    }
+
+    /**
      * The Aids to Navigation page of the AtoN Service Application.
      *
      * @param model The application UI model
-     * @return The index page
+     * @return The logs page
      */
     @GetMapping("/logs")
     public String logs(Model model) {
@@ -111,7 +125,7 @@ public class HTMLViewerController {
      * The about page of the AtoN Service Application.
      *
      * @param model The application UI model
-     * @return The index page
+     * @return The about page
      */
     @GetMapping("/about")
     public String about(Model model) {
