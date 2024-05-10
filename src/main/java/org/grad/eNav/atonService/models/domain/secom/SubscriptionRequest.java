@@ -103,11 +103,11 @@ public class SubscriptionRequest {
     private LocalDateTime subscriptionPeriodEnd;
 
     @CreatedDate
-    @GenericField(indexNullAs = "1970-01-01T00:00:00")
+    @GenericField(sortable = Sortable.YES)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @GenericField(indexNullAs = "1970-01-01T00:00:00")
+    @GenericField(sortable = Sortable.YES)
     private LocalDateTime updatedAt;
 
     @NonStandardField(name="subscriptionGeometry", valueBinder = @ValueBinderRef(
