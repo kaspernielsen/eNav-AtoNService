@@ -32,6 +32,7 @@ import _int.iho.s125.gml.cs0._1.impl.AssociationImpl;
 import _int.iho.s125.gml.cs0._1.impl.DatasetImpl;
 import _int.iho.s125.gml.cs0._1.impl.ObjectFactory;
 import jakarta.validation.constraints.NotNull;
+import org.apache.commons.lang3.StringUtils;
 import org.grad.eNav.atonService.models.domain.DatasetContent;
 import org.grad.eNav.atonService.models.domain.s125.AidsToNavigation;
 import org.grad.eNav.atonService.models.domain.s125.S125AtonTypes;
@@ -42,6 +43,7 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 
+import java.net.URI;
 import java.util.*;
 
 public class S125DatasetBuilder {
@@ -52,14 +54,22 @@ public class S125DatasetBuilder {
     private final ModelMapper modelMapper;
 
     // Class Variables
-    private final ObjectFactory s125GMLFactory;
+    private String datasetIdPrefix;
 
     /**
      * Class Constructor.
      */
+    public S125DatasetBuilder(ModelMapper modelMapper, String datasetIdPrefix) {
+        this.modelMapper = modelMapper;
+        this.datasetIdPrefix = datasetIdPrefix;
+    }
+
+    /**
+     * Class Constructor with empty dataset ID prefix (uses the default).
+     */
     public S125DatasetBuilder(ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
-        this.s125GMLFactory = new ObjectFactory();
+        this.datasetIdPrefix = null;
     }
 
     /**
@@ -73,12 +83,9 @@ public class S125DatasetBuilder {
         // Initialise the dataset
         Dataset dataset = this.modelMapper.map(s125Dataset, DatasetImpl.class);
 
-        // Always use a UUID as an ID
+        // Always use a UUID for building the ID
         if(Objects.isNull(dataset.getId())) {
-            dataset.setId(Optional.ofNullable(s125Dataset)
-                    .map(S125Dataset::getUuid)
-                    .orElse(UUID.randomUUID())
-                    .toString());
+            dataset.setId(S125DatasetBuilder.generateDatasetId(this.datasetIdPrefix, s125Dataset.getUuid()));
         }
 
         // Add the content update sequence to the dataset identification information
@@ -191,6 +198,30 @@ public class S125DatasetBuilder {
             envelope.expandToInclude(c);
         }
         return envelope;
+    }
+
+    /**
+     * A helpful utility to generate the dataset ID in a single place based on
+     * the MRN prefix provided and the dataset UUID.
+     * <p/>
+     * The resulting ID should follow an MRN structure. Therefore, an MRN prefix
+     * will be used and the UUID identified for this dataset will be appended in
+     * the end. If no MRN prefix is provided, then a standard one to make sure
+     * it conforms to something like an MRN will be used:
+     * <p/>
+     * e.g. "urn:mrn:test:s125:dataset"
+     *
+     * @param prefix the MRN prefix to be used
+     * @param uuid the UUID of the dataset
+     * @return the combine dataset ID as an MRN that includes the dataset UUID
+     */
+    public static String generateDatasetId(String prefix, UUID uuid) {
+        return Optional.ofNullable(prefix)
+                .filter(StringUtils::isNotBlank)
+                .map(p -> p.endsWith(":") ? p : p+":")
+                .orElse("urn:mrn:test:s125:") +
+                Optional.ofNullable(uuid)
+                        .orElse(UUID.randomUUID());
     }
 
 }

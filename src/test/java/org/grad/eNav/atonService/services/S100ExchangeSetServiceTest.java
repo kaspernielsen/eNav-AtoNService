@@ -232,7 +232,7 @@ class S100ExchangeSetServiceTest {
         // Unmarshall the XML and check some of its individual fields
         final S100ExchangeCatalogue s100ExchangeCatalogue = S100ExchangeSetUtils.unmarshallS100ExchangeSetCatalogue(result);
         assertNotNull(s100ExchangeCatalogue.getIdentifier());
-        assertNotNull(UUID.fromString(s100ExchangeCatalogue.getIdentifier().getIdentifier()));
+        assertNotNull(s100ExchangeCatalogue.getIdentifier().getIdentifier());
         assertNotNull(s100ExchangeCatalogue.getContact());
         assertNotNull(s100ExchangeCatalogue.getContact().getOrganization());
         assertNotNull(s100ExchangeCatalogue.getContact().getOrganization().getCharacterString());

@@ -32,6 +32,7 @@ import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.s125.utils.S125Utils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,6 +82,12 @@ public class DatasetContentService {
      */
     @Autowired
     DatasetContentRepo datasetContentRepo;
+
+    /**
+     * The MRN prefix to be used for identifying the S-125 datasets generated
+     */
+    @Value("${gla.rad.aton-service.datasetMrnPrefix:urn:mrn:test:s125}")
+    String datasetMrnPrefix;
 
     /**
      * The saving operation that persists the dataset content in the database
@@ -198,7 +205,7 @@ public class DatasetContentService {
                 .toList();
 
         // Now try to marshal the dataset into an XML string and update the content/delta
-        final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper);
+        final S125DatasetBuilder s125DatasetBuilder = new S125DatasetBuilder(this.modelMapper, this.datasetMrnPrefix);
         try {
             // Build the dataset contents, if any
             final Dataset dataset = s125DatasetBuilder.packageToDataset(s125Dataset, atonList);

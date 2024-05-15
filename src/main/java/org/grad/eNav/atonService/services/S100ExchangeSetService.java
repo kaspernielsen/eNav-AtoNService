@@ -31,6 +31,7 @@ import org.grad.eNav.atonService.models.domain.s125.S125Dataset;
 import org.grad.eNav.atonService.models.dtos.McpEntityType;
 import org.grad.eNav.atonService.models.dtos.SignatureCertificateDto;
 import org.grad.eNav.atonService.models.enums.DatasetOperation;
+import org.grad.eNav.atonService.utils.S125DatasetBuilder;
 import org.grad.eNav.atonService.utils.ZipUtils;
 import org.grad.eNav.atonService.utils.FileActionUtils;
 import org.grad.eNav.s100.enums.MaintenanceFrequency;
@@ -115,6 +116,12 @@ public class S100ExchangeSetService {
     @Autowired
     @Lazy
     CKeeperClient cKeeperClient;
+
+    /**
+     * The MRN prefix to be used for identifying the S-125 datasets generated
+     */
+    @Value("${gla.rad.aton-service.datasetMrnPrefix:urn:mrn:test:s125}")
+    String datasetMrnPrefix;
 
     /**
      * The main packaging function to an exchange set. This operation will
@@ -256,7 +263,7 @@ public class S100ExchangeSetService {
                     s100SEDigitalSignature.setValue(this.signContent(data.certificateId, DigitalSignatureAlgorithmEnum.ECDSA.getValue(), payload));
                     return s100SEDigitalSignature;
                 })
-                .setIdentifier(UUID.randomUUID().toString())
+                .setIdentifier(S125DatasetBuilder.generateDatasetId(this.datasetMrnPrefix + ":exchangeset", UUID.randomUUID()))
                 .setDataServerIdentifier(UUID.nameUUIDFromBytes(this.serviceInformationConfig.name().getBytes()).toString())
                 .setOrganization(this.serviceInformationConfig.organization())
                 .setElectronicMailAddresses(this.serviceInformationConfig.electronicMailAddresses())
@@ -287,7 +294,7 @@ public class S100ExchangeSetService {
             // And add to the builder
             s100ExchangeCatalogueBuilder.addDatasetMetadata(builder -> builder
                     .setFileName("file:/" + data.datasetFile.getName())
-                    .setDatasetID(dataset.getUuid().toString())
+                    .setDatasetID(S125DatasetBuilder.generateDatasetId(this.datasetMrnPrefix, dataset.getUuid()))
                     .setDescription(dataset.getDatasetIdentificationInformation().getDatasetAbstract())
                     .setCompressionFlag(false)
                     .setDataProtection(false)
