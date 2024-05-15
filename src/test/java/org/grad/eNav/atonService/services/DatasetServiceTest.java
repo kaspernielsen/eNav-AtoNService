@@ -50,6 +50,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,6 +78,12 @@ class DatasetServiceTest {
      */
     @Mock
     EntityManager entityManager;
+
+    /**
+     * The Task Executor mock.
+     */
+    @Mock
+    Executor taskExecutor;
 
     /**
      * The Dataset Content Service mock.
@@ -333,6 +340,12 @@ class DatasetServiceTest {
     void testSave() {
         doReturn(this.newDataset).when(this.datasetRepo).saveAndFlush(any());
         doNothing().when(this.datasetService).requestDatasetContentUpdate(any());
+
+        // Special call ---  Allow the executor task to run
+        doAnswer(args -> {
+            ((Runnable)args.getArguments()[0]).run();
+            return null;
+        }).when(this.taskExecutor).execute(any());
 
         // Perform the service call
         S125Dataset result = this.datasetService.save(new S125Dataset());

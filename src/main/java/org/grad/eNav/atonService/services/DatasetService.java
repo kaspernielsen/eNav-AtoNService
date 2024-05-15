@@ -65,6 +65,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.function.Predicate.not;
 
@@ -90,6 +92,12 @@ public class DatasetService {
      */
     @Autowired
     EntityManager entityManager;
+
+    /**
+     * The Task Executor.
+     */
+    @Autowired
+    Executor taskExecutor;
 
     /**
      * The Dataset Content Service.
@@ -245,8 +253,17 @@ public class DatasetService {
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset savedDataset = this.datasetRepo.saveAndFlush(dataset);
 
-        // Request an Update for the dataset content
-        this.requestDatasetContentUpdate(savedDataset.getUuid());
+        // Request an update for the dataset content, but let someone else
+        // deal with this. We have issues with the dataset being passed to
+        // the database before the context update kicks in...
+        this.taskExecutor.execute(() -> {
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+                this.requestDatasetContentUpdate(savedDataset.getUuid());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         // And return the saved dataset
         return savedDataset;
@@ -377,6 +394,7 @@ public class DatasetService {
      *
      * @param uuid the UUID of the dataset to update the content for
      */
+    @Transactional
     public void requestDatasetContentUpdate(@NotNull UUID uuid) {
         // And request the dataset content generation asynchronously
         this.datasetContentService.generateDatasetContent(uuid)
