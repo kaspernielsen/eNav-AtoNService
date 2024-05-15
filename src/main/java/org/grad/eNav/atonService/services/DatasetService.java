@@ -253,9 +253,11 @@ public class DatasetService {
         // Now save the dataset - Merge to pick up all the latest changes
         final S125Dataset savedDataset = this.datasetRepo.saveAndFlush(dataset);
 
+        // TODO: We need to improve this code not sure that a task executor and
+        //       sleep is the best course of action here...
         // Request an update for the dataset content, but let someone else
         // deal with this. We have issues with the dataset being passed to
-        // the database before the context update kicks in...
+        // the database before the content update kicks in...
         this.taskExecutor.execute(() -> {
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
