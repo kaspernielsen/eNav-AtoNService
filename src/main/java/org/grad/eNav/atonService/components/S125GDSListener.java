@@ -15,9 +15,9 @@
  */
 
 package org.grad.eNav.atonService.components;
-import _int.iho.s100.gml.profiles._5_0.AbstractGMLType;
-import _int.iho.s100.gml.profiles._5_0.AggregationType;
-import _int.iho.s100.gml.profiles._5_0.ReferenceType;
+import _int.iho.s125.s100.gml.profiles._5_0.AbstractGMLType;
+import _int.iho.s125.s100.gml.profiles._5_0.AggregationType;
+import _int.iho.s125.s100.gml.profiles._5_0.ReferenceType;
 import _int.iho.s125.gml.cs0._1.AidsToNavigationType;
 import _int.iho.s125.gml.cs0._1.EquipmentType;
 import _int.iho.s125.gml.cs0._1.StructureObjectType;

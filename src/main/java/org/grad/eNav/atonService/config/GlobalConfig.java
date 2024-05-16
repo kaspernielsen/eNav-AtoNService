@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.config;
 
-import _int.iho.s100.gml.base._5_0.impl.DataSetIdentificationTypeImpl;
+import _int.iho.s125.s100.gml.base._5_0.impl.DataSetIdentificationTypeImpl;
 import _int.iho.s125.gml.cs0._1.AidsToNavigationType;
 import _int.iho.s125.gml.cs0._1.Dataset;
 import _int.iho.s125.gml.cs0._1.S100TruncatedDate;

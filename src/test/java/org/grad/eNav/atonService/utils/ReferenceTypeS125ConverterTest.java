@@ -16,7 +16,7 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _int.iho.s100.gml.profiles._5_0.ReferenceType;
+import _int.iho.s125.s100.gml.profiles._5_0.ReferenceType;
 import org.grad.eNav.atonService.models.domain.s125.*;
 import org.grad.eNav.atonService.models.enums.ReferenceTypeRole;
 import org.junit.jupiter.api.BeforeEach;

@@ -16,16 +16,16 @@
 
 package org.grad.eNav.atonService.utils;
 
-import _int.iho.s100.gml.base._5_0.CurveProperty;
-import _int.iho.s100.gml.base._5_0.MultiPointProperty;
-import _int.iho.s100.gml.base._5_0.PointProperty;
-import _int.iho.s100.gml.base._5_0.SurfaceProperty;
-import _int.iho.s100.gml.profiles._5_0.BoundingShapeType;
-import _int.iho.s100.gml.profiles._5_0.EnvelopeType;
-import _int.iho.s100.gml.profiles._5_0.Pos;
-import _int.iho.s100.gml.profiles._5_0.impl.BoundingShapeTypeImpl;
-import _int.iho.s100.gml.profiles._5_0.impl.EnvelopeTypeImpl;
-import _int.iho.s100.gml.profiles._5_0.impl.PosImpl;
+import _int.iho.s125.s100.gml.base._5_0.CurveProperty;
+import _int.iho.s125.s100.gml.base._5_0.MultiPointProperty;
+import _int.iho.s125.s100.gml.base._5_0.PointProperty;
+import _int.iho.s125.s100.gml.base._5_0.SurfaceProperty;
+import _int.iho.s125.s100.gml.profiles._5_0.BoundingShapeType;
+import _int.iho.s125.s100.gml.profiles._5_0.EnvelopeType;
+import _int.iho.s125.s100.gml.profiles._5_0.Pos;
+import _int.iho.s125.s100.gml.profiles._5_0.impl.BoundingShapeTypeImpl;
+import _int.iho.s125.s100.gml.profiles._5_0.impl.EnvelopeTypeImpl;
+import _int.iho.s125.s100.gml.profiles._5_0.impl.PosImpl;
 import _int.iho.s125.gml.cs0._1.Dataset;
 import _int.iho.s125.gml.cs0._1.impl.AggregationImpl;
 import _int.iho.s125.gml.cs0._1.impl.AssociationImpl;
