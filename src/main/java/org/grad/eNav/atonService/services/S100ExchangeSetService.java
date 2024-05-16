@@ -217,7 +217,7 @@ public class S100ExchangeSetService {
         final File esSignature = FileActionUtils.createFile(esRootFolder, "CATALOG.SIGN");
         final byte[] signature;
         try {
-            signature = this.signContent(signatureCertificate.getCertificateId(), DigitalSignatureAlgorithmEnum.ECDSA.getValue(), catalogueXml.getBytes());
+            signature = this.signContent(signatureCertificate.getCertificateId(), DigitalSignatureAlgorithmEnum.SHA3_384_WITH_ECDSA.getValue(), catalogueXml.getBytes());
             FileUtils.writeStringToFile(esSignature, new String(signature, StandardCharsets.UTF_8), Charset.defaultCharset());
         } catch (IOException ex) {
             log.error("Error while generating the exchange set signature: {}", ex.getMessage());
@@ -260,7 +260,7 @@ public class S100ExchangeSetService {
                     S100SEDigitalSignature s100SEDigitalSignature = new S100SEDigitalSignature();
                     s100SEDigitalSignature.setId(String.format("sig%d", signatureCounter.getAndIncrement()));
                     s100SEDigitalSignature.setCertificateRef(String.format("cer%d", data.certificateId()));
-                    s100SEDigitalSignature.setValue(this.signContent(data.certificateId, DigitalSignatureAlgorithmEnum.ECDSA.getValue(), payload));
+                    s100SEDigitalSignature.setValue(this.signContent(data.certificateId, DigitalSignatureAlgorithmEnum.SHA3_384_WITH_ECDSA.getValue(), payload));
                     return s100SEDigitalSignature;
                 })
                 .setIdentifier(S125DatasetBuilder.generateDatasetId(this.datasetMrnPrefix + ":exchangeset", UUID.randomUUID()))

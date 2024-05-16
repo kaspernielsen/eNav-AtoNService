@@ -257,18 +257,18 @@ class SecomControllerTest {
                     assertNotNull(capabilityResponseObject.getCapability());
                     assertFalse(capabilityResponseObject.getCapability().isEmpty());
                     assertEquals(1, capabilityResponseObject.getCapability().size());
-                    assertEquals(ContainerTypeEnum.S100_DataSet, capabilityResponseObject.getCapability().get(0).getContainerType());
-                    assertEquals(SECOM_DataProductType.S125, capabilityResponseObject.getCapability().get(0).getDataProductType());
-                    assertEquals("/xsd/S125.xsd", capabilityResponseObject.getCapability().get(0).getProductSchemaUrl().getPath());
-                    assertEquals("0.0.0", capabilityResponseObject.getCapability().get(0).getServiceVersion());
-                    assertFalse(capabilityResponseObject.getCapability().get(0).getImplementedInterfaces().getAccess());
-                    assertFalse(capabilityResponseObject.getCapability().get(0).getImplementedInterfaces().getEncryptionKey());
-                    assertTrue(capabilityResponseObject.getCapability().get(0).getImplementedInterfaces().getGet());
-                    assertTrue(capabilityResponseObject.getCapability().get(0).getImplementedInterfaces().getSubscription());
-                    assertFalse(capabilityResponseObject.getCapability().get(0).getImplementedInterfaces().getGetByLink());
-                    assertTrue(capabilityResponseObject.getCapability().get(0).getImplementedInterfaces().getGetSummary());
-                    assertFalse(capabilityResponseObject.getCapability().get(0).getImplementedInterfaces().getUpload());
-                    assertFalse(capabilityResponseObject.getCapability().get(0).getImplementedInterfaces().getUploadLink());
+                    assertEquals(ContainerTypeEnum.S100_DataSet, capabilityResponseObject.getCapability().getFirst().getContainerType());
+                    assertEquals(SECOM_DataProductType.S125, capabilityResponseObject.getCapability().getFirst().getDataProductType());
+                    assertEquals("/xsd/S125.xsd", capabilityResponseObject.getCapability().getFirst().getProductSchemaUrl().getPath());
+                    assertEquals("0.0.0", capabilityResponseObject.getCapability().getFirst().getServiceVersion());
+                    assertFalse(capabilityResponseObject.getCapability().getFirst().getImplementedInterfaces().getAccess());
+                    assertFalse(capabilityResponseObject.getCapability().getFirst().getImplementedInterfaces().getEncryptionKey());
+                    assertTrue(capabilityResponseObject.getCapability().getFirst().getImplementedInterfaces().getGet());
+                    assertTrue(capabilityResponseObject.getCapability().getFirst().getImplementedInterfaces().getSubscription());
+                    assertFalse(capabilityResponseObject.getCapability().getFirst().getImplementedInterfaces().getGetByLink());
+                    assertTrue(capabilityResponseObject.getCapability().getFirst().getImplementedInterfaces().getGetSummary());
+                    assertFalse(capabilityResponseObject.getCapability().getFirst().getImplementedInterfaces().getUpload());
+                    assertFalse(capabilityResponseObject.getCapability().getFirst().getImplementedInterfaces().getUploadLink());
                 });
     }
 
@@ -316,17 +316,17 @@ class SecomControllerTest {
                     assertNotNull(getSummaryResponseObject);
                     assertNotNull(getSummaryResponseObject.getSummaryObject());
                     assertEquals(1, getSummaryResponseObject.getSummaryObject().size());
-                    assertEquals(ContainerTypeEnum.S100_DataSet, getSummaryResponseObject.getSummaryObject().get(0).getContainerType());
-                    assertEquals(SECOM_DataProductType.S125, getSummaryResponseObject.getSummaryObject().get(0).getDataProductType());
-                    assertEquals(Boolean.FALSE, getSummaryResponseObject.getSummaryObject().get(0).getDataCompression());
-                    assertEquals(Boolean.FALSE, getSummaryResponseObject.getSummaryObject().get(0).getDataProtection());
-                    assertEquals(this.s125DataSet.getUuid(), getSummaryResponseObject.getSummaryObject().get(0).getDataReference());
-                    assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getProductEdition(), getSummaryResponseObject.getSummaryObject().get(0).getInfo_productVersion());
-                    assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetFileIdentifier(), getSummaryResponseObject.getSummaryObject().get(0).getInfo_identifier());
-                    assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetTitle(), getSummaryResponseObject.getSummaryObject().get(0).getInfo_name());
-                    assertEquals(InfoStatusEnum.PRESENT.getValue(), getSummaryResponseObject.getSummaryObject().get(0).getInfo_status());
-                    assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetAbstract(), getSummaryResponseObject.getSummaryObject().get(0).getInfo_description());
-                    assertEquals(this.s125DataSet.getLastUpdatedAt(), getSummaryResponseObject.getSummaryObject().get(0).getInfo_lastModifiedDate());
+                    assertEquals(ContainerTypeEnum.S100_DataSet, getSummaryResponseObject.getSummaryObject().getFirst().getContainerType());
+                    assertEquals(SECOM_DataProductType.S125, getSummaryResponseObject.getSummaryObject().getFirst().getDataProductType());
+                    assertEquals(Boolean.FALSE, getSummaryResponseObject.getSummaryObject().getFirst().getDataCompression());
+                    assertEquals(Boolean.FALSE, getSummaryResponseObject.getSummaryObject().getFirst().getDataProtection());
+                    assertEquals(this.s125DataSet.getUuid(), getSummaryResponseObject.getSummaryObject().getFirst().getDataReference());
+                    assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getProductEdition(), getSummaryResponseObject.getSummaryObject().getFirst().getInfo_productVersion());
+                    assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetFileIdentifier(), getSummaryResponseObject.getSummaryObject().getFirst().getInfo_identifier());
+                    assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetTitle(), getSummaryResponseObject.getSummaryObject().getFirst().getInfo_name());
+                    assertEquals(InfoStatusEnum.PRESENT.getValue(), getSummaryResponseObject.getSummaryObject().getFirst().getInfo_status());
+                    assertEquals(this.s125DataSet.getDatasetIdentificationInformation().getDatasetAbstract(), getSummaryResponseObject.getSummaryObject().getFirst().getInfo_description());
+                    assertEquals(this.s125DataSet.getLastUpdatedAt(), getSummaryResponseObject.getSummaryObject().getFirst().getInfo_lastModifiedDate());
                     assertNotNull(getSummaryResponseObject.getPagination());
                     assertEquals(Integer.MAX_VALUE, getSummaryResponseObject.getPagination().getMaxItemsPerPage());
                     assertEquals(1, getSummaryResponseObject.getPagination().getTotalItems());
@@ -401,7 +401,7 @@ class SecomControllerTest {
         digitalSignatureCertificate.setPublicKey(mockPublicKey);
         digitalSignatureCertificate.setRootCertificate(mockRootCertificate);
         doReturn(digitalSignatureCertificate).when(this.secomCertificateProvider).getDigitalSignatureCertificate();
-        doReturn(DigitalSignatureAlgorithmEnum.ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
+        doReturn(DigitalSignatureAlgorithmEnum.SHA3_384_WITH_ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
         doReturn("signature".getBytes()).when(this.secomSignatureProvider).generateSignature(any(), any(), any());
 
         // Mock the rest
@@ -432,22 +432,22 @@ class SecomControllerTest {
                     assertNotNull(getResponseObject.getDataResponseObject());
                     assertNotNull(getResponseObject.getPagination());
                     assertEquals(1, getResponseObject.getDataResponseObject().size());
-                    assertNotNull(getResponseObject.getDataResponseObject().get(0));
-                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getData());
-                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getExchangeMetadata());
-                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDataProtection());
-                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getCompressionFlag());
-                    assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getProtectionScheme());
-                    assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureReference());
-                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue());
-                    assertEquals(DatatypeConverter.printHexBinary("signature".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
-                    assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
-                    assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
+                    assertNotNull(getResponseObject.getDataResponseObject().getFirst());
+                    assertNotNull(getResponseObject.getDataResponseObject().getFirst().getData());
+                    assertNotNull(getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDataProtection());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getCompressionFlag());
+                    assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getProtectionScheme());
+                    assertEquals(DigitalSignatureAlgorithmEnum.SHA3_384_WITH_ECDSA, getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureReference());
+                    assertNotNull(getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureValue());
+                    assertEquals(DatatypeConverter.printHexBinary("signature".getBytes()), getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
+                    assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
+                    assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
                     assertEquals(Integer.MAX_VALUE, getResponseObject.getPagination().getMaxItemsPerPage());
                     assertEquals(1, getResponseObject.getPagination().getTotalItems());
 
                     // Try to parse the incoming data
-                    String s125Xml = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().get(0).getData()));
+                    String s125Xml = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().getFirst().getData()));
                     try {
                         Dataset result = S125Utils.unmarshallS125(s125Xml);
                         assertNotNull(result);
@@ -482,7 +482,7 @@ class SecomControllerTest {
         digitalSignatureCertificate.setPublicKey(mockPublicKey);
         digitalSignatureCertificate.setRootCertificate(mockRootCertificate);
         doReturn(digitalSignatureCertificate).when(this.secomCertificateProvider).getDigitalSignatureCertificate();
-        doReturn(DigitalSignatureAlgorithmEnum.ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
+        doReturn(DigitalSignatureAlgorithmEnum.SHA3_384_WITH_ECDSA).when(this.secomSignatureProvider).getSignatureAlgorithm();
         doReturn("signature".getBytes()).when(this.secomSignatureProvider).generateSignature(any(), any(), any());
 
         // Mock the rest
@@ -517,22 +517,22 @@ class SecomControllerTest {
                     assertNotNull(getResponseObject.getDataResponseObject());
                     assertNotNull(getResponseObject.getPagination());
                     assertEquals(1, getResponseObject.getDataResponseObject().size());
-                    assertNotNull(getResponseObject.getDataResponseObject().get(0));
-                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getData());
-                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getExchangeMetadata());
-                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDataProtection());
-                    assertEquals(Boolean.TRUE, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getCompressionFlag());
-                    assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getProtectionScheme());
-                    assertEquals(DigitalSignatureAlgorithmEnum.ECDSA, getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureReference());
-                    assertNotNull(getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue());
-                    assertEquals(DatatypeConverter.printHexBinary("signature".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
-                    assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
-                    assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().get(0).getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
+                    assertNotNull(getResponseObject.getDataResponseObject().getFirst());
+                    assertNotNull(getResponseObject.getDataResponseObject().getFirst().getData());
+                    assertNotNull(getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata());
+                    assertEquals(Boolean.FALSE, getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDataProtection());
+                    assertEquals(Boolean.TRUE, getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getCompressionFlag());
+                    assertEquals(SecomConstants.SECOM_PROTECTION_SCHEME, getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getProtectionScheme());
+                    assertEquals(DigitalSignatureAlgorithmEnum.SHA3_384_WITH_ECDSA, getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureReference());
+                    assertNotNull(getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureValue());
+                    assertEquals(DatatypeConverter.printHexBinary("signature".getBytes()), getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureValue().getDigitalSignature());
+                    assertEquals(Base64.getEncoder().encodeToString("certificate".getBytes()), getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureValue().getPublicCertificate());
+                    assertEquals("a79fd87b7e6418a5085f88c21482e017eb0ef9a6", getResponseObject.getDataResponseObject().getFirst().getExchangeMetadata().getDigitalSignatureValue().getPublicRootCertificateThumbprint());
                     assertEquals(Integer.MAX_VALUE, getResponseObject.getPagination().getMaxItemsPerPage());
                     assertEquals(1, getResponseObject.getPagination().getTotalItems());
 
                     // Try to parse the incoming data
-                    String exchangeSetBytes = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().get(0).getData()));
+                    String exchangeSetBytes = new String(Base64.getDecoder().decode(getResponseObject.getDataResponseObject().getFirst().getData()));
                     assertEquals("packagedExchangeSet", exchangeSetBytes);
                 });
     }
