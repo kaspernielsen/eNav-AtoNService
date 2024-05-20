@@ -133,7 +133,7 @@ class S125GDSListenerTest {
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8);
 
         // Also create a GeoJSON point geometry for our S125 message
-        JsonNode point = GeoJSONUtils.createGeoJSONPoint(53.61, 1.594);
+        JsonNode point = GeoJSONUtils.createGeoJSON(53.61, 1.594);
 
         // Now create the S125 node object and populate the data
         this.s125Node = new S125Node("test_aton", point, xml);

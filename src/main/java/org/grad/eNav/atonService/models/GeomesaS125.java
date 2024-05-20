@@ -25,16 +25,22 @@ import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.util.factory.Hints;
 import org.grad.eNav.atonService.models.dtos.S125Node;
 import org.grad.eNav.atonService.utils.GeoJSONUtils;
+import org.grad.eNav.atonService.utils.GeometryJSONConverter;
 import org.locationtech.geomesa.utils.interop.SimpleFeatureTypes;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.function.Predicate.not;
+
 /**
+ * The GeomesaS125 Class.
+ * <p/>
  * The implementation of the S-125 data entries transported through the Geomesa
- * data stores.
+ * data-stores.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
@@ -56,7 +62,7 @@ public class GeomesaS125 implements GeomesaData<S125Node>{
     /**
      * Constructor with a specified geometry area.
      *
-     * @param geometry the geometry of the Geomesa S125 object
+     * @param geometry the geometry of the GeomesaS125 object
      */
     public GeomesaS125(Geometry geometry) {
         this.geometry = geometry;
@@ -79,7 +85,6 @@ public class GeomesaS125 implements GeomesaData<S125Node>{
     public Geometry getGeometry() {
         return geometry;
     }
-
 
     /**
      * Defines the Geomesa Data Type - AtoN.
@@ -107,7 +112,7 @@ public class GeomesaS125 implements GeomesaData<S125Node>{
             StringBuilder attributes = new StringBuilder();
 
             attributes.append("atonUID:String,");
-            attributes.append("*geom:Point:srid=4326,"); // the "*" denotes the default geometry (used for indexing)
+            attributes.append("*geom:Geometry:srid=4326,"); // the "*" denotes the default geometry (used for indexing)
             attributes.append("content:String");
 
             // create the simple-feature type - use the GeoMesa 'SimpleFeatureTypes' class for best compatibility
@@ -118,6 +123,15 @@ public class GeomesaS125 implements GeomesaData<S125Node>{
             // if not specified, the first date attribute (if any) will be used
             // could also use ':default=true' in the attribute specification string
             sft.getUserData().put(SimpleFeatureTypes.DEFAULT_DATE_KEY, "atonUID");
+            // Trying to create a schema with mixed geometry type 'geom:Geometry'.
+            // Queries may be slower when using mixed geometries. If this is
+            // intentional, you may override this check by putting Boolean.TRUE
+            // into the SimpleFeatureType user data under the key
+            // 'geomesa.mixed.geometries' before calling createSchema, or
+            // by setting the system property 'geomesa.mixed.geometries' to
+            // 'true'. Otherwise, please specify a single geometry type (e.g.
+            // Point, LineString, Polygon, etc).
+            sft.getUserData().put("geomesa.mixed.geometries",Boolean.TRUE);
         }
         return sft;
     }
@@ -141,7 +155,7 @@ public class GeomesaS125 implements GeomesaData<S125Node>{
 
             for(S125Node node: s125Nodes) {
                 builder.set("atonUID", node.getAtonUID());
-                builder.set("geom", GeoJSONUtils.geoJSONPointToECQL(node.getBbox()));
+                builder.set("geom", node.getGeometry());
                 builder.set("content", node.getContent());
 
                 // be sure to tell GeoTools explicitly that we want to use the ID we provided
@@ -173,10 +187,10 @@ public class GeomesaS125 implements GeomesaData<S125Node>{
         // Otherwise map all the provided features
         return features.stream()
                 .map(feature ->
-                        // Create the S125 Node message
+                        // Create the S125Node message
                         new S125Node(
                                 ((String)feature.getAttribute("atonUID")),
-                                GeoJSONUtils.createGeoJSONPoint(((Point)feature.getAttribute("geom")).getX(), ((Point)feature.getAttribute("geom")).getY()),
+                                GeometryJSONConverter.convertFromGeometry((Geometry) feature.getAttribute("geom")),
                                 ((String)feature.getAttribute("content"))
                         )
                 )
@@ -211,7 +225,10 @@ public class GeomesaS125 implements GeomesaData<S125Node>{
     @Override
     public Filter getSubsetFilter() {
         // For no or invalid filters, just reject everything
-        if(Optional.ofNullable(geometry).map(Geometry::isEmpty).orElse(Boolean.TRUE)) {
+        if(Optional.ofNullable(this.geometry)
+                .filter(Polygon.class::isInstance)
+                .map(Geometry::isEmpty)
+                .orElse(Boolean.TRUE)) {
             return Filter.EXCLUDE;
         }
 
@@ -219,12 +236,10 @@ public class GeomesaS125 implements GeomesaData<S125Node>{
         // here, we use a polygon (POLYGON) predicate as an example. This is
         // useful for a general query area.
         try {
-            String cqlGeometry = "WITHIN(geom, Polygon(("
-                    + String.join(", ",
-                    Arrays.asList(this.geometry.getCoordinates())
-                            .stream().map(c -> c.getY() + " " + c.getX())
-                            .collect(Collectors.toList())
-            )
+            String cqlGeometry = "INTERSECTS(geom, Polygon(("
+                    + Arrays.stream(this.geometry
+                            .getCoordinates()).map(c -> c.getX() + " " + c.getY())
+                            .collect(Collectors.joining(", "))
                     + ")) )";
 
             // We use geotools ECQL class to parse a CQL string into a Filter object
