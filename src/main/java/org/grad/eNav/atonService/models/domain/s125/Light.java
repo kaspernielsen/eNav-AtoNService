@@ -75,7 +75,7 @@ public class Light extends Equipment {
 
     private String signalGroup;
 
-    private String signalPeriod;
+    private BigDecimal signalPeriod;
 
     private String signalSequence;
 
@@ -342,7 +342,7 @@ public class Light extends Equipment {
      *
      * @return the signal period
      */
-    public String getSignalPeriod() {
+    public BigDecimal getSignalPeriod() {
         return signalPeriod;
     }
 
@@ -351,7 +351,7 @@ public class Light extends Equipment {
      *
      * @param signalPeriod the signal period
      */
-    public void setSignalPeriod(String signalPeriod) {
+    public void setSignalPeriod(BigDecimal signalPeriod) {
         this.signalPeriod = signalPeriod;
     }
 
