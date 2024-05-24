@@ -57,10 +57,6 @@ public abstract class GenericBuoy extends StructureObject {
     @ElementCollection(targetClass = NatureOfConstructionType.class)
     private List<NatureOfConstructionType> natureOfconstuctions;
 
-    private String objectNameInNationalLanguage;
-
-    private String objectName;
-
     @Enumerated(EnumType.STRING)
     @ElementCollection(targetClass = StatusType.class)
     private List<StatusType> statuses;
@@ -173,42 +169,6 @@ public abstract class GenericBuoy extends StructureObject {
      */
     public void setNatureOfconstuctions(List<NatureOfConstructionType> natureOfconstuctions) {
         this.natureOfconstuctions = natureOfconstuctions;
-    }
-
-    /**
-     * Gets object name in national language.
-     *
-     * @return the object name in national language
-     */
-    public String getObjectNameInNationalLanguage() {
-        return objectNameInNationalLanguage;
-    }
-
-    /**
-     * Sets object name in national language.
-     *
-     * @param objectNameInNationalLanguage the object name in national language
-     */
-    public void setObjectNameInNationalLanguage(String objectNameInNationalLanguage) {
-        this.objectNameInNationalLanguage = objectNameInNationalLanguage;
-    }
-
-    /**
-     * Gets object name.
-     *
-     * @return the object name
-     */
-    public String getObjectName() {
-        return objectName;
-    }
-
-    /**
-     * Sets object name.
-     *
-     * @param objectName the object name
-     */
-    public void setObjectName(String objectName) {
-        this.objectName = objectName;
     }
 
     /**

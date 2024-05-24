@@ -18,11 +18,14 @@ package org.grad.eNav.atonService.models.domain.s125;
 
 import _int.iho.s125.gml.cs0._1.StatusType;
 import _int.iho.s125.gml.cs0._1.VirtualAISAidToNavigationTypeType;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.List;
 
 /**
  * The S-125 Virtual AIS Aids to Navigation Entity Class.
@@ -41,16 +44,13 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
     @Enumerated(EnumType.STRING)
     private VirtualAISAidToNavigationTypeType virtualAISAidToNavigationType;
 
-    private String objectNameInNationalLanguage;
-
-    private String objectName;
-
-    @Enumerated(EnumType.STRING)
-    private StatusType status;
-
     private BigDecimal estimatedRangeOfTransmission;
 
-    private BigDecimal mmsiCode;
+    private BigInteger mmsiCode;
+
+    @Enumerated(EnumType.STRING)
+    @ElementCollection(targetClass = StatusType.class)
+    private List<StatusType> statuses;
 
     /**
      * Gets virtual ais aid to navigation type.
@@ -68,60 +68,6 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      */
     public void setVirtualAISAidToNavigationType(VirtualAISAidToNavigationTypeType virtualAISAidToNavigationType) {
         this.virtualAISAidToNavigationType = virtualAISAidToNavigationType;
-    }
-
-    /**
-     * Gets object name in national language.
-     *
-     * @return the object name in national language
-     */
-    public String getObjectNameInNationalLanguage() {
-        return objectNameInNationalLanguage;
-    }
-
-    /**
-     * Sets object name in national language.
-     *
-     * @param objectNameInNationalLanguage the object name in national language
-     */
-    public void setObjectNameInNationalLanguage(String objectNameInNationalLanguage) {
-        this.objectNameInNationalLanguage = objectNameInNationalLanguage;
-    }
-
-    /**
-     * Gets object name.
-     *
-     * @return the object name
-     */
-    public String getObjectName() {
-        return objectName;
-    }
-
-    /**
-     * Sets object name.
-     *
-     * @param objectName the object name
-     */
-    public void setObjectName(String objectName) {
-        this.objectName = objectName;
-    }
-
-    /**
-     * Gets status.
-     *
-     * @return the status
-     */
-    public StatusType getStatus() {
-        return status;
-    }
-
-    /**
-     * Sets status.
-     *
-     * @param status the status
-     */
-    public void setStatus(StatusType status) {
-        this.status = status;
     }
 
     /**
@@ -147,7 +93,7 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      *
      * @return the mmsi code
      */
-    public BigDecimal getMmsiCode() {
+    public BigInteger getMmsiCode() {
         return mmsiCode;
     }
 
@@ -156,7 +102,25 @@ public class VirtualAISAidToNavigation extends AISAidToNavigation {
      *
      * @param mmsiCode the mmsi code
      */
-    public void setMmsiCode(BigDecimal mmsiCode) {
+    public void setMmsiCode(BigInteger mmsiCode) {
         this.mmsiCode = mmsiCode;
+    }
+
+    /**
+     * Gets statuses.
+     *
+     * @return the statuses
+     */
+    public List<StatusType> getStatuses() {
+        return statuses;
+    }
+
+    /**
+     * Sets statuses.
+     *
+     * @param statuses the statuses
+     */
+    public void setStatuses(List<StatusType> statuses) {
+        this.statuses = statuses;
     }
 }

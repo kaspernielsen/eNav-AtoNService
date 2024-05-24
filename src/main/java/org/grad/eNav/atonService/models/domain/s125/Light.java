@@ -63,10 +63,6 @@ public class Light extends Equipment {
 
     private BigInteger multiplicityOfLights;
 
-    private String objectNameInNationalLanguage;
-
-    private String objectName;
-
     private BigDecimal orientation;
 
     private BigDecimal sectorLimitOne;
@@ -227,42 +223,6 @@ public class Light extends Equipment {
      */
     public void setMultiplicityOfLights(BigInteger multiplicityOfLights) {
         this.multiplicityOfLights = multiplicityOfLights;
-    }
-
-    /**
-     * Gets object name in national language.
-     *
-     * @return the object name in national language
-     */
-    public String getObjectNameInNationalLanguage() {
-        return objectNameInNationalLanguage;
-    }
-
-    /**
-     * Sets object name in national language.
-     *
-     * @param objectNameInNationalLanguage the object name in national language
-     */
-    public void setObjectNameInNationalLanguage(String objectNameInNationalLanguage) {
-        this.objectNameInNationalLanguage = objectNameInNationalLanguage;
-    }
-
-    /**
-     * Gets object name.
-     *
-     * @return the object name
-     */
-    public String getObjectName() {
-        return objectName;
-    }
-
-    /**
-     * Sets object name.
-     *
-     * @param objectName the object name
-     */
-    public void setObjectName(String objectName) {
-        this.objectName = objectName;
     }
 
     /**

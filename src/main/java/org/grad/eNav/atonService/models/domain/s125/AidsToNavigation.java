@@ -64,10 +64,6 @@ public abstract class AidsToNavigation implements Serializable {
     @SequenceGenerator(name="aids_to_navigation_generator", sequenceName = "aids_to_navigation_seq", allocationSize=1)
     private BigInteger id;
 
-    @KeywordField(name="aton_number", sortable = Sortable.YES)
-    @Column(unique=true)
-    private String atonNumber;
-
     @NotNull
     @KeywordField(name="id_code", sortable = Sortable.YES)
     @Column(unique=true)
@@ -130,26 +126,6 @@ public abstract class AidsToNavigation implements Serializable {
      */
     public void setId(BigInteger id) {
         this.id = id;
-    }
-
-    /**
-     * Gets aton number.
-     *
-     * @return the aton number
-     */
-    @Deprecated
-    public String getAtonNumber() {
-        return atonNumber;
-    }
-
-    /**
-     * Sets aton number.
-     *
-     * @param atonNumber the aton number
-     */
-    @Deprecated
-    public void setAtonNumber(String atonNumber) {
-        this.atonNumber = atonNumber;
     }
 
     /**

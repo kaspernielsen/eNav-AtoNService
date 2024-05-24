@@ -46,7 +46,7 @@ public enum S125AtonTypes {
     INSTALLATION_BUOY("Installation Buoy", BuoyInstallationImpl.class, BuoyInstallation.class),
     ISOLATED_DANGER_BUOY("Isolated Danger Buoy", BuoyIsolatedDangerImpl.class, BuoyIsolatedDanger.class),
     SAFE_WATER_BUOY("Safe Water Buoy", BuoySafeWaterImpl.class, BuoySafeWater.class),
-    SPECIAL_PURPOSE_BUOY("Special Purpose Beacon", BuoySpecialPurposeGeneralImpl.class, BuoySpecialPurpose.class),
+    SPECIAL_PURPOSE_BUOY("Special Purpose Buoy", BuoySpecialPurposeGeneralImpl.class, BuoySpecialPurpose.class),
     DAYMARK("Daymark", DaymarkImpl.class, Daymark.class),
     FOG_SIGNAL("Fog Signal", FogSignalImpl.class, FogSignal.class),
     LIGHT("Light", LightImpl.class, Light.class),
