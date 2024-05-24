@@ -23,6 +23,13 @@ SET row_security = off;
 CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
 
 
+--
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner:
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -34,7 +41,7 @@ SET default_table_access_method = heap;
 CREATE TABLE public.aggregation (
     id numeric(38,0) NOT NULL,
     aggregation_type character varying(255),
-    CONSTRAINT aggregation_aggregation_type_check CHECK (((aggregation_type)::text = ANY ((ARRAY['LEADING_LINE'::character varying, 'RANGE_SYSTEM'::character varying, 'MEASURED_DISTANCE'::character varying, 'BUOY_MOORING'::character varying])::text[])))
+    CONSTRAINT aggregation_aggregation_type_check CHECK (((aggregation_type)::text = ANY (ARRAY[('LEADING_LINE'::character varying)::text, ('RANGE_SYSTEM'::character varying)::text, ('MEASURED_DISTANCE'::character varying)::text, ('BUOY_MOORING'::character varying)::text])))
 );
 
 
@@ -121,30 +128,30 @@ CREATE TABLE public.aids_to_navigation (
     virtualaisaid_to_navigation_type character varying(255),
     visual_prominence character varying(255),
     geometry public.geometry,
-    CONSTRAINT aids_to_navigation_beacon_shape_check CHECK (((beacon_shape)::text = ANY ((ARRAY['STAKE_POLE_PERCH_POST'::character varying, 'BEACON_TOWER'::character varying, 'LATTICE_BEACON'::character varying, 'PILE_BEACON'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_building_shape_check CHECK (((building_shape)::text = ANY ((ARRAY['HIGH_RISE_BUILDING'::character varying, 'PYRAMID'::character varying, 'CYLINDRICAL'::character varying, 'SPHERICAL'::character varying, 'CUBIC'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_buoy_shape_check CHECK (((buoy_shape)::text = ANY ((ARRAY['CONICAL_NUN_OGIVAL'::character varying, 'CAN_CYLINDRICAL'::character varying, 'SPHERICAL'::character varying, 'PILLAR'::character varying, 'SPAR_SPINDLE'::character varying, 'BARREL_TUN'::character varying, 'SUPER_BUOY'::character varying, 'ICE_BUOY'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_cardinal_mark_check CHECK (((category_of_cardinal_mark)::text = ANY ((ARRAY['NORTH_CARDINAL_MARK'::character varying, 'EAST_CARDINAL_MARK'::character varying, 'SOUTH_CARDINAL_MARK'::character varying, 'WEST_CARDINAL_MARK'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_fog_signal_check CHECK (((category_of_fog_signal)::text = ANY ((ARRAY['SIREN'::character varying, 'BELL'::character varying, 'WHISTLE'::character varying, 'HORN'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_installation_buoy_check CHECK (((category_of_installation_buoy)::text = ANY ((ARRAY['CATENARY_ANCHOR_LEG_MOORING_CALM'::character varying, 'SINGLE_BUOY_MOORING_SBM_OR_SPM'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_lateral_mark_check CHECK (((category_of_lateral_mark)::text = ANY ((ARRAY['PORT_HAND_LATERAL_MARK'::character varying, 'STARBOARD_HAND_LATERAL_MARK'::character varying, 'PREFERRED_CHANNEL_TO_STARBOARD_LATERAL_MARK'::character varying, 'PREFERRED_CHANNEL_TO_PORT_LATERAL_MARK'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_navigation_line_check CHECK (((category_of_navigation_line)::text = ANY ((ARRAY['CLEARING_LINE'::character varying, 'TRANSIT_LINE'::character varying, 'LEADING_LINE_BEARING_A_RECOMMENDED_TRACK'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_pile_check CHECK (((category_of_pile)::text = ANY ((ARRAY['STAKE'::character varying, 'POST'::character varying, 'TRIPODAL'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_radar_transponder_beacon_t_check CHECK (((category_of_radar_transponder_beacon_type)::text = ANY ((ARRAY['RAMARK_RADAR_BEACON_TRANSMITTING_CONTINUOUSLY'::character varying, 'RACON_RADAR_TRANSPONDER_BEACON'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_radio_station_check CHECK (((category_of_radio_station)::text = ANY ((ARRAY['DIFFERENTIAL_GNSS'::character varying, 'AIS_BASE_STATION'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_recommended_track_check CHECK (((category_of_recommended_track)::text = ANY ((ARRAY['BASED_ON_A_SYSTEM_OF_FIXED_MARKS'::character varying, 'NOT_BASED_ON_A_SYSTEM_OF_FIXED_MARKS'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_category_of_silo_tank_check CHECK (((category_of_silo_tank)::text = ANY ((ARRAY['SILO_IN_GENERAL'::character varying, 'TANK_IN_GENERAL'::character varying])::text[]))),
+    CONSTRAINT aids_to_navigation_beacon_shape_check CHECK (((beacon_shape)::text = ANY (ARRAY[('STAKE_POLE_PERCH_POST'::character varying)::text, ('BEACON_TOWER'::character varying)::text, ('LATTICE_BEACON'::character varying)::text, ('PILE_BEACON'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_building_shape_check CHECK (((building_shape)::text = ANY (ARRAY[('HIGH_RISE_BUILDING'::character varying)::text, ('PYRAMID'::character varying)::text, ('CYLINDRICAL'::character varying)::text, ('SPHERICAL'::character varying)::text, ('CUBIC'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_buoy_shape_check CHECK (((buoy_shape)::text = ANY (ARRAY[('CONICAL_NUN_OGIVAL'::character varying)::text, ('CAN_CYLINDRICAL'::character varying)::text, ('SPHERICAL'::character varying)::text, ('PILLAR'::character varying)::text, ('SPAR_SPINDLE'::character varying)::text, ('BARREL_TUN'::character varying)::text, ('SUPER_BUOY'::character varying)::text, ('ICE_BUOY'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_cardinal_mark_check CHECK (((category_of_cardinal_mark)::text = ANY (ARRAY[('NORTH_CARDINAL_MARK'::character varying)::text, ('EAST_CARDINAL_MARK'::character varying)::text, ('SOUTH_CARDINAL_MARK'::character varying)::text, ('WEST_CARDINAL_MARK'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_fog_signal_check CHECK (((category_of_fog_signal)::text = ANY (ARRAY[('SIREN'::character varying)::text, ('BELL'::character varying)::text, ('WHISTLE'::character varying)::text, ('HORN'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_installation_buoy_check CHECK (((category_of_installation_buoy)::text = ANY (ARRAY[('CATENARY_ANCHOR_LEG_MOORING_CALM'::character varying)::text, ('SINGLE_BUOY_MOORING_SBM_OR_SPM'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_lateral_mark_check CHECK (((category_of_lateral_mark)::text = ANY (ARRAY[('PORT_HAND_LATERAL_MARK'::character varying)::text, ('STARBOARD_HAND_LATERAL_MARK'::character varying)::text, ('PREFERRED_CHANNEL_TO_STARBOARD_LATERAL_MARK'::character varying)::text, ('PREFERRED_CHANNEL_TO_PORT_LATERAL_MARK'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_navigation_line_check CHECK (((category_of_navigation_line)::text = ANY (ARRAY[('CLEARING_LINE'::character varying)::text, ('TRANSIT_LINE'::character varying)::text, ('LEADING_LINE_BEARING_A_RECOMMENDED_TRACK'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_pile_check CHECK (((category_of_pile)::text = ANY (ARRAY[('STAKE'::character varying)::text, ('POST'::character varying)::text, ('TRIPODAL'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_radar_transponder_beacon_t_check CHECK (((category_of_radar_transponder_beacon_type)::text = ANY (ARRAY[('RAMARK_RADAR_BEACON_TRANSMITTING_CONTINUOUSLY'::character varying)::text, ('RACON_RADAR_TRANSPONDER_BEACON'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_radio_station_check CHECK (((category_of_radio_station)::text = ANY (ARRAY[('DIFFERENTIAL_GNSS'::character varying)::text, ('AIS_BASE_STATION'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_recommended_track_check CHECK (((category_of_recommended_track)::text = ANY (ARRAY[('BASED_ON_A_SYSTEM_OF_FIXED_MARKS'::character varying)::text, ('NOT_BASED_ON_A_SYSTEM_OF_FIXED_MARKS'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_category_of_silo_tank_check CHECK (((category_of_silo_tank)::text = ANY (ARRAY[('SILO_IN_GENERAL'::character varying)::text, ('TANK_IN_GENERAL'::character varying)::text]))),
     CONSTRAINT aids_to_navigation_category_of_special_purpose_mark_check CHECK (((category_of_special_purpose_mark >= 0) AND (category_of_special_purpose_mark <= 59))),
-    CONSTRAINT aids_to_navigation_colour_check CHECK (((colour)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_condition_check CHECK (((condition)::text = ANY ((ARRAY['UNDER_CONSTRUCTION'::character varying, 'RUINED'::character varying, 'UNDER_RECLAMATION'::character varying, 'PLANNED_CONSTRUCTION'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_exhibition_condition_of_light_check CHECK (((exhibition_condition_of_light)::text = ANY ((ARRAY['LIGHT_SHOWN_WITHOUT_CHANGE_OF_CHARACTER'::character varying, 'DAYTIME_LIGHT'::character varying, 'FOG_LIGHT'::character varying, 'NIGHT_LIGHT'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_light_characteristic_check CHECK (((light_characteristic)::text = ANY ((ARRAY['FIXED'::character varying, 'FLASHING'::character varying, 'LONG_FLASHING'::character varying, 'QUICK_FLASHING'::character varying, 'VERY_QUICK_FLASHING'::character varying, 'ULTRA_QUICK_FLASHING'::character varying, 'ISOPHASED'::character varying, 'OCCULTING'::character varying, 'INTERRUPTED_QUICK_FLASHING'::character varying, 'INTERRUPTED_VERY_QUICK_FLASHING'::character varying, 'INTERRUPTED_ULTRA_QUICK_FLASHING'::character varying, 'MORSE'::character varying, 'FIXED_AND_FLASH'::character varying, 'FLASH_AND_LONG_FLASH'::character varying, 'OCCULTING_AND_FLASH'::character varying, 'FIXED_AND_LONG_FLASH'::character varying, 'OCCULTING_ALTERNATING'::character varying, 'LONG_FLASH_ALTERNATING'::character varying, 'FLASH_ALTERNATING'::character varying, 'QUICK_FLASH_PLUS_LONG_FLASH'::character varying, 'VERY_QUICK_FLASH_PLUS_LONG_FLASH'::character varying, 'ULTRA_QUICK_FLASH_PLUS_LONG_FLASH'::character varying, 'ALTERNATING'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_marks_navigational_system_of_check CHECK (((marks_navigational_system_of)::text = ANY ((ARRAY['IALA_A'::character varying, 'IALA_B'::character varying, 'NO_SYSTEM'::character varying, 'OTHER_SYSTEM'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_radar_conspicuous_check CHECK (((radar_conspicuous)::text = ANY ((ARRAY['RADAR_CONSPICUOUS'::character varying, 'NOT_RADAR_CONSPICUOUS'::character varying, 'RADAR_CONSPICUOUS_HAS_RADAR_REFLECTOR'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_status_check CHECK (((status)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_traffic_flow_check CHECK (((traffic_flow)::text = ANY ((ARRAY['INBOUND'::character varying, 'OUTBOUND'::character varying, 'ONE_WAY'::character varying, 'TWO_WAY'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_virtualaisaid_to_navigation_type_check CHECK (((virtualaisaid_to_navigation_type)::text = ANY ((ARRAY['NORTH_CARDINAL'::character varying, 'EAST_CARDINAL'::character varying, 'SOUTH_CARDINAL'::character varying, 'WEST_CARDINAL'::character varying, 'PORT_LATERAL'::character varying, 'STARBOARD_LATERAL'::character varying, 'PREFERRED_CHANNEL_TO_PORT'::character varying, 'PREFERRED_CHANNEL_TO_STARBOARD'::character varying, 'ISOLATED_DANGER'::character varying, 'SAFE_WATER'::character varying, 'SPECIAL_PURPOSE'::character varying, 'NEW_DANGER_MARKING'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_visual_prominence_check CHECK (((visual_prominence)::text = ANY ((ARRAY['VISUALLY_CONSPICUOUS'::character varying, 'NOT_VISUALLY_CONSPICUOUS'::character varying])::text[])))
+    CONSTRAINT aids_to_navigation_colour_check CHECK (((colour)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_condition_check CHECK (((condition)::text = ANY (ARRAY[('UNDER_CONSTRUCTION'::character varying)::text, ('RUINED'::character varying)::text, ('UNDER_RECLAMATION'::character varying)::text, ('PLANNED_CONSTRUCTION'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_exhibition_condition_of_light_check CHECK (((exhibition_condition_of_light)::text = ANY (ARRAY[('LIGHT_SHOWN_WITHOUT_CHANGE_OF_CHARACTER'::character varying)::text, ('DAYTIME_LIGHT'::character varying)::text, ('FOG_LIGHT'::character varying)::text, ('NIGHT_LIGHT'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_light_characteristic_check CHECK (((light_characteristic)::text = ANY (ARRAY[('FIXED'::character varying)::text, ('FLASHING'::character varying)::text, ('LONG_FLASHING'::character varying)::text, ('QUICK_FLASHING'::character varying)::text, ('VERY_QUICK_FLASHING'::character varying)::text, ('ULTRA_QUICK_FLASHING'::character varying)::text, ('ISOPHASED'::character varying)::text, ('OCCULTING'::character varying)::text, ('INTERRUPTED_QUICK_FLASHING'::character varying)::text, ('INTERRUPTED_VERY_QUICK_FLASHING'::character varying)::text, ('INTERRUPTED_ULTRA_QUICK_FLASHING'::character varying)::text, ('MORSE'::character varying)::text, ('FIXED_AND_FLASH'::character varying)::text, ('FLASH_AND_LONG_FLASH'::character varying)::text, ('OCCULTING_AND_FLASH'::character varying)::text, ('FIXED_AND_LONG_FLASH'::character varying)::text, ('OCCULTING_ALTERNATING'::character varying)::text, ('LONG_FLASH_ALTERNATING'::character varying)::text, ('FLASH_ALTERNATING'::character varying)::text, ('QUICK_FLASH_PLUS_LONG_FLASH'::character varying)::text, ('VERY_QUICK_FLASH_PLUS_LONG_FLASH'::character varying)::text, ('ULTRA_QUICK_FLASH_PLUS_LONG_FLASH'::character varying)::text, ('ALTERNATING'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_marks_navigational_system_of_check CHECK (((marks_navigational_system_of)::text = ANY (ARRAY[('IALA_A'::character varying)::text, ('IALA_B'::character varying)::text, ('NO_SYSTEM'::character varying)::text, ('OTHER_SYSTEM'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_radar_conspicuous_check CHECK (((radar_conspicuous)::text = ANY (ARRAY[('RADAR_CONSPICUOUS'::character varying)::text, ('NOT_RADAR_CONSPICUOUS'::character varying)::text, ('RADAR_CONSPICUOUS_HAS_RADAR_REFLECTOR'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_status_check CHECK (((status)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_traffic_flow_check CHECK (((traffic_flow)::text = ANY (ARRAY[('INBOUND'::character varying)::text, ('OUTBOUND'::character varying)::text, ('ONE_WAY'::character varying)::text, ('TWO_WAY'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_virtualaisaid_to_navigation_type_check CHECK (((virtualaisaid_to_navigation_type)::text = ANY (ARRAY[('NORTH_CARDINAL'::character varying)::text, ('EAST_CARDINAL'::character varying)::text, ('SOUTH_CARDINAL'::character varying)::text, ('WEST_CARDINAL'::character varying)::text, ('PORT_LATERAL'::character varying)::text, ('STARBOARD_LATERAL'::character varying)::text, ('PREFERRED_CHANNEL_TO_PORT'::character varying)::text, ('PREFERRED_CHANNEL_TO_STARBOARD'::character varying)::text, ('ISOLATED_DANGER'::character varying)::text, ('SAFE_WATER'::character varying)::text, ('SPECIAL_PURPOSE'::character varying)::text, ('NEW_DANGER_MARKING'::character varying)::text]))),
+    CONSTRAINT aids_to_navigation_visual_prominence_check CHECK (((visual_prominence)::text = ANY (ARRAY[('VISUALLY_CONSPICUOUS'::character varying)::text, ('NOT_VISUALLY_CONSPICUOUS'::character varying)::text])))
 );
 
 
@@ -171,7 +178,7 @@ ALTER TABLE public.aids_to_navigation_seq OWNER TO atonservice;
 CREATE TABLE public.association (
     id numeric(38,0) NOT NULL,
     association_type character varying(255),
-    CONSTRAINT association_association_type_check CHECK (((association_type)::text = ANY ((ARRAY['CHANNEL_MARKINGS'::character varying, 'DANGER_MARKINGS'::character varying])::text[])))
+    CONSTRAINT association_association_type_check CHECK (((association_type)::text = ANY (ARRAY[('CHANNEL_MARKINGS'::character varying)::text, ('DANGER_MARKINGS'::character varying)::text])))
 );
 
 
@@ -210,7 +217,7 @@ ALTER TABLE public.association_seq OWNER TO atonservice;
 CREATE TABLE public.beacon_special_purpose_category_of_special_purpose_marks (
     beacon_special_purpose_id numeric(38,0) NOT NULL,
     category_of_special_purpose_marks character varying(255),
-    CONSTRAINT beacon_special_purpose_categ_category_of_special_purpose__check CHECK (((category_of_special_purpose_marks)::text = ANY ((ARRAY['FIRING_DANGER_MARK'::character varying, 'TARGET_MARK'::character varying, 'MARKER_SHIP_MARK'::character varying, 'DEGAUSSING_RANGE_MARK'::character varying, 'BARGE_MARK'::character varying, 'CABLE_MARK'::character varying, 'SPOIL_GROUND_MARK'::character varying, 'OUTFALL_MARK'::character varying, 'ODAS_OCEAN_DATA_ACQUISITION_SYSTEM'::character varying, 'RECORDING_MARK'::character varying, 'SEAPLANE_ANCHORAGE_MARK'::character varying, 'RECREATION_ZONE_MARK'::character varying, 'PRIVATE_MARK'::character varying, 'MOORING_MARK'::character varying, 'LANBY_LARGE_AUTOMATIC_NAVIGATIONAL_BUOY'::character varying, 'LEADING_MARK'::character varying, 'MEASURED_DISTANCE_MARK'::character varying, 'NOTICE_MARK'::character varying, 'TSS_MARK_TRAFFIC_SEPARATION_SCHEME'::character varying, 'ANCHORING_PROHIBITED_MARK'::character varying, 'BERTHING_PROHIBITED_MARK'::character varying, 'OVERTAKING_PROHIBITED_MARK'::character varying, 'TWO_WAY_TRAFFIC_PROHIBITED_MARK'::character varying, 'REDUCED_WAKE_MARK'::character varying, 'SPEED_LIMIT_MARK'::character varying, 'STOP_MARK'::character varying, 'GENERAL_WARNING_MARK'::character varying, 'SOUND_SHIP_S_SIREN_MARK'::character varying, 'RESTRICTED_VERTICAL_CLEARANCE_MARK'::character varying, 'MAXIMUM_VESSEL_S_DRAUGHT_MARK'::character varying, 'RESTRICTED_HORIZONTAL_CLEARANCE_MARK'::character varying, 'STRONG_CURRENT_WARNING_MARK'::character varying, 'BERTHING_PERMITTED_MARK'::character varying, 'OVERHEAD_POWER_CABLE_MARK'::character varying, 'CHANNEL_EDGE_GRADIENT_MARK'::character varying, 'TELEPHONE_MARK'::character varying, 'FERRY_CROSSING_MARK'::character varying, 'PIPELINE_MARK'::character varying, 'ANCHORAGE_MARK'::character varying, 'CLEARING_MARK'::character varying, 'CONTROL_MARK'::character varying, 'DIVING_MARK'::character varying, 'REFUGE_BEACON'::character varying, 'FOUL_GROUND_MARK'::character varying, 'YACHTING_MARK'::character varying, 'HELIPORT_MARK'::character varying, 'GNSS_MARK'::character varying, 'SEAPLANE_LANDING_MARK'::character varying, 'ENTRY_PROHIBITED_MARK'::character varying, 'WORK_IN_PROGRESS_MARK'::character varying, 'MARK_WITH_UNKNOWN_PURPOSE'::character varying, 'WELLHEAD_MARK'::character varying, 'CHANNEL_SEPARATION_MARK'::character varying, 'MARINE_FARM_MARK'::character varying, 'ARTIFICIAL_REEF_MARK'::character varying, 'JETSKI_PROHIBITED'::character varying, 'WRECK_MARK'::character varying, 'FACILITY_PROTECTION_MARK'::character varying, 'OIL_PIPELINE_PROTECTION_MARK'::character varying, 'MARINE_CABLE_PROTECTION_MARK'::character varying])::text[])))
+    CONSTRAINT beacon_special_purpose_categ_category_of_special_purpose__check CHECK (((category_of_special_purpose_marks)::text = ANY (ARRAY[('FIRING_DANGER_MARK'::character varying)::text, ('TARGET_MARK'::character varying)::text, ('MARKER_SHIP_MARK'::character varying)::text, ('DEGAUSSING_RANGE_MARK'::character varying)::text, ('BARGE_MARK'::character varying)::text, ('CABLE_MARK'::character varying)::text, ('SPOIL_GROUND_MARK'::character varying)::text, ('OUTFALL_MARK'::character varying)::text, ('ODAS_OCEAN_DATA_ACQUISITION_SYSTEM'::character varying)::text, ('RECORDING_MARK'::character varying)::text, ('SEAPLANE_ANCHORAGE_MARK'::character varying)::text, ('RECREATION_ZONE_MARK'::character varying)::text, ('PRIVATE_MARK'::character varying)::text, ('MOORING_MARK'::character varying)::text, ('LANBY_LARGE_AUTOMATIC_NAVIGATIONAL_BUOY'::character varying)::text, ('LEADING_MARK'::character varying)::text, ('MEASURED_DISTANCE_MARK'::character varying)::text, ('NOTICE_MARK'::character varying)::text, ('TSS_MARK_TRAFFIC_SEPARATION_SCHEME'::character varying)::text, ('ANCHORING_PROHIBITED_MARK'::character varying)::text, ('BERTHING_PROHIBITED_MARK'::character varying)::text, ('OVERTAKING_PROHIBITED_MARK'::character varying)::text, ('TWO_WAY_TRAFFIC_PROHIBITED_MARK'::character varying)::text, ('REDUCED_WAKE_MARK'::character varying)::text, ('SPEED_LIMIT_MARK'::character varying)::text, ('STOP_MARK'::character varying)::text, ('GENERAL_WARNING_MARK'::character varying)::text, ('SOUND_SHIP_S_SIREN_MARK'::character varying)::text, ('RESTRICTED_VERTICAL_CLEARANCE_MARK'::character varying)::text, ('MAXIMUM_VESSEL_S_DRAUGHT_MARK'::character varying)::text, ('RESTRICTED_HORIZONTAL_CLEARANCE_MARK'::character varying)::text, ('STRONG_CURRENT_WARNING_MARK'::character varying)::text, ('BERTHING_PERMITTED_MARK'::character varying)::text, ('OVERHEAD_POWER_CABLE_MARK'::character varying)::text, ('CHANNEL_EDGE_GRADIENT_MARK'::character varying)::text, ('TELEPHONE_MARK'::character varying)::text, ('FERRY_CROSSING_MARK'::character varying)::text, ('PIPELINE_MARK'::character varying)::text, ('ANCHORAGE_MARK'::character varying)::text, ('CLEARING_MARK'::character varying)::text, ('CONTROL_MARK'::character varying)::text, ('DIVING_MARK'::character varying)::text, ('REFUGE_BEACON'::character varying)::text, ('FOUL_GROUND_MARK'::character varying)::text, ('YACHTING_MARK'::character varying)::text, ('HELIPORT_MARK'::character varying)::text, ('GNSS_MARK'::character varying)::text, ('SEAPLANE_LANDING_MARK'::character varying)::text, ('ENTRY_PROHIBITED_MARK'::character varying)::text, ('WORK_IN_PROGRESS_MARK'::character varying)::text, ('MARK_WITH_UNKNOWN_PURPOSE'::character varying)::text, ('WELLHEAD_MARK'::character varying)::text, ('CHANNEL_SEPARATION_MARK'::character varying)::text, ('MARINE_FARM_MARK'::character varying)::text, ('ARTIFICIAL_REEF_MARK'::character varying)::text, ('JETSKI_PROHIBITED'::character varying)::text, ('WRECK_MARK'::character varying)::text, ('FACILITY_PROTECTION_MARK'::character varying)::text, ('OIL_PIPELINE_PROTECTION_MARK'::character varying)::text, ('MARINE_CABLE_PROTECTION_MARK'::character varying)::text])))
 );
 
 
@@ -235,7 +242,7 @@ ALTER TABLE public.broadcast_by_join_table OWNER TO atonservice;
 CREATE TABLE public.buoy_special_purpose_category_of_special_purpose_marks (
     buoy_special_purpose_id numeric(38,0) NOT NULL,
     category_of_special_purpose_marks character varying(255),
-    CONSTRAINT buoy_special_purpose_categor_category_of_special_purpose__check CHECK (((category_of_special_purpose_marks)::text = ANY ((ARRAY['FIRING_DANGER_MARK'::character varying, 'TARGET_MARK'::character varying, 'MARKER_SHIP_MARK'::character varying, 'DEGAUSSING_RANGE_MARK'::character varying, 'BARGE_MARK'::character varying, 'CABLE_MARK'::character varying, 'SPOIL_GROUND_MARK'::character varying, 'OUTFALL_MARK'::character varying, 'ODAS_OCEAN_DATA_ACQUISITION_SYSTEM'::character varying, 'RECORDING_MARK'::character varying, 'SEAPLANE_ANCHORAGE_MARK'::character varying, 'RECREATION_ZONE_MARK'::character varying, 'PRIVATE_MARK'::character varying, 'MOORING_MARK'::character varying, 'LANBY_LARGE_AUTOMATIC_NAVIGATIONAL_BUOY'::character varying, 'LEADING_MARK'::character varying, 'MEASURED_DISTANCE_MARK'::character varying, 'NOTICE_MARK'::character varying, 'TSS_MARK_TRAFFIC_SEPARATION_SCHEME'::character varying, 'ANCHORING_PROHIBITED_MARK'::character varying, 'BERTHING_PROHIBITED_MARK'::character varying, 'OVERTAKING_PROHIBITED_MARK'::character varying, 'TWO_WAY_TRAFFIC_PROHIBITED_MARK'::character varying, 'REDUCED_WAKE_MARK'::character varying, 'SPEED_LIMIT_MARK'::character varying, 'STOP_MARK'::character varying, 'GENERAL_WARNING_MARK'::character varying, 'SOUND_SHIP_S_SIREN_MARK'::character varying, 'RESTRICTED_VERTICAL_CLEARANCE_MARK'::character varying, 'MAXIMUM_VESSEL_S_DRAUGHT_MARK'::character varying, 'RESTRICTED_HORIZONTAL_CLEARANCE_MARK'::character varying, 'STRONG_CURRENT_WARNING_MARK'::character varying, 'BERTHING_PERMITTED_MARK'::character varying, 'OVERHEAD_POWER_CABLE_MARK'::character varying, 'CHANNEL_EDGE_GRADIENT_MARK'::character varying, 'TELEPHONE_MARK'::character varying, 'FERRY_CROSSING_MARK'::character varying, 'PIPELINE_MARK'::character varying, 'ANCHORAGE_MARK'::character varying, 'CLEARING_MARK'::character varying, 'CONTROL_MARK'::character varying, 'DIVING_MARK'::character varying, 'REFUGE_BEACON'::character varying, 'FOUL_GROUND_MARK'::character varying, 'YACHTING_MARK'::character varying, 'HELIPORT_MARK'::character varying, 'GNSS_MARK'::character varying, 'SEAPLANE_LANDING_MARK'::character varying, 'ENTRY_PROHIBITED_MARK'::character varying, 'WORK_IN_PROGRESS_MARK'::character varying, 'MARK_WITH_UNKNOWN_PURPOSE'::character varying, 'WELLHEAD_MARK'::character varying, 'CHANNEL_SEPARATION_MARK'::character varying, 'MARINE_FARM_MARK'::character varying, 'ARTIFICIAL_REEF_MARK'::character varying, 'JETSKI_PROHIBITED'::character varying, 'WRECK_MARK'::character varying, 'FACILITY_PROTECTION_MARK'::character varying, 'OIL_PIPELINE_PROTECTION_MARK'::character varying, 'MARINE_CABLE_PROTECTION_MARK'::character varying])::text[])))
+    CONSTRAINT buoy_special_purpose_categor_category_of_special_purpose__check CHECK (((category_of_special_purpose_marks)::text = ANY (ARRAY[('FIRING_DANGER_MARK'::character varying)::text, ('TARGET_MARK'::character varying)::text, ('MARKER_SHIP_MARK'::character varying)::text, ('DEGAUSSING_RANGE_MARK'::character varying)::text, ('BARGE_MARK'::character varying)::text, ('CABLE_MARK'::character varying)::text, ('SPOIL_GROUND_MARK'::character varying)::text, ('OUTFALL_MARK'::character varying)::text, ('ODAS_OCEAN_DATA_ACQUISITION_SYSTEM'::character varying)::text, ('RECORDING_MARK'::character varying)::text, ('SEAPLANE_ANCHORAGE_MARK'::character varying)::text, ('RECREATION_ZONE_MARK'::character varying)::text, ('PRIVATE_MARK'::character varying)::text, ('MOORING_MARK'::character varying)::text, ('LANBY_LARGE_AUTOMATIC_NAVIGATIONAL_BUOY'::character varying)::text, ('LEADING_MARK'::character varying)::text, ('MEASURED_DISTANCE_MARK'::character varying)::text, ('NOTICE_MARK'::character varying)::text, ('TSS_MARK_TRAFFIC_SEPARATION_SCHEME'::character varying)::text, ('ANCHORING_PROHIBITED_MARK'::character varying)::text, ('BERTHING_PROHIBITED_MARK'::character varying)::text, ('OVERTAKING_PROHIBITED_MARK'::character varying)::text, ('TWO_WAY_TRAFFIC_PROHIBITED_MARK'::character varying)::text, ('REDUCED_WAKE_MARK'::character varying)::text, ('SPEED_LIMIT_MARK'::character varying)::text, ('STOP_MARK'::character varying)::text, ('GENERAL_WARNING_MARK'::character varying)::text, ('SOUND_SHIP_S_SIREN_MARK'::character varying)::text, ('RESTRICTED_VERTICAL_CLEARANCE_MARK'::character varying)::text, ('MAXIMUM_VESSEL_S_DRAUGHT_MARK'::character varying)::text, ('RESTRICTED_HORIZONTAL_CLEARANCE_MARK'::character varying)::text, ('STRONG_CURRENT_WARNING_MARK'::character varying)::text, ('BERTHING_PERMITTED_MARK'::character varying)::text, ('OVERHEAD_POWER_CABLE_MARK'::character varying)::text, ('CHANNEL_EDGE_GRADIENT_MARK'::character varying)::text, ('TELEPHONE_MARK'::character varying)::text, ('FERRY_CROSSING_MARK'::character varying)::text, ('PIPELINE_MARK'::character varying)::text, ('ANCHORAGE_MARK'::character varying)::text, ('CLEARING_MARK'::character varying)::text, ('CONTROL_MARK'::character varying)::text, ('DIVING_MARK'::character varying)::text, ('REFUGE_BEACON'::character varying)::text, ('FOUL_GROUND_MARK'::character varying)::text, ('YACHTING_MARK'::character varying)::text, ('HELIPORT_MARK'::character varying)::text, ('GNSS_MARK'::character varying)::text, ('SEAPLANE_LANDING_MARK'::character varying)::text, ('ENTRY_PROHIBITED_MARK'::character varying)::text, ('WORK_IN_PROGRESS_MARK'::character varying)::text, ('MARK_WITH_UNKNOWN_PURPOSE'::character varying)::text, ('WELLHEAD_MARK'::character varying)::text, ('CHANNEL_SEPARATION_MARK'::character varying)::text, ('MARINE_FARM_MARK'::character varying)::text, ('ARTIFICIAL_REEF_MARK'::character varying)::text, ('JETSKI_PROHIBITED'::character varying)::text, ('WRECK_MARK'::character varying)::text, ('FACILITY_PROTECTION_MARK'::character varying)::text, ('OIL_PIPELINE_PROTECTION_MARK'::character varying)::text, ('MARINE_CABLE_PROTECTION_MARK'::character varying)::text])))
 );
 
 
@@ -275,7 +282,7 @@ CREATE TABLE public.dataset_content_log (
     delta oid,
     geometry public.geometry,
     CONSTRAINT dataset_content_log_dataset_type_check CHECK (((dataset_type)::text = 'S125'::text)),
-    CONSTRAINT dataset_content_log_operation_check CHECK (((operation)::text = ANY ((ARRAY['CREATED'::character varying, 'UPDATED'::character varying, 'CANCELLED'::character varying, 'DELETED'::character varying, 'OTHER'::character varying, 'AUTO'::character varying])::text[])))
+    CONSTRAINT dataset_content_log_operation_check CHECK (((operation)::text = ANY (ARRAY[('CREATED'::character varying)::text, ('UPDATED'::character varying)::text, ('CANCELLED'::character varying)::text, ('DELETED'::character varying)::text, ('OTHER'::character varying)::text, ('AUTO'::character varying)::text])))
 );
 
 
@@ -330,7 +337,7 @@ ALTER TABLE public.dataset_identification_generator_seq OWNER TO atonservice;
 CREATE TABLE public.daymark_colour_patterns (
     daymark_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT daymark_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT daymark_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -343,7 +350,7 @@ ALTER TABLE public.daymark_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.daymark_colours (
     daymark_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT daymark_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT daymark_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -356,7 +363,7 @@ ALTER TABLE public.daymark_colours OWNER TO atonservice;
 CREATE TABLE public.daymark_nature_of_constructions (
     daymark_id numeric(38,0) NOT NULL,
     nature_of_constructions character varying(255),
-    CONSTRAINT daymark_nature_of_constructions_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY ((ARRAY['MASONRY'::character varying, 'HARD_SURFACE'::character varying, 'CONCRETED'::character varying, 'LOOSE_BOULDERS'::character varying, 'WOODEN'::character varying, 'METAL'::character varying, 'PAINTED'::character varying, 'FIBERGLASS'::character varying, 'PLASTIC'::character varying])::text[])))
+    CONSTRAINT daymark_nature_of_constructions_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY (ARRAY[('MASONRY'::character varying)::text, ('HARD_SURFACE'::character varying)::text, ('CONCRETED'::character varying)::text, ('LOOSE_BOULDERS'::character varying)::text, ('WOODEN'::character varying)::text, ('METAL'::character varying)::text, ('PAINTED'::character varying)::text, ('FIBERGLASS'::character varying)::text, ('PLASTIC'::character varying)::text])))
 );
 
 
@@ -369,7 +376,7 @@ ALTER TABLE public.daymark_nature_of_constructions OWNER TO atonservice;
 CREATE TABLE public.daymark_statuses (
     daymark_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT daymark_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT daymark_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -411,7 +418,7 @@ ALTER TABLE public.feature_name_seq OWNER TO atonservice;
 CREATE TABLE public.fog_signal_statuses (
     fog_signal_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT fog_signal_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT fog_signal_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -424,7 +431,7 @@ ALTER TABLE public.fog_signal_statuses OWNER TO atonservice;
 CREATE TABLE public.generic_beacon_colour_patterns (
     generic_beacon_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT generic_beacon_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT generic_beacon_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -437,7 +444,7 @@ ALTER TABLE public.generic_beacon_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.generic_beacon_colours (
     generic_beacon_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT generic_beacon_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT generic_beacon_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -450,7 +457,7 @@ ALTER TABLE public.generic_beacon_colours OWNER TO atonservice;
 CREATE TABLE public.generic_beacon_nature_of_constructions (
     generic_beacon_id numeric(38,0) NOT NULL,
     nature_of_constructions character varying(255),
-    CONSTRAINT generic_beacon_nature_of_construc_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY ((ARRAY['MASONRY'::character varying, 'HARD_SURFACE'::character varying, 'CONCRETED'::character varying, 'LOOSE_BOULDERS'::character varying, 'WOODEN'::character varying, 'METAL'::character varying, 'PAINTED'::character varying, 'FIBERGLASS'::character varying, 'PLASTIC'::character varying])::text[])))
+    CONSTRAINT generic_beacon_nature_of_construc_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY (ARRAY[('MASONRY'::character varying)::text, ('HARD_SURFACE'::character varying)::text, ('CONCRETED'::character varying)::text, ('LOOSE_BOULDERS'::character varying)::text, ('WOODEN'::character varying)::text, ('METAL'::character varying)::text, ('PAINTED'::character varying)::text, ('FIBERGLASS'::character varying)::text, ('PLASTIC'::character varying)::text])))
 );
 
 
@@ -463,7 +470,7 @@ ALTER TABLE public.generic_beacon_nature_of_constructions OWNER TO atonservice;
 CREATE TABLE public.generic_beacon_statuses (
     generic_beacon_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT generic_beacon_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT generic_beacon_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -476,7 +483,7 @@ ALTER TABLE public.generic_beacon_statuses OWNER TO atonservice;
 CREATE TABLE public.generic_buoy_colour_patterns (
     generic_buoy_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT generic_buoy_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT generic_buoy_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -489,7 +496,7 @@ ALTER TABLE public.generic_buoy_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.generic_buoy_colours (
     generic_buoy_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT generic_buoy_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT generic_buoy_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -502,7 +509,7 @@ ALTER TABLE public.generic_buoy_colours OWNER TO atonservice;
 CREATE TABLE public.generic_buoy_nature_ofconstuctions (
     generic_buoy_id numeric(38,0) NOT NULL,
     nature_ofconstuctions character varying(255),
-    CONSTRAINT generic_buoy_nature_ofconstuctions_nature_ofconstuctions_check CHECK (((nature_ofconstuctions)::text = ANY ((ARRAY['MASONRY'::character varying, 'HARD_SURFACE'::character varying, 'CONCRETED'::character varying, 'LOOSE_BOULDERS'::character varying, 'WOODEN'::character varying, 'METAL'::character varying, 'PAINTED'::character varying, 'FIBERGLASS'::character varying, 'PLASTIC'::character varying])::text[])))
+    CONSTRAINT generic_buoy_nature_ofconstuctions_nature_ofconstuctions_check CHECK (((nature_ofconstuctions)::text = ANY (ARRAY[('MASONRY'::character varying)::text, ('HARD_SURFACE'::character varying)::text, ('CONCRETED'::character varying)::text, ('LOOSE_BOULDERS'::character varying)::text, ('WOODEN'::character varying)::text, ('METAL'::character varying)::text, ('PAINTED'::character varying)::text, ('FIBERGLASS'::character varying)::text, ('PLASTIC'::character varying)::text])))
 );
 
 
@@ -515,7 +522,7 @@ ALTER TABLE public.generic_buoy_nature_ofconstuctions OWNER TO atonservice;
 CREATE TABLE public.generic_buoy_statuses (
     generic_buoy_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT generic_buoy_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT generic_buoy_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -559,7 +566,7 @@ ALTER TABLE public.information_seq OWNER TO atonservice;
 CREATE TABLE public.landmark_category_of_landmarks (
     landmark_id numeric(38,0) NOT NULL,
     category_of_landmarks character varying(255),
-    CONSTRAINT landmark_category_of_landmarks_category_of_landmarks_check CHECK (((category_of_landmarks)::text = ANY ((ARRAY['CHIMNEY'::character varying, 'MAST'::character varying, 'MONUMENT'::character varying, 'DOME'::character varying, 'RADAR_SCANNER'::character varying, 'TOWER'::character varying, 'WINDMOTOR'::character varying])::text[])))
+    CONSTRAINT landmark_category_of_landmarks_category_of_landmarks_check CHECK (((category_of_landmarks)::text = ANY (ARRAY[('CHIMNEY'::character varying)::text, ('MAST'::character varying)::text, ('MONUMENT'::character varying)::text, ('DOME'::character varying)::text, ('RADAR_SCANNER'::character varying)::text, ('TOWER'::character varying)::text, ('WINDMOTOR'::character varying)::text])))
 );
 
 
@@ -572,7 +579,7 @@ ALTER TABLE public.landmark_category_of_landmarks OWNER TO atonservice;
 CREATE TABLE public.landmark_colour_patterns (
     landmark_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT landmark_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT landmark_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -585,7 +592,7 @@ ALTER TABLE public.landmark_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.landmark_colours (
     landmark_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT landmark_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT landmark_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -598,7 +605,7 @@ ALTER TABLE public.landmark_colours OWNER TO atonservice;
 CREATE TABLE public.landmark_functions (
     landmark_id numeric(38,0) NOT NULL,
     functions character varying(255),
-    CONSTRAINT landmark_functions_functions_check CHECK (((functions)::text = ANY ((ARRAY['CUSTOMS_OFFICE'::character varying, 'HOSPITAL'::character varying, 'POST_OFFICE'::character varying, 'HOTEL'::character varying, 'RAILWAY_STATION'::character varying, 'POLICE_STATION'::character varying, 'WATER_POLICE_STATION'::character varying, 'BANK_OFFICE'::character varying, 'POWER_STATION'::character varying, 'EDUCATIONAL_FACILITY'::character varying, 'CHURCH'::character varying, 'TEMPLE'::character varying, 'TELEVISION'::character varying, 'RADIO'::character varying, 'RADAR'::character varying, 'LIGHT_SUPPORT'::character varying, 'BUS_STATION'::character varying])::text[])))
+    CONSTRAINT landmark_functions_functions_check CHECK (((functions)::text = ANY (ARRAY[('CUSTOMS_OFFICE'::character varying)::text, ('HOSPITAL'::character varying)::text, ('POST_OFFICE'::character varying)::text, ('HOTEL'::character varying)::text, ('RAILWAY_STATION'::character varying)::text, ('POLICE_STATION'::character varying)::text, ('WATER_POLICE_STATION'::character varying)::text, ('BANK_OFFICE'::character varying)::text, ('POWER_STATION'::character varying)::text, ('EDUCATIONAL_FACILITY'::character varying)::text, ('CHURCH'::character varying)::text, ('TEMPLE'::character varying)::text, ('TELEVISION'::character varying)::text, ('RADIO'::character varying)::text, ('RADAR'::character varying)::text, ('LIGHT_SUPPORT'::character varying)::text, ('BUS_STATION'::character varying)::text])))
 );
 
 
@@ -611,7 +618,7 @@ ALTER TABLE public.landmark_functions OWNER TO atonservice;
 CREATE TABLE public.landmark_nature_of_constructions (
     landmark_id numeric(38,0) NOT NULL,
     nature_of_constructions character varying(255),
-    CONSTRAINT landmark_nature_of_constructions_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY ((ARRAY['MASONRY'::character varying, 'HARD_SURFACE'::character varying, 'CONCRETED'::character varying, 'LOOSE_BOULDERS'::character varying, 'WOODEN'::character varying, 'METAL'::character varying, 'PAINTED'::character varying, 'FIBERGLASS'::character varying, 'PLASTIC'::character varying])::text[])))
+    CONSTRAINT landmark_nature_of_constructions_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY (ARRAY[('MASONRY'::character varying)::text, ('HARD_SURFACE'::character varying)::text, ('CONCRETED'::character varying)::text, ('LOOSE_BOULDERS'::character varying)::text, ('WOODEN'::character varying)::text, ('METAL'::character varying)::text, ('PAINTED'::character varying)::text, ('FIBERGLASS'::character varying)::text, ('PLASTIC'::character varying)::text])))
 );
 
 
@@ -624,7 +631,7 @@ ALTER TABLE public.landmark_nature_of_constructions OWNER TO atonservice;
 CREATE TABLE public.landmark_statuses (
     landmark_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT landmark_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT landmark_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -637,7 +644,7 @@ ALTER TABLE public.landmark_statuses OWNER TO atonservice;
 CREATE TABLE public.light_category_of_lights (
     light_id numeric(38,0) NOT NULL,
     category_of_lights character varying(255),
-    CONSTRAINT light_category_of_lights_category_of_lights_check CHECK (((category_of_lights)::text = ANY ((ARRAY['LEADING_LIGHT'::character varying, 'AERO_LIGHT'::character varying, 'AIR_OBSTRUCTION_LIGHT'::character varying, 'FOG_DETECTOR_LIGHT'::character varying, 'FLOOD_LIGHT'::character varying, 'STRIP_LIGHT'::character varying, 'SUBSIDIARY_LIGHT'::character varying, 'SPOTLIGHT'::character varying, 'FRONT'::character varying, 'REAR'::character varying, 'LOWER'::character varying, 'UPPER'::character varying, 'EMERGENCY'::character varying, 'HORIZONTALLY_DISPOSED'::character varying, 'VERTICALLY_DISPOSED'::character varying, 'BRIDGE_LIGHT'::character varying])::text[])))
+    CONSTRAINT light_category_of_lights_category_of_lights_check CHECK (((category_of_lights)::text = ANY (ARRAY[('LEADING_LIGHT'::character varying)::text, ('AERO_LIGHT'::character varying)::text, ('AIR_OBSTRUCTION_LIGHT'::character varying)::text, ('FOG_DETECTOR_LIGHT'::character varying)::text, ('FLOOD_LIGHT'::character varying)::text, ('STRIP_LIGHT'::character varying)::text, ('SUBSIDIARY_LIGHT'::character varying)::text, ('SPOTLIGHT'::character varying)::text, ('FRONT'::character varying)::text, ('REAR'::character varying)::text, ('LOWER'::character varying)::text, ('UPPER'::character varying)::text, ('EMERGENCY'::character varying)::text, ('HORIZONTALLY_DISPOSED'::character varying)::text, ('VERTICALLY_DISPOSED'::character varying)::text, ('BRIDGE_LIGHT'::character varying)::text])))
 );
 
 
@@ -650,7 +657,7 @@ ALTER TABLE public.light_category_of_lights OWNER TO atonservice;
 CREATE TABLE public.light_float_colour_patterns (
     light_float_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT light_float_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT light_float_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -663,7 +670,7 @@ ALTER TABLE public.light_float_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.light_float_colours (
     light_float_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT light_float_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT light_float_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -676,7 +683,7 @@ ALTER TABLE public.light_float_colours OWNER TO atonservice;
 CREATE TABLE public.light_float_nature_of_constructions (
     light_float_id numeric(38,0) NOT NULL,
     nature_of_constructions character varying(255),
-    CONSTRAINT light_float_nature_of_constructio_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY ((ARRAY['MASONRY'::character varying, 'HARD_SURFACE'::character varying, 'CONCRETED'::character varying, 'LOOSE_BOULDERS'::character varying, 'WOODEN'::character varying, 'METAL'::character varying, 'PAINTED'::character varying, 'FIBERGLASS'::character varying, 'PLASTIC'::character varying])::text[])))
+    CONSTRAINT light_float_nature_of_constructio_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY (ARRAY[('MASONRY'::character varying)::text, ('HARD_SURFACE'::character varying)::text, ('CONCRETED'::character varying)::text, ('LOOSE_BOULDERS'::character varying)::text, ('WOODEN'::character varying)::text, ('METAL'::character varying)::text, ('PAINTED'::character varying)::text, ('FIBERGLASS'::character varying)::text, ('PLASTIC'::character varying)::text])))
 );
 
 
@@ -689,7 +696,7 @@ ALTER TABLE public.light_float_nature_of_constructions OWNER TO atonservice;
 CREATE TABLE public.light_float_statuses (
     light_float_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT light_float_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT light_float_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -702,7 +709,7 @@ ALTER TABLE public.light_float_statuses OWNER TO atonservice;
 CREATE TABLE public.light_light_visibilities (
     light_id numeric(38,0) NOT NULL,
     light_visibilities character varying(255),
-    CONSTRAINT light_light_visibilities_light_visibilities_check CHECK (((light_visibilities)::text = ANY ((ARRAY['HIGH_INTENSITY'::character varying, 'LOW_INTENSITY'::character varying, 'FAINT'::character varying, 'INTENSIFIED'::character varying, 'UNINTENSIFIED'::character varying, 'VISIBILITY_DELIBERATELY_RESTRICTED'::character varying, 'OBSCURED'::character varying, 'PARTIALLY_OBSCURED'::character varying])::text[])))
+    CONSTRAINT light_light_visibilities_light_visibilities_check CHECK (((light_visibilities)::text = ANY (ARRAY[('HIGH_INTENSITY'::character varying)::text, ('LOW_INTENSITY'::character varying)::text, ('FAINT'::character varying)::text, ('INTENSIFIED'::character varying)::text, ('UNINTENSIFIED'::character varying)::text, ('VISIBILITY_DELIBERATELY_RESTRICTED'::character varying)::text, ('OBSCURED'::character varying)::text, ('PARTIALLY_OBSCURED'::character varying)::text])))
 );
 
 
@@ -715,7 +722,7 @@ ALTER TABLE public.light_light_visibilities OWNER TO atonservice;
 CREATE TABLE public.light_statuses (
     light_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT light_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT light_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -728,7 +735,7 @@ ALTER TABLE public.light_statuses OWNER TO atonservice;
 CREATE TABLE public.light_vessel_colour_patterns (
     light_vessel_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT light_vessel_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT light_vessel_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -741,7 +748,7 @@ ALTER TABLE public.light_vessel_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.light_vessel_colours (
     light_vessel_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT light_vessel_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT light_vessel_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -754,7 +761,7 @@ ALTER TABLE public.light_vessel_colours OWNER TO atonservice;
 CREATE TABLE public.light_vessel_nature_of_constructions (
     light_vessel_id numeric(38,0) NOT NULL,
     nature_of_constructions character varying(255),
-    CONSTRAINT light_vessel_nature_of_constructi_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY ((ARRAY['MASONRY'::character varying, 'HARD_SURFACE'::character varying, 'CONCRETED'::character varying, 'LOOSE_BOULDERS'::character varying, 'WOODEN'::character varying, 'METAL'::character varying, 'PAINTED'::character varying, 'FIBERGLASS'::character varying, 'PLASTIC'::character varying])::text[])))
+    CONSTRAINT light_vessel_nature_of_constructi_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY (ARRAY[('MASONRY'::character varying)::text, ('HARD_SURFACE'::character varying)::text, ('CONCRETED'::character varying)::text, ('LOOSE_BOULDERS'::character varying)::text, ('WOODEN'::character varying)::text, ('METAL'::character varying)::text, ('PAINTED'::character varying)::text, ('FIBERGLASS'::character varying)::text, ('PLASTIC'::character varying)::text])))
 );
 
 
@@ -767,7 +774,7 @@ ALTER TABLE public.light_vessel_nature_of_constructions OWNER TO atonservice;
 CREATE TABLE public.light_vessel_statuses (
     light_vessel_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT light_vessel_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT light_vessel_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -780,7 +787,7 @@ ALTER TABLE public.light_vessel_statuses OWNER TO atonservice;
 CREATE TABLE public.navigation_line_statuses (
     navigation_line_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT navigation_line_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT navigation_line_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -793,7 +800,7 @@ ALTER TABLE public.navigation_line_statuses OWNER TO atonservice;
 CREATE TABLE public.offshore_platform_category_of_offshore_platforms (
     offshore_platform_id numeric(38,0) NOT NULL,
     category_of_offshore_platforms character varying(255),
-    CONSTRAINT offshore_platform_category_o_category_of_offshore_platfor_check CHECK (((category_of_offshore_platforms)::text = ANY ((ARRAY['PRODUCTION_PLATFORM'::character varying, 'OBSERVATION_RESEARCH_PLATFORM'::character varying])::text[])))
+    CONSTRAINT offshore_platform_category_o_category_of_offshore_platfor_check CHECK (((category_of_offshore_platforms)::text = ANY (ARRAY[('PRODUCTION_PLATFORM'::character varying)::text, ('OBSERVATION_RESEARCH_PLATFORM'::character varying)::text])))
 );
 
 
@@ -806,7 +813,7 @@ ALTER TABLE public.offshore_platform_category_of_offshore_platforms OWNER TO ato
 CREATE TABLE public.offshore_platform_colour_patterns (
     offshore_platform_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT offshore_platform_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT offshore_platform_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -819,7 +826,7 @@ ALTER TABLE public.offshore_platform_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.offshore_platform_colours (
     offshore_platform_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT offshore_platform_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT offshore_platform_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -832,7 +839,7 @@ ALTER TABLE public.offshore_platform_colours OWNER TO atonservice;
 CREATE TABLE public.offshore_platform_nature_of_constructions (
     offshore_platform_id numeric(38,0) NOT NULL,
     nature_of_constructions character varying(255),
-    CONSTRAINT offshore_platform_nature_of_const_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY ((ARRAY['MASONRY'::character varying, 'HARD_SURFACE'::character varying, 'CONCRETED'::character varying, 'LOOSE_BOULDERS'::character varying, 'WOODEN'::character varying, 'METAL'::character varying, 'PAINTED'::character varying, 'FIBERGLASS'::character varying, 'PLASTIC'::character varying])::text[])))
+    CONSTRAINT offshore_platform_nature_of_const_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY (ARRAY[('MASONRY'::character varying)::text, ('HARD_SURFACE'::character varying)::text, ('CONCRETED'::character varying)::text, ('LOOSE_BOULDERS'::character varying)::text, ('WOODEN'::character varying)::text, ('METAL'::character varying)::text, ('PAINTED'::character varying)::text, ('FIBERGLASS'::character varying)::text, ('PLASTIC'::character varying)::text])))
 );
 
 
@@ -845,7 +852,7 @@ ALTER TABLE public.offshore_platform_nature_of_constructions OWNER TO atonservic
 CREATE TABLE public.offshore_platform_statuses (
     offshore_platform_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT offshore_platform_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT offshore_platform_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -858,7 +865,7 @@ ALTER TABLE public.offshore_platform_statuses OWNER TO atonservice;
 CREATE TABLE public.physicalaisaid_to_navigation_statuses (
     physicalaisaid_to_navigation_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT physicalaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT physicalaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -871,7 +878,7 @@ ALTER TABLE public.physicalaisaid_to_navigation_statuses OWNER TO atonservice;
 CREATE TABLE public.pile_colour_patterns (
     pile_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT pile_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT pile_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -884,7 +891,7 @@ ALTER TABLE public.pile_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.pile_colours (
     pile_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT pile_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT pile_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -897,7 +904,7 @@ ALTER TABLE public.pile_colours OWNER TO atonservice;
 CREATE TABLE public.radar_reflector_statuses (
     radar_reflector_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT radar_reflector_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT radar_reflector_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -910,7 +917,7 @@ ALTER TABLE public.radar_reflector_statuses OWNER TO atonservice;
 CREATE TABLE public.radar_transponder_beacon_statuses (
     radar_transponder_beacon_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT radar_transponder_beacon_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT radar_transponder_beacon_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -935,7 +942,7 @@ ALTER TABLE public.recommended_track_nav_lines OWNER TO atonservice;
 CREATE TABLE public.recommended_track_statuses (
     recommended_track_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT recommended_track_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT recommended_track_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -948,7 +955,7 @@ ALTER TABLE public.recommended_track_statuses OWNER TO atonservice;
 CREATE TABLE public.retro_reflector_colour_patterns (
     retro_reflector_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT retro_reflector_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT retro_reflector_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -961,7 +968,7 @@ ALTER TABLE public.retro_reflector_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.retro_reflector_colours (
     retro_reflector_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT retro_reflector_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT retro_reflector_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -974,7 +981,7 @@ ALTER TABLE public.retro_reflector_colours OWNER TO atonservice;
 CREATE TABLE public.retro_reflector_statuses (
     retro_reflector_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT retro_reflector_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT retro_reflector_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -1037,7 +1044,7 @@ ALTER TABLE public.s125dataset_identification OWNER TO atonservice;
 CREATE TABLE public.s125dataset_identification_dataset_topic_categories (
     s125dataset_identification_id numeric(38,0) NOT NULL,
     dataset_topic_categories character varying(255),
-    CONSTRAINT s125dataset_identification_datas_dataset_topic_categories_check CHECK (((dataset_topic_categories)::text = ANY ((ARRAY['FARMING'::character varying, 'BIOTA'::character varying, 'BOUNDARIES'::character varying, 'CLIMATOLOGY_METEOROLOGY_ATMOSPHERE'::character varying, 'ECONOMY'::character varying, 'ELEVATION'::character varying, 'ENVIRONMENT'::character varying, 'GEOSCIENTIFIC_INFORMATION'::character varying, 'HEALTH'::character varying, 'IMAGERY_BASE_MAPS_EARTH_COVER'::character varying, 'INTELLIGENCE_MILITARY'::character varying, 'INLAND_WATERS'::character varying, 'LOCATION'::character varying, 'OCEANS'::character varying, 'PLANNING_CADASTRE'::character varying, 'SOCIETY'::character varying, 'STRUCTURE'::character varying, 'TRANSPORTATION'::character varying, 'UTILITIES_COMMUNICATION'::character varying])::text[])))
+    CONSTRAINT s125dataset_identification_datas_dataset_topic_categories_check CHECK (((dataset_topic_categories)::text = ANY (ARRAY[('FARMING'::character varying)::text, ('BIOTA'::character varying)::text, ('BOUNDARIES'::character varying)::text, ('CLIMATOLOGY_METEOROLOGY_ATMOSPHERE'::character varying)::text, ('ECONOMY'::character varying)::text, ('ELEVATION'::character varying)::text, ('ENVIRONMENT'::character varying)::text, ('GEOSCIENTIFIC_INFORMATION'::character varying)::text, ('HEALTH'::character varying)::text, ('IMAGERY_BASE_MAPS_EARTH_COVER'::character varying)::text, ('INTELLIGENCE_MILITARY'::character varying)::text, ('INLAND_WATERS'::character varying)::text, ('LOCATION'::character varying)::text, ('OCEANS'::character varying)::text, ('PLANNING_CADASTRE'::character varying)::text, ('SOCIETY'::character varying)::text, ('STRUCTURE'::character varying)::text, ('TRANSPORTATION'::character varying)::text, ('UTILITIES_COMMUNICATION'::character varying)::text])))
 );
 
 
@@ -1050,7 +1057,7 @@ ALTER TABLE public.s125dataset_identification_dataset_topic_categories OWNER TO 
 CREATE TABLE public.silo_tank_colour_patterns (
     silo_tank_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT silo_tank_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT silo_tank_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -1063,7 +1070,7 @@ ALTER TABLE public.silo_tank_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.silo_tank_colours (
     silo_tank_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT silo_tank_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT silo_tank_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -1076,7 +1083,7 @@ ALTER TABLE public.silo_tank_colours OWNER TO atonservice;
 CREATE TABLE public.silo_tank_nature_of_constructions (
     silo_tank_id numeric(38,0) NOT NULL,
     nature_of_constructions character varying(255),
-    CONSTRAINT silo_tank_nature_of_constructions_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY ((ARRAY['MASONRY'::character varying, 'HARD_SURFACE'::character varying, 'CONCRETED'::character varying, 'LOOSE_BOULDERS'::character varying, 'WOODEN'::character varying, 'METAL'::character varying, 'PAINTED'::character varying, 'FIBERGLASS'::character varying, 'PLASTIC'::character varying])::text[])))
+    CONSTRAINT silo_tank_nature_of_constructions_nature_of_constructions_check CHECK (((nature_of_constructions)::text = ANY (ARRAY[('MASONRY'::character varying)::text, ('HARD_SURFACE'::character varying)::text, ('CONCRETED'::character varying)::text, ('LOOSE_BOULDERS'::character varying)::text, ('WOODEN'::character varying)::text, ('METAL'::character varying)::text, ('PAINTED'::character varying)::text, ('FIBERGLASS'::character varying)::text, ('PLASTIC'::character varying)::text])))
 );
 
 
@@ -1089,7 +1096,7 @@ ALTER TABLE public.silo_tank_nature_of_constructions OWNER TO atonservice;
 CREATE TABLE public.silo_tank_statuses (
     silo_tank_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT silo_tank_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT silo_tank_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -1127,7 +1134,7 @@ ALTER TABLE public.subscription_request OWNER TO atonservice;
 CREATE TABLE public.syntheticaisaid_to_navigation_statuses (
     syntheticaisaid_to_navigation_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT syntheticaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT syntheticaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -1140,7 +1147,7 @@ ALTER TABLE public.syntheticaisaid_to_navigation_statuses OWNER TO atonservice;
 CREATE TABLE public.topmark_colour_patterns (
     topmark_id numeric(38,0) NOT NULL,
     colour_patterns character varying(255),
-    CONSTRAINT topmark_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY ((ARRAY['HORIZONTAL_STRIPES'::character varying, 'VERTICAL_STRIPES'::character varying, 'DIAGONAL_STRIPES'::character varying, 'SQUARED'::character varying, 'STRIPES_DIRECTION_UNKNOWN'::character varying, 'BORDER_STRIPE'::character varying, 'SINGLE_COLOUR'::character varying, 'RECTANGLE'::character varying, 'TRIANGLE'::character varying, 'OTHER_PATTERN'::character varying])::text[])))
+    CONSTRAINT topmark_colour_patterns_colour_patterns_check CHECK (((colour_patterns)::text = ANY (ARRAY[('HORIZONTAL_STRIPES'::character varying)::text, ('VERTICAL_STRIPES'::character varying)::text, ('DIAGONAL_STRIPES'::character varying)::text, ('SQUARED'::character varying)::text, ('STRIPES_DIRECTION_UNKNOWN'::character varying)::text, ('BORDER_STRIPE'::character varying)::text, ('SINGLE_COLOUR'::character varying)::text, ('RECTANGLE'::character varying)::text, ('TRIANGLE'::character varying)::text, ('OTHER_PATTERN'::character varying)::text])))
 );
 
 
@@ -1153,7 +1160,7 @@ ALTER TABLE public.topmark_colour_patterns OWNER TO atonservice;
 CREATE TABLE public.topmark_colours (
     topmark_id numeric(38,0) NOT NULL,
     colours character varying(255),
-    CONSTRAINT topmark_colours_colours_check CHECK (((colours)::text = ANY ((ARRAY['WHITE'::character varying, 'BLACK'::character varying, 'RED'::character varying, 'GREEN'::character varying, 'BLUE'::character varying, 'YELLOW'::character varying, 'GREY'::character varying, 'BROWN'::character varying, 'ORANGE'::character varying, 'FLUORESCENT_WHITE'::character varying, 'FLUORESCENT_RED'::character varying, 'FLUORESCENT_GREEN'::character varying, 'FLUORESCENT_ORANGE'::character varying])::text[])))
+    CONSTRAINT topmark_colours_colours_check CHECK (((colours)::text = ANY (ARRAY[('WHITE'::character varying)::text, ('BLACK'::character varying)::text, ('RED'::character varying)::text, ('GREEN'::character varying)::text, ('BLUE'::character varying)::text, ('YELLOW'::character varying)::text, ('GREY'::character varying)::text, ('BROWN'::character varying)::text, ('ORANGE'::character varying)::text, ('FLUORESCENT_WHITE'::character varying)::text, ('FLUORESCENT_RED'::character varying)::text, ('FLUORESCENT_GREEN'::character varying)::text, ('FLUORESCENT_ORANGE'::character varying)::text])))
 );
 
 
@@ -1166,7 +1173,7 @@ ALTER TABLE public.topmark_colours OWNER TO atonservice;
 CREATE TABLE public.topmark_statuses (
     topmark_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT topmark_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT topmark_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -1179,7 +1186,7 @@ ALTER TABLE public.topmark_statuses OWNER TO atonservice;
 CREATE TABLE public.virtualaisaid_to_navigation_statuses (
     virtualaisaid_to_navigation_id numeric(38,0) NOT NULL,
     statuses character varying(255),
-    CONSTRAINT virtualaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+    CONSTRAINT virtualaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY (ARRAY[('PERMANENT'::character varying)::text, ('NOT_IN_USE'::character varying)::text, ('PERIODIC_INTERMITTENT'::character varying)::text, ('TEMPORARY'::character varying)::text, ('PRIVATE'::character varying)::text, ('PUBLIC'::character varying)::text, ('WATCHED'::character varying)::text, ('UN_WATCHED'::character varying)::text, ('CONFIRMED'::character varying)::text, ('CANDIDATE'::character varying)::text, ('UNDER_MODIFICATION'::character varying)::text, ('CANDIDATE_FOR_MODIFICATION'::character varying)::text, ('UNDER_REMOVAL_DELETION'::character varying)::text, ('REMOVED_DELETED'::character varying)::text, ('EXPERIMENTAL'::character varying)::text, ('TEMPORARILY_DISCONTINUED'::character varying)::text, ('TEMPORARILY_RELOCATED'::character varying)::text])))
 );
 
 
@@ -1258,14 +1265,6 @@ ALTER TABLE ONLY public.feature_name
 
 
 --
--- Name: flyway_schema_history flyway_schema_history_pk; Type: CONSTRAINT; Schema: public; Owner: atonservice
---
-
-ALTER TABLE ONLY public.flyway_schema_history
-    ADD CONSTRAINT flyway_schema_history_pk PRIMARY KEY (installed_rank);
-
-
---
 -- Name: information information_pkey; Type: CONSTRAINT; Schema: public; Owner: atonservice
 --
 
@@ -1319,13 +1318,6 @@ ALTER TABLE ONLY public.s125dataset
 
 ALTER TABLE ONLY public.subscription_request
     ADD CONSTRAINT subscription_request_pkey PRIMARY KEY (uuid);
-
-
---
--- Name: flyway_schema_history_s_idx; Type: INDEX; Schema: public; Owner: atonservice
---
-
-CREATE INDEX flyway_schema_history_s_idx ON public.flyway_schema_history USING btree (success);
 
 
 --
@@ -1906,4 +1898,3 @@ ALTER TABLE ONLY public.retro_reflector_statuses
 --
 -- PostgreSQL database dump complete
 --
-
