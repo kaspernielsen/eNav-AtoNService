@@ -53,7 +53,7 @@ public abstract class GenericBeacon extends StructureObject {
     private RadarConspicuousType radarConspicuous;
 
     @Enumerated(EnumType.STRING)
-    private VisualProminenceType visuallyConspicuous;
+    private VisualProminenceType visualProminence;
 
     private BigDecimal height;
 
@@ -143,21 +143,21 @@ public abstract class GenericBeacon extends StructureObject {
     }
 
     /**
-     * Gets visually conspicuous.
+     * Gets visual prominence.
      *
-     * @return the visually conspicuous
+     * @return the visual prominence
      */
-    public VisualProminenceType getVisuallyConspicuous() {
-        return visuallyConspicuous;
+    public VisualProminenceType getVisualProminence() {
+        return visualProminence;
     }
 
     /**
      * Sets visually conspicuous.
      *
-     * @param visuallyConspicuous the visually conspicuous
+     * @param visualProminence the visually conspicuous
      */
-    public void setVisuallyConspicuous(VisualProminenceType visuallyConspicuous) {
-        this.visuallyConspicuous = visuallyConspicuous;
+    public void setVisualProminence(VisualProminenceType visualProminence) {
+        this.visualProminence = visualProminence;
     }
 
     /**

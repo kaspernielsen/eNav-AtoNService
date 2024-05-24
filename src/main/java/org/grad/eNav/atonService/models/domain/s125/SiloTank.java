@@ -56,7 +56,7 @@ public class SiloTank extends StructureObject {
     private RadarConspicuousType radarConspicuous;
 
     @Enumerated(EnumType.STRING)
-    private VisualProminenceType visuallyConspicuous;
+    private VisualProminenceType visualProminence;
 
     private BigDecimal height;
 
@@ -159,21 +159,21 @@ public class SiloTank extends StructureObject {
     }
 
     /**
-     * Gets visually conspicuous.
+     * Gets visual prominence.
      *
-     * @return the visually conspicuous
+     * @return the visual prominence
      */
-    public VisualProminenceType getVisuallyConspicuous() {
-        return visuallyConspicuous;
+    public VisualProminenceType getVisualProminence() {
+        return visualProminence;
     }
 
     /**
-     * Sets visually conspicuous.
+     * Sets visual prominence.
      *
-     * @param visuallyConspicuous the visually conspicuous
+     * @param visualProminence the visual prominence
      */
-    public void setVisuallyConspicuous(VisualProminenceType visuallyConspicuous) {
-        this.visuallyConspicuous = visuallyConspicuous;
+    public void setVisualProminence(VisualProminenceType visualProminence) {
+        this.visualProminence = visualProminence;
     }
 
     /**

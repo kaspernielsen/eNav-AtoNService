@@ -48,7 +48,7 @@ public abstract class GenericBuoy extends StructureObject {
     private List<ColourPatternType> colourPatterns;
 
     @Enumerated(EnumType.STRING)
-    private RadarConspicuousType radarConspicious;
+    private RadarConspicuousType radarConspicuous;
 
     @Enumerated(EnumType.STRING)
     private MarksNavigationalSystemOfType marksNavigationalSystemOf;
@@ -118,21 +118,21 @@ public abstract class GenericBuoy extends StructureObject {
     }
 
     /**
-     * Gets radar conspicious.
+     * Gets radar conspicuous.
      *
-     * @return the radar conspicious
+     * @return the radar conspicuous
      */
-    public RadarConspicuousType getRadarConspicious() {
-        return radarConspicious;
+    public RadarConspicuousType getRadarConspicuous() {
+        return radarConspicuous;
     }
 
     /**
-     * Sets radar conspicious.
+     * Sets radar conspicuous.
      *
-     * @param radarConspicious the radar conspicious
+     * @param radarConspicuous the radar conspicuous
      */
-    public void setRadarConspicious(RadarConspicuousType radarConspicious) {
-        this.radarConspicious = radarConspicious;
+    public void setRadarConspicuous(RadarConspicuousType radarConspicuous) {
+        this.radarConspicuous = radarConspicuous;
     }
 
     /**
