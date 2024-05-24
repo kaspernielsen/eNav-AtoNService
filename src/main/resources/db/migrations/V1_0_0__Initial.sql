@@ -72,61 +72,56 @@ ALTER TABLE public.aggregation_seq OWNER TO atonservice;
 --
 
 CREATE TABLE public.aids_to_navigation (
-    dtype character varying(31) NOT NULL,
-    id numeric(38,0) NOT NULL,
-    aton_number character varying(255),
+    category_of_special_purpose_mark smallint,
     date_end date,
     date_start date,
-    geometry public.geometry,
-    id_code character varying(255) NOT NULL,
-    last_modified_at timestamp(6) without time zone,
+    estimated_range_of_transmission numeric(38,2),
+    height numeric(38,2),
+    id numeric(38,0) NOT NULL,
+    mmsi_code numeric(38,0),
+    multiplicity_of_lights numeric(38,0),
+    orientation numeric(38,2),
+    parent_id numeric(38,0),
     period_end date,
     period_start date,
-    pictorial_representation character varying(255),
     scale_minimum numeric(38,0),
-    marks_navigational_system_of character varying(255),
-    topmark_daymark_shape character varying(255),
-    estimated_range_of_transmission numeric(38,2),
-    mmsi_code numeric(38,2),
-    object_name character varying(255),
-    object_name_in_national_language character varying(255),
-    status character varying(255),
-    virtualaisaid_to_navigation_type character varying(255),
-    category_of_radar_transponder_beacon_type character varying(255),
-    radar_wave_length character varying(255),
     sector_limit_one numeric(38,2),
     sector_limit_two numeric(38,2),
+    signal_period numeric(38,2),
+    value_of_nominal_range numeric(38,2),
+    vertical_length numeric(38,2),
+    last_modified_at timestamp(6) without time zone,
+    dtype character varying(31) NOT NULL,
+    beacon_shape character varying(255),
+    building_shape character varying(255),
+    buoy_shape character varying(255),
+    category_of_cardinal_mark character varying(255),
+    category_of_fog_signal character varying(255),
+    category_of_installation_buoy character varying(255),
+    category_of_lateral_mark character varying(255),
+    category_of_navigation_line character varying(255),
+    category_of_pile character varying(255),
+    category_of_radar_transponder_beacon_type character varying(255),
+    category_of_radio_station character varying(255),
+    category_of_recommended_track character varying(255),
+    category_of_silo_tank character varying(255),
+    colour character varying(255),
+    condition character varying(255),
+    exhibition_condition_of_light character varying(255),
+    id_code character varying(255) NOT NULL,
+    light_characteristic character varying(255),
+    marks_navigational_system_of character varying(255),
+    pictorial_representation character varying(255),
+    radar_conspicuous character varying(255),
+    radar_wave_length character varying(255),
     signal_group character varying(255),
     signal_sequence character varying(255),
-    value_of_nominal_range numeric(38,2),
-    beacon_shape character varying(255),
-    height numeric(38,2),
-    radar_conspicuous character varying(255),
-    vertical_length numeric(38,2),
-    visually_conspicuous character varying(255),
-    category_of_lateral_mark character varying(255),
-    category_of_recommended_track character varying(255),
-    orientation numeric(38,2),
+    status character varying(255),
+    topmark_daymark_shape character varying(255),
     traffic_flow character varying(255),
-    category_of_radio_station character varying(255),
-    colour character varying(255),
-    exhibition_condition_of_light character varying(255),
-    light_characteristic character varying(255),
-    multiplicity_of_lights numeric(38,0),
-    signal_period numeric(38,0),
-    category_of_cardinal_mark character varying(255),
-    category_of_pile character varying(255),
-    buoy_shape character varying(255),
-    radar_conspicious character varying(255),
-    category_of_fog_signal character varying(255),
-    category_of_navigation_line character varying(255),
-    building_shape character varying(255),
-    category_of_silo_tank character varying(255),
-    category_of_installation_buoy character varying(255),
-    condition character varying(255),
-    category_of_special_purpose_mark smallint,
-    parent_id numeric(38,0),
-    broadcasts_id numeric(38,0),
+    virtualaisaid_to_navigation_type character varying(255),
+    visual_prominence character varying(255),
+    geometry public.geometry,
     CONSTRAINT aids_to_navigation_beacon_shape_check CHECK (((beacon_shape)::text = ANY ((ARRAY['STAKE_POLE_PERCH_POST'::character varying, 'BEACON_TOWER'::character varying, 'LATTICE_BEACON'::character varying, 'PILE_BEACON'::character varying])::text[]))),
     CONSTRAINT aids_to_navigation_building_shape_check CHECK (((building_shape)::text = ANY ((ARRAY['HIGH_RISE_BUILDING'::character varying, 'PYRAMID'::character varying, 'CYLINDRICAL'::character varying, 'SPHERICAL'::character varying, 'CUBIC'::character varying])::text[]))),
     CONSTRAINT aids_to_navigation_buoy_shape_check CHECK (((buoy_shape)::text = ANY ((ARRAY['CONICAL_NUN_OGIVAL'::character varying, 'CAN_CYLINDRICAL'::character varying, 'SPHERICAL'::character varying, 'PILLAR'::character varying, 'SPAR_SPINDLE'::character varying, 'BARREL_TUN'::character varying, 'SUPER_BUOY'::character varying, 'ICE_BUOY'::character varying])::text[]))),
@@ -146,12 +141,11 @@ CREATE TABLE public.aids_to_navigation (
     CONSTRAINT aids_to_navigation_exhibition_condition_of_light_check CHECK (((exhibition_condition_of_light)::text = ANY ((ARRAY['LIGHT_SHOWN_WITHOUT_CHANGE_OF_CHARACTER'::character varying, 'DAYTIME_LIGHT'::character varying, 'FOG_LIGHT'::character varying, 'NIGHT_LIGHT'::character varying])::text[]))),
     CONSTRAINT aids_to_navigation_light_characteristic_check CHECK (((light_characteristic)::text = ANY ((ARRAY['FIXED'::character varying, 'FLASHING'::character varying, 'LONG_FLASHING'::character varying, 'QUICK_FLASHING'::character varying, 'VERY_QUICK_FLASHING'::character varying, 'ULTRA_QUICK_FLASHING'::character varying, 'ISOPHASED'::character varying, 'OCCULTING'::character varying, 'INTERRUPTED_QUICK_FLASHING'::character varying, 'INTERRUPTED_VERY_QUICK_FLASHING'::character varying, 'INTERRUPTED_ULTRA_QUICK_FLASHING'::character varying, 'MORSE'::character varying, 'FIXED_AND_FLASH'::character varying, 'FLASH_AND_LONG_FLASH'::character varying, 'OCCULTING_AND_FLASH'::character varying, 'FIXED_AND_LONG_FLASH'::character varying, 'OCCULTING_ALTERNATING'::character varying, 'LONG_FLASH_ALTERNATING'::character varying, 'FLASH_ALTERNATING'::character varying, 'QUICK_FLASH_PLUS_LONG_FLASH'::character varying, 'VERY_QUICK_FLASH_PLUS_LONG_FLASH'::character varying, 'ULTRA_QUICK_FLASH_PLUS_LONG_FLASH'::character varying, 'ALTERNATING'::character varying])::text[]))),
     CONSTRAINT aids_to_navigation_marks_navigational_system_of_check CHECK (((marks_navigational_system_of)::text = ANY ((ARRAY['IALA_A'::character varying, 'IALA_B'::character varying, 'NO_SYSTEM'::character varying, 'OTHER_SYSTEM'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_radar_conspicious_check CHECK (((radar_conspicious)::text = ANY ((ARRAY['RADAR_CONSPICUOUS'::character varying, 'NOT_RADAR_CONSPICUOUS'::character varying, 'RADAR_CONSPICUOUS_HAS_RADAR_REFLECTOR'::character varying])::text[]))),
     CONSTRAINT aids_to_navigation_radar_conspicuous_check CHECK (((radar_conspicuous)::text = ANY ((ARRAY['RADAR_CONSPICUOUS'::character varying, 'NOT_RADAR_CONSPICUOUS'::character varying, 'RADAR_CONSPICUOUS_HAS_RADAR_REFLECTOR'::character varying])::text[]))),
     CONSTRAINT aids_to_navigation_status_check CHECK (((status)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[]))),
     CONSTRAINT aids_to_navigation_traffic_flow_check CHECK (((traffic_flow)::text = ANY ((ARRAY['INBOUND'::character varying, 'OUTBOUND'::character varying, 'ONE_WAY'::character varying, 'TWO_WAY'::character varying])::text[]))),
     CONSTRAINT aids_to_navigation_virtualaisaid_to_navigation_type_check CHECK (((virtualaisaid_to_navigation_type)::text = ANY ((ARRAY['NORTH_CARDINAL'::character varying, 'EAST_CARDINAL'::character varying, 'SOUTH_CARDINAL'::character varying, 'WEST_CARDINAL'::character varying, 'PORT_LATERAL'::character varying, 'STARBOARD_LATERAL'::character varying, 'PREFERRED_CHANNEL_TO_PORT'::character varying, 'PREFERRED_CHANNEL_TO_STARBOARD'::character varying, 'ISOLATED_DANGER'::character varying, 'SAFE_WATER'::character varying, 'SPECIAL_PURPOSE'::character varying, 'NEW_DANGER_MARKING'::character varying])::text[]))),
-    CONSTRAINT aids_to_navigation_visually_conspicuous_check CHECK (((visually_conspicuous)::text = ANY ((ARRAY['VISUALLY_CONSPICUOUS'::character varying, 'NOT_VISUALLY_CONSPICUOUS'::character varying])::text[])))
+    CONSTRAINT aids_to_navigation_visual_prominence_check CHECK (((visual_prominence)::text = ANY ((ARRAY['VISUALLY_CONSPICUOUS'::character varying, 'NOT_VISUALLY_CONSPICUOUS'::character varying])::text[])))
 );
 
 
@@ -224,6 +218,18 @@ CREATE TABLE public.beacon_special_purpose_category_of_special_purpose_marks (
 ALTER TABLE public.beacon_special_purpose_category_of_special_purpose_marks OWNER TO atonservice;
 
 --
+-- Name: broadcast_by_join_table; Type: TABLE; Schema: public; Owner: atonservice
+--
+
+CREATE TABLE public.broadcast_by_join_table (
+    ais_aton_id numeric(38,0) NOT NULL,
+    radio_station_id numeric(38,0) NOT NULL
+);
+
+
+ALTER TABLE public.broadcast_by_join_table OWNER TO atonservice;
+
+--
 -- Name: buoy_special_purpose_category_of_special_purpose_marks; Type: TABLE; Schema: public; Owner: atonservice
 --
 
@@ -241,13 +247,13 @@ ALTER TABLE public.buoy_special_purpose_category_of_special_purpose_marks OWNER 
 --
 
 CREATE TABLE public.dataset_content (
-    id numeric(24,0) NOT NULL,
-    content oid,
     content_length numeric(38,0),
-    delta oid,
     delta_length numeric(38,0),
+    id numeric(24,0) NOT NULL,
+    sequence_no numeric(38,0),
     generated_at timestamp(6) without time zone,
-    sequence_no numeric(38,0)
+    content oid,
+    delta oid
 );
 
 
@@ -258,17 +264,17 @@ ALTER TABLE public.dataset_content OWNER TO atonservice;
 --
 
 CREATE TABLE public.dataset_content_log (
-    id numeric(24,0) NOT NULL,
-    content oid,
     content_length numeric(38,0),
-    dataset_type character varying(255),
-    delta oid,
     delta_length numeric(38,0),
-    generated_at timestamp(6) without time zone,
-    geometry public.geometry,
-    operation character varying(255),
+    id numeric(24,0) NOT NULL,
     sequence_no numeric(38,0),
+    generated_at timestamp(6) without time zone,
     uuid uuid NOT NULL,
+    dataset_type character varying(255),
+    operation character varying(255),
+    content oid,
+    delta oid,
+    geometry public.geometry,
     CONSTRAINT dataset_content_log_dataset_type_check CHECK (((dataset_type)::text = 'S125'::text)),
     CONSTRAINT dataset_content_log_operation_check CHECK (((operation)::text = ANY ((ARRAY['CREATED'::character varying, 'UPDATED'::character varying, 'CANCELLED'::character varying, 'DELETED'::character varying, 'OTHER'::character varying, 'AUTO'::character varying])::text[])))
 );
@@ -375,11 +381,11 @@ ALTER TABLE public.daymark_statuses OWNER TO atonservice;
 --
 
 CREATE TABLE public.feature_name (
-    id numeric(38,0) NOT NULL,
     display_name boolean,
+    feature_id numeric(38,0),
+    id numeric(38,0) NOT NULL,
     language character varying(255),
-    name character varying(255),
-    feature_id numeric(38,0)
+    name character varying(255)
 );
 
 
@@ -521,13 +527,13 @@ ALTER TABLE public.generic_buoy_statuses OWNER TO atonservice;
 --
 
 CREATE TABLE public.information (
+    feature_id numeric(38,0),
     id numeric(38,0) NOT NULL,
     file_locator character varying(255),
     file_reference character varying(255),
     headline character varying(255),
     language character varying(255),
-    text character varying(255),
-    feature_id numeric(38,0)
+    text character varying(255)
 );
 
 
@@ -847,6 +853,19 @@ CREATE TABLE public.offshore_platform_statuses (
 ALTER TABLE public.offshore_platform_statuses OWNER TO atonservice;
 
 --
+-- Name: physicalaisaid_to_navigation_statuses; Type: TABLE; Schema: public; Owner: atonservice
+--
+
+CREATE TABLE public.physicalaisaid_to_navigation_statuses (
+    physicalaisaid_to_navigation_id numeric(38,0) NOT NULL,
+    statuses character varying(255),
+    CONSTRAINT physicalaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.physicalaisaid_to_navigation_statuses OWNER TO atonservice;
+
+--
 -- Name: pile_colour_patterns; Type: TABLE; Schema: public; Owner: atonservice
 --
 
@@ -903,8 +922,8 @@ ALTER TABLE public.radar_transponder_beacon_statuses OWNER TO atonservice;
 --
 
 CREATE TABLE public.recommended_track_nav_lines (
-    recommended_track_id numeric(38,0) NOT NULL,
-    navigation_line_id numeric(38,0) NOT NULL
+    navigation_line_id numeric(38,0) NOT NULL,
+    recommended_track_id numeric(38,0) NOT NULL
 );
 
 
@@ -979,13 +998,13 @@ ALTER TABLE public.s125_dataset_content_xref OWNER TO atonservice;
 --
 
 CREATE TABLE public.s125dataset (
-    uuid uuid NOT NULL,
     cancelled boolean,
+    dataset_identification_id numeric(38,0),
     created_at timestamp(6) without time zone,
-    geometry public.geometry,
     last_updated_at timestamp(6) without time zone,
     replaces uuid,
-    dataset_identification_id numeric(38,0)
+    uuid uuid NOT NULL,
+    geometry public.geometry
 );
 
 
@@ -996,12 +1015,12 @@ ALTER TABLE public.s125dataset OWNER TO atonservice;
 --
 
 CREATE TABLE public.s125dataset_identification (
+    dataset_reference_date date,
     id numeric(38,0) NOT NULL,
     application_profile character varying(255),
     dataset_abstract character varying(255),
     dataset_file_identifier character varying(255),
     dataset_language character varying(255),
-    dataset_reference_date date,
     dataset_title character varying(255),
     encoding_specification character varying(255),
     encoding_specification_edition character varying(255),
@@ -1082,25 +1101,38 @@ ALTER TABLE public.silo_tank_statuses OWNER TO atonservice;
 --
 
 CREATE TABLE public.subscription_request (
-    uuid uuid NOT NULL,
-    client_mrn character varying(255),
     container_type smallint,
-    created_at timestamp(6) without time zone,
     data_product_type smallint,
-    data_reference uuid,
-    geometry public.geometry,
-    product_version character varying(255),
-    subscription_geometry public.geometry,
+    created_at timestamp(6) without time zone,
     subscription_period_end timestamp(6) without time zone,
     subscription_period_start timestamp(6) without time zone,
-    unlocode character varying(255),
     updated_at timestamp(6) without time zone,
+    data_reference uuid,
+    uuid uuid NOT NULL,
+    client_mrn character varying(255),
+    product_version character varying(255),
+    unlocode character varying(255),
+    geometry public.geometry,
+    subscription_geometry public.geometry,
     CONSTRAINT subscription_request_container_type_check CHECK (((container_type >= 0) AND (container_type <= 2))),
     CONSTRAINT subscription_request_data_product_type_check CHECK (((data_product_type >= 0) AND (data_product_type <= 27)))
 );
 
 
 ALTER TABLE public.subscription_request OWNER TO atonservice;
+
+--
+-- Name: syntheticaisaid_to_navigation_statuses; Type: TABLE; Schema: public; Owner: atonservice
+--
+
+CREATE TABLE public.syntheticaisaid_to_navigation_statuses (
+    syntheticaisaid_to_navigation_id numeric(38,0) NOT NULL,
+    statuses character varying(255),
+    CONSTRAINT syntheticaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.syntheticaisaid_to_navigation_statuses OWNER TO atonservice;
 
 --
 -- Name: topmark_colour_patterns; Type: TABLE; Schema: public; Owner: atonservice
@@ -1142,6 +1174,19 @@ CREATE TABLE public.topmark_statuses (
 ALTER TABLE public.topmark_statuses OWNER TO atonservice;
 
 --
+-- Name: virtualaisaid_to_navigation_statuses; Type: TABLE; Schema: public; Owner: atonservice
+--
+
+CREATE TABLE public.virtualaisaid_to_navigation_statuses (
+    virtualaisaid_to_navigation_id numeric(38,0) NOT NULL,
+    statuses character varying(255),
+    CONSTRAINT virtualaisaid_to_navigation_statuses_statuses_check CHECK (((statuses)::text = ANY ((ARRAY['PERMANENT'::character varying, 'NOT_IN_USE'::character varying, 'PERIODIC_INTERMITTENT'::character varying, 'TEMPORARY'::character varying, 'PRIVATE'::character varying, 'PUBLIC'::character varying, 'WATCHED'::character varying, 'UN_WATCHED'::character varying, 'CONFIRMED'::character varying, 'CANDIDATE'::character varying, 'UNDER_MODIFICATION'::character varying, 'CANDIDATE_FOR_MODIFICATION'::character varying, 'UNDER_REMOVAL_DELETION'::character varying, 'REMOVED_DELETED'::character varying, 'EXPERIMENTAL'::character varying, 'TEMPORARILY_DISCONTINUED'::character varying, 'TEMPORARILY_RELOCATED'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.virtualaisaid_to_navigation_statuses OWNER TO atonservice;
+
+--
 -- Name: aggregation_join_table aggregation_join_table_pkey; Type: CONSTRAINT; Schema: public; Owner: atonservice
 --
 
@@ -1155,6 +1200,14 @@ ALTER TABLE ONLY public.aggregation_join_table
 
 ALTER TABLE ONLY public.aggregation
     ADD CONSTRAINT aggregation_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: aids_to_navigation aids_to_navigation_id_code_key; Type: CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.aids_to_navigation
+    ADD CONSTRAINT aids_to_navigation_id_code_key UNIQUE (id_code);
 
 
 --
@@ -1206,6 +1259,14 @@ ALTER TABLE ONLY public.feature_name
 
 
 --
+-- Name: flyway_schema_history flyway_schema_history_pk; Type: CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.flyway_schema_history
+    ADD CONSTRAINT flyway_schema_history_pk PRIMARY KEY (installed_rank);
+
+
+--
 -- Name: information information_pkey; Type: CONSTRAINT; Schema: public; Owner: atonservice
 --
 
@@ -1214,11 +1275,27 @@ ALTER TABLE ONLY public.information
 
 
 --
+-- Name: s125_dataset_content_xref s125_dataset_content_xref_dataset_content_id_key; Type: CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.s125_dataset_content_xref
+    ADD CONSTRAINT s125_dataset_content_xref_dataset_content_id_key UNIQUE (dataset_content_id);
+
+
+--
 -- Name: s125_dataset_content_xref s125_dataset_content_xref_pkey; Type: CONSTRAINT; Schema: public; Owner: atonservice
 --
 
 ALTER TABLE ONLY public.s125_dataset_content_xref
     ADD CONSTRAINT s125_dataset_content_xref_pkey PRIMARY KEY (dataset_uuid);
+
+
+--
+-- Name: s125dataset s125dataset_dataset_identification_id_key; Type: CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.s125dataset
+    ADD CONSTRAINT s125dataset_dataset_identification_id_key UNIQUE (dataset_identification_id);
 
 
 --
@@ -1246,35 +1323,10 @@ ALTER TABLE ONLY public.subscription_request
 
 
 --
--- Name: aids_to_navigation uk_49huytwbx2hsnmtd1s7sfyc91; Type: CONSTRAINT; Schema: public; Owner: atonservice
+-- Name: flyway_schema_history_s_idx; Type: INDEX; Schema: public; Owner: atonservice
 --
 
-ALTER TABLE ONLY public.aids_to_navigation
-    ADD CONSTRAINT uk_49huytwbx2hsnmtd1s7sfyc91 UNIQUE (aton_number);
-
-
---
--- Name: s125dataset uk_hol8cy0be7j0kpoioinyu5fgm; Type: CONSTRAINT; Schema: public; Owner: atonservice
---
-
-ALTER TABLE ONLY public.s125dataset
-    ADD CONSTRAINT uk_hol8cy0be7j0kpoioinyu5fgm UNIQUE (dataset_identification_id);
-
-
---
--- Name: aids_to_navigation uk_mjwf2bnpb56a0hhv0muvb13mj; Type: CONSTRAINT; Schema: public; Owner: atonservice
---
-
-ALTER TABLE ONLY public.aids_to_navigation
-    ADD CONSTRAINT uk_mjwf2bnpb56a0hhv0muvb13mj UNIQUE (id_code);
-
-
---
--- Name: s125_dataset_content_xref uk_p9xgm2s4o6g85u0h3sohmifxw; Type: CONSTRAINT; Schema: public; Owner: atonservice
---
-
-ALTER TABLE ONLY public.s125_dataset_content_xref
-    ADD CONSTRAINT uk_p9xgm2s4o6g85u0h3sohmifxw UNIQUE (dataset_content_id);
+CREATE INDEX flyway_schema_history_s_idx ON public.flyway_schema_history USING btree (success);
 
 
 --
@@ -1322,6 +1374,14 @@ ALTER TABLE ONLY public.beacon_special_purpose_category_of_special_purpose_marks
 
 ALTER TABLE ONLY public.offshore_platform_statuses
     ADD CONSTRAINT fk4a92ructtenbqc6dln1l64qa0 FOREIGN KEY (offshore_platform_id) REFERENCES public.aids_to_navigation(id);
+
+
+--
+-- Name: syntheticaisaid_to_navigation_statuses fk4qkj34pvxx9srfyhjfh8sq0uo; Type: FK CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.syntheticaisaid_to_navigation_statuses
+    ADD CONSTRAINT fk4qkj34pvxx9srfyhjfh8sq0uo FOREIGN KEY (syntheticaisaid_to_navigation_id) REFERENCES public.aids_to_navigation(id);
 
 
 --
@@ -1378,6 +1438,22 @@ ALTER TABLE ONLY public.light_vessel_colour_patterns
 
 ALTER TABLE ONLY public.s125dataset
     ADD CONSTRAINT fk6iq9xxb0c1hipfvh9329n4fb3 FOREIGN KEY (dataset_identification_id) REFERENCES public.s125dataset_identification(id);
+
+
+--
+-- Name: physicalaisaid_to_navigation_statuses fk6u448qfcfxwd7w4swx76tciiv; Type: FK CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.physicalaisaid_to_navigation_statuses
+    ADD CONSTRAINT fk6u448qfcfxwd7w4swx76tciiv FOREIGN KEY (physicalaisaid_to_navigation_id) REFERENCES public.aids_to_navigation(id);
+
+
+--
+-- Name: broadcast_by_join_table fk7k5gdm25xs6sydapvsfj2la3n; Type: FK CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.broadcast_by_join_table
+    ADD CONSTRAINT fk7k5gdm25xs6sydapvsfj2la3n FOREIGN KEY (ais_aton_id) REFERENCES public.aids_to_navigation(id);
 
 
 --
@@ -1533,6 +1609,14 @@ ALTER TABLE ONLY public.fog_signal_statuses
 
 
 --
+-- Name: broadcast_by_join_table fkd4rfi17wmgtxabphk6qpdwc9o; Type: FK CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.broadcast_by_join_table
+    ADD CONSTRAINT fkd4rfi17wmgtxabphk6qpdwc9o FOREIGN KEY (radio_station_id) REFERENCES public.aids_to_navigation(id);
+
+
+--
 -- Name: landmark_colour_patterns fkdlymx2s2ovrw9qgqkf4yr9wio; Type: FK CONSTRAINT; Schema: public; Owner: atonservice
 --
 
@@ -1586,6 +1670,14 @@ ALTER TABLE ONLY public.generic_buoy_nature_ofconstuctions
 
 ALTER TABLE ONLY public.recommended_track_nav_lines
     ADD CONSTRAINT fkeni1a0te0u215bn43ltt0cu1r FOREIGN KEY (navigation_line_id) REFERENCES public.aids_to_navigation(id);
+
+
+--
+-- Name: virtualaisaid_to_navigation_statuses fkfivvugv07uj29agevx1oso1k5; Type: FK CONSTRAINT; Schema: public; Owner: atonservice
+--
+
+ALTER TABLE ONLY public.virtualaisaid_to_navigation_statuses
+    ADD CONSTRAINT fkfivvugv07uj29agevx1oso1k5 FOREIGN KEY (virtualaisaid_to_navigation_id) REFERENCES public.aids_to_navigation(id);
 
 
 --
@@ -1650,14 +1742,6 @@ ALTER TABLE ONLY public.light_light_visibilities
 
 ALTER TABLE ONLY public.light_float_statuses
     ADD CONSTRAINT fkk9q8q6seqe0drxjth225y9t0s FOREIGN KEY (light_float_id) REFERENCES public.aids_to_navigation(id);
-
-
---
--- Name: aids_to_navigation fkky26heg4r9cb9qnq0dpiq7kmq; Type: FK CONSTRAINT; Schema: public; Owner: atonservice
---
-
-ALTER TABLE ONLY public.aids_to_navigation
-    ADD CONSTRAINT fkky26heg4r9cb9qnq0dpiq7kmq FOREIGN KEY (broadcasts_id) REFERENCES public.aids_to_navigation(id);
 
 
 --
