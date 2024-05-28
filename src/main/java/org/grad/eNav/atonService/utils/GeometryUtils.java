@@ -40,11 +40,9 @@ public class GeometryUtils {
     public static Geometry joinGeometries(Geometry... geometries) {
         Geometry result = null;
         for(Geometry geometry : geometries) {
-            if(result == null && geometry == null) {
-                result = null;
-            } else if(result == null || geometry == null) {
-                result = Optional.ofNullable(result).orElse(geometry);
-            } else {
+            if (result == null) {
+                result = geometry;
+            } else if (geometry != null) {
                 result = result.union(geometry);
             }
         }
